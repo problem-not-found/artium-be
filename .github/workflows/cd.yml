@@ -50,8 +50,8 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "${{ secrets.ENV_FILE }}" > /home/ubuntu/actions-runner/_work/gbjs-be/gbjs-be/.env
-            cd /home/ubuntu/actions-runner/_work/sb-study/sb-study
+            echo "${{ secrets.ENV_FILE }}" > /home/ubuntu/actions-runner/_work/artium-be/artium-be/.env
+            cd /home/ubuntu/actions-runner/_work/artium-be/artium-be
             docker compose down
             docker compose pull
             docker compose up -d --build
