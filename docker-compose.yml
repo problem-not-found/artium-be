@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    container_name: artium-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/artium
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASS}
+    command: ["java", "-Dspring.profiles.active=dev", "-jar", "app.jar"]
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - sbs-network
+    restart: on-failure
+
+  mysql:
+    image: mysql:8.0
+    container_name: artium-mysql
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: artium
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASS}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASS}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - sbs-network
+    restart: always
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: artium-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - artium-network
+    restart: always
+
+networks:
+  artium-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
