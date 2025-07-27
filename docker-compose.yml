@@ -16,7 +16,7 @@ services:
       - mysql
       - redis
     networks:
-      - sbs-network
+      - artium-network
     restart: on-failure
 
   mysql:
@@ -32,7 +32,7 @@ services:
     volumes:
       - mysql-data:/var/lib/mysql
     networks:
-      - sbs-network
+      - artium-network
     restart: always
 
   redis:
