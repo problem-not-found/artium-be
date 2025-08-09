@@ -3,8 +3,11 @@
  */
 package com.likelion13.artium.domain.user.entity;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -12,9 +15,11 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.global.common.BaseTimeEntity;
 
 import lombok.AccessLevel;
@@ -53,6 +58,9 @@ public class User extends BaseTimeEntity {
   @Enumerated(EnumType.STRING)
   @Builder.Default
   private Role role = Role.USER;
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  private List<Piece> pieces = new ArrayList<>();
 
   public static User fromOAuth(String email, String provider, String nickname) {
     return User.builder()
