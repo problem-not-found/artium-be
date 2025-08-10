@@ -39,6 +39,9 @@ public interface S3Controller {
   @Operation(summary = "S3 파일 삭제 API", description = "파일명을 기반으로 이미지를 삭제합니다.")
   @DeleteMapping
   ResponseEntity<BaseResponse<String>> deleteFile(
-      @Parameter(description = "파일 이름", example = "profile-image/43835b6e-8991-4eab-8384-5cbf7e854abb") @RequestParam
+      @Parameter(
+              description = "파일 이름",
+              example = "profile-image/43835b6e-8991-4eab-8384-5cbf7e854abb")
+          @RequestParam
           String keyName);
 }
