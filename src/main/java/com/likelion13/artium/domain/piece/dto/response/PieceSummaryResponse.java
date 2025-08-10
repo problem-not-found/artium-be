@@ -3,6 +3,8 @@
  */
 package com.likelion13.artium.domain.piece.dto.response;
 
+import com.likelion13.artium.domain.piece.entity.Status;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,6 +28,9 @@ public class PieceSummaryResponse {
 
   @Schema(description = "작품 구매 가능 여부", example = "true")
   private Boolean isPurchasable;
+
+  @Schema(description = "작품 상태", example = "ON_DISPLAY")
+  private Status status;
 
   @Schema(description = "사용자 ID", example = "2")
   private Long userId;

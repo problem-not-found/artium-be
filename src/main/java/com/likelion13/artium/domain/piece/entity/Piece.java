@@ -3,7 +3,9 @@
  */
 package com.likelion13.artium.domain.piece.entity;
 
-import com.likelion13.artium.domain.pieceDetail.entity.PieceDetail;
+import java.util.ArrayList;
+import java.util.List;
+
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -16,18 +18,19 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
+import com.likelion13.artium.domain.pieceDetail.entity.PieceDetail;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.global.common.BaseTimeEntity;
 
-import java.util.ArrayList;
-import java.util.List;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Table(name = "piece")
@@ -49,6 +52,9 @@ public class Piece extends BaseTimeEntity {
 
   @Column(name = "is_purchasable", nullable = false)
   private Boolean isPurchasable;
+
+  @Column(name = "status", nullable = false)
+  private Status status = Status.UNREGISTERED;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id")
