@@ -6,10 +6,12 @@ package com.likelion13.artium.global.security;
 import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -33,6 +35,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
   private final JwtProvider jwtProvider;
   private final UserRepository userRepository;
+  private final RedisTemplate<String, String> redisTemplate;
 
   @Override
   @Transactional
@@ -79,7 +82,17 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     String refreshToken =
         jwtProvider.createRefreshToken(user.getUsername(), UUID.randomUUID().toString());
 
-    log.info("로그인 성공: {}", user.getUsername());
+    long refreshTokenExpiration = jwtProvider.getExpiration(refreshToken);
+
+    redisTemplate
+        .opsForValue()
+        .set(
+            "RT:" + user.getUsername(),
+            refreshToken,
+            refreshTokenExpiration,
+            TimeUnit.MILLISECONDS);
+
+    log.info("소셜 로그인 성공: {}", user.getUsername());
 
     response.addHeader("Authorization", "Bearer " + accessToken);
     response.sendRedirect("/swagger-ui/index.html#/");
