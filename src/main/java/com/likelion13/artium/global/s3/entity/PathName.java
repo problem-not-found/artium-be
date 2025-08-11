@@ -9,5 +9,7 @@ public enum PathName {
   @Schema(description = "프로필사진")
   PROFILE_IMAGE,
   @Schema(description = "작품사진")
-  PIECE
+  PIECE,
+  @Schema(description = "작품 디테일컷")
+  PIECE_DETAIL
 }
