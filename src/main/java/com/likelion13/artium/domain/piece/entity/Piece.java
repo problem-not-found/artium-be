@@ -80,10 +80,13 @@ public class Piece extends BaseTimeEntity {
   }
 
   public void updatePieceDetails(List<PieceDetail> pieceDetails) {
+    if(pieceDetails == null) return;
     this.pieceDetails = pieceDetails;
   }
 
   public void addPieceDetail(PieceDetail pieceDetail) {
+    if(pieceDetail == null) return;
+    if(this.pieceDetails == null) this.pieceDetails = new ArrayList<>();
     this.pieceDetails.add(pieceDetail);
   }
 }
