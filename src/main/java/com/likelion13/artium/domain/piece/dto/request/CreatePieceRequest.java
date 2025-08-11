@@ -33,6 +33,6 @@ public class CreatePieceRequest {
   @Schema(description = "구매 가능 여부", example = "true")
   private Boolean isPurchasable;
 
-  @Schema(description = "작품 상태(임시저장: DRAFT, 저장: REGISTERED", example = "REGISTERED")
+  @Schema(description = "작품 상태(임시저장: DRAFT, 저장: REGISTERED", example = "UNREGISTERED")
   private Status status;
 }

@@ -3,7 +3,12 @@
  */
 package com.likelion13.artium.domain.piece.dto.request;
 
+import java.util.List;
+
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+
+import com.likelion13.artium.domain.piece.entity.Status;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -26,7 +31,13 @@ public class UpdatePieceRequest {
   @Schema(description = "작품 설명", example = "매년 삿포로에서 하는 눈 마을 축제를 그린 그림.")
   private String description;
 
-  @NotBlank(message = "구매 가능 여부는 필수입니다.")
+  @NotNull(message = "구매 가능 여부는 필수입니다.")
   @Schema(description = "구매 가능 여부", example = "true")
   private Boolean isPurchasable;
+
+  @Schema(description = "작품 상태(임시저장: DRAFT, 저장: REGISTERED", example = "UNREGISTERED")
+  private Status status;
+
+  @Schema(description = "남길 작품 식별자 리스트", example = "[1, 3]")
+  private List<Long> remainPieceDetailIds;
 }

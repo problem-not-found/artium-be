@@ -6,6 +6,7 @@ package com.likelion13.artium.domain.piece.dto.response;
 import java.util.List;
 
 import com.likelion13.artium.domain.piece.entity.Status;
+import com.likelion13.artium.domain.pieceDetail.dto.response.PieceDetailSummaryResponse;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
@@ -38,5 +39,5 @@ public class PieceResponse {
   private Long userId;
 
   @Schema(description = "디테일 컷 리스트")
-  private List<String> pieceDetails;
+  private List<PieceDetailSummaryResponse> pieceDetails;
 }
