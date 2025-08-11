@@ -73,8 +73,8 @@ public class User extends BaseTimeEntity {
   }
 
   public void addPiece(Piece piece) {
-    if(piece == null) return;
-    if(this.pieces == null) this.pieces = new ArrayList<>();
+    if (piece == null) return;
+    if (this.pieces == null) this.pieces = new ArrayList<>();
     this.pieces.add(piece);
   }
 }

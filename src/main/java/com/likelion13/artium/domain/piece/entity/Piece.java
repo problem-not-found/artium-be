@@ -3,14 +3,14 @@
  */
 package com.likelion13.artium.domain.piece.entity;
 
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import java.util.ArrayList;
 import java.util.List;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -80,13 +80,13 @@ public class Piece extends BaseTimeEntity {
   }
 
   public void updatePieceDetails(List<PieceDetail> pieceDetails) {
-    if(pieceDetails == null) return;
+    if (pieceDetails == null) return;
     this.pieceDetails = pieceDetails;
   }
 
   public void addPieceDetail(PieceDetail pieceDetail) {
-    if(pieceDetail == null) return;
-    if(this.pieceDetails == null) this.pieceDetails = new ArrayList<>();
+    if (pieceDetail == null) return;
+    if (this.pieceDetails == null) this.pieceDetails = new ArrayList<>();
     this.pieceDetails.add(pieceDetail);
   }
 }
