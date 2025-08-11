@@ -10,10 +10,15 @@ import org.springframework.stereotype.Component;
 import com.likelion13.artium.domain.piece.dto.response.PieceResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceSummaryResponse;
 import com.likelion13.artium.domain.piece.entity.Piece;
-import com.likelion13.artium.domain.pieceDetail.entity.PieceDetail;
+import com.likelion13.artium.domain.pieceDetail.mapper.PieceDetailMapper;
+
+import lombok.RequiredArgsConstructor;
 
 @Component
+@RequiredArgsConstructor
 public class PieceMapper {
+
+  private final PieceDetailMapper pieceDetailMapper;
 
   public PieceResponse toPieceResponse(Piece piece) {
     return PieceResponse.builder()
@@ -27,7 +32,9 @@ public class PieceMapper {
         .pieceDetails(
             piece.getPieceDetails() == null
                 ? List.of()
-                : piece.getPieceDetails().stream().map(PieceDetail::getImageUrl).toList())
+                : piece.getPieceDetails().stream()
+                    .map(pieceDetail -> pieceDetailMapper.toPieceDetailSummaryResponse(pieceDetail))
+                    .toList())
         .build();
   }
 
@@ -40,20 +47,6 @@ public class PieceMapper {
         .isPurchasable(piece.getIsPurchasable())
         .status(piece.getStatus())
         .userId(piece.getUser().getId())
-        .build();
-  }
-
-  public PieceResponse toPieceResponseWithDetail(
-      PieceResponse pieceResponse, List<String> detailImageUrls) {
-    return PieceResponse.builder()
-        .pieceId(pieceResponse.getPieceId())
-        .title(pieceResponse.getTitle())
-        .description(pieceResponse.getDescription())
-        .imageUrl(pieceResponse.getImageUrl())
-        .isPurchasable(pieceResponse.getIsPurchasable())
-        .status(pieceResponse.getStatus())
-        .userId(pieceResponse.getUserId())
-        .pieceDetails(detailImageUrls)
         .build();
   }
 }
