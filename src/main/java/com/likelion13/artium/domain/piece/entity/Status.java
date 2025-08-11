@@ -12,7 +12,7 @@ public enum Status {
   UNREGISTERED,
   @Schema(description = "등록 실패")
   FAILED,
-  @Schema(description = "등록")
+  @Schema(description = "등록 완료")
   REGISTERED,
   @Schema(description = "전시 중")
   ON_DISPLAY,

@@ -47,7 +47,7 @@ public class Piece extends BaseTimeEntity {
   @Column(name = "description", nullable = false)
   private String description;
 
-  @Column(name = "image_url", nullable = false)
+  @Column(name = "image_url")
   private String imageUrl;
 
   @Column(name = "is_purchasable", nullable = false)
@@ -60,12 +60,27 @@ public class Piece extends BaseTimeEntity {
   @JoinColumn(name = "user_id")
   private User user;
 
-  @OneToMany(mappedBy = "piece", cascade = CascadeType.ALL)
+  @OneToMany(mappedBy = "piece", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<PieceDetail> pieceDetails = new ArrayList<>();
 
-  public void update(String title, String description, Boolean isPurchasable) {
+  public void update(String title, String description, Boolean isPurchasable, Status status) {
     this.title = title;
     this.description = description;
     this.isPurchasable = isPurchasable;
+    this.status = status;
+  }
+
+  public String updateImageUrl(String imageUrl) {
+    String oldImageUrl = this.imageUrl;
+    this.imageUrl = imageUrl;
+    return oldImageUrl;
+  }
+
+  public void updatePieceDetails(List<PieceDetail> pieceDetails) {
+    this.pieceDetails = pieceDetails;
+  }
+
+  public void addPieceDetail(PieceDetail pieceDetail) {
+    this.pieceDetails.add(pieceDetail);
   }
 }
