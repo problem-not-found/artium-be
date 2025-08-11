@@ -22,7 +22,7 @@ public class PieceDetailServiceImpl implements PieceDetailService {
 
   @Override
   @Transactional
-  public PieceDetail createPieceDetails(Piece piece, String detailImageUrl) {
+  public PieceDetail createPieceDetail(Piece piece, String detailImageUrl) {
 
     PieceDetail pieceDetail = PieceDetail.builder().piece(piece).imageUrl(detailImageUrl).build();
     pieceDetailRepository.save(pieceDetail);

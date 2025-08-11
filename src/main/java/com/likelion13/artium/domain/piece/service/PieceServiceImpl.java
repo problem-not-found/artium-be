@@ -83,7 +83,7 @@ public class PieceServiceImpl implements PieceService {
               .toList();
       List<PieceDetail> pieceDetails =
           detailImageUrls.stream()
-              .map(detailImageUrl -> pieceDetailService.createPieceDetails(piece, detailImageUrl))
+              .map(detailImageUrl -> pieceDetailService.createPieceDetail(piece, detailImageUrl))
               .toList();
       piece.updatePieceDetails(pieceDetails);
     }
@@ -142,7 +142,7 @@ public class PieceServiceImpl implements PieceService {
               .toList();
       List<PieceDetail> pieceDetails =
           detailImageUrls.stream()
-              .map(detailImageUrl -> pieceDetailService.createPieceDetails(piece, detailImageUrl))
+              .map(detailImageUrl -> pieceDetailService.createPieceDetail(piece, detailImageUrl))
               .toList();
       pieceDetails.forEach(piece::addPieceDetail);
     }

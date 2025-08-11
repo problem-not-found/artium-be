@@ -13,5 +13,5 @@ public interface PieceDetailService {
    * @param detailImageUrl 디테일 컷 Url
    * @return 디테일 컷 정보가 담긴 DTO
    */
-  PieceDetail createPieceDetails(Piece piece, String detailImageUrl);
+  PieceDetail createPieceDetail(Piece piece, String detailImageUrl);
 }

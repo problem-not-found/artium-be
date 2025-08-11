@@ -3,6 +3,8 @@
  */
 package com.likelion13.artium.domain.piece.entity;
 
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -53,6 +55,7 @@ public class Piece extends BaseTimeEntity {
   @Column(name = "is_purchasable", nullable = false)
   private Boolean isPurchasable;
 
+  @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false)
   private Status status = Status.UNREGISTERED;
 
