@@ -5,13 +5,10 @@ package com.likelion13.artium.global.security;
 
 import java.io.IOException;
 import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
@@ -19,6 +16,7 @@ import org.springframework.security.web.authentication.AuthenticationSuccessHand
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.likelion13.artium.domain.auth.dto.response.TokenResponse;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.repository.UserRepository;
@@ -35,7 +33,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
   private final JwtProvider jwtProvider;
   private final UserRepository userRepository;
-  private final RedisTemplate<String, String> redisTemplate;
 
   @Override
   @Transactional
@@ -76,25 +73,22 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             .findByUsername(email)
             .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
-    String accessToken =
-        jwtProvider.createAccessToken(user.getUsername(), user.getRole().toString(), provider);
+    TokenResponse tokenResponse = jwtProvider.createTokens(authentication);
 
-    String refreshToken =
-        jwtProvider.createRefreshToken(user.getUsername(), UUID.randomUUID().toString());
+    jwtProvider.addJwtToCookie(
+        response,
+        tokenResponse.getRefreshToken(),
+        "REFRESH_TOKEN",
+        jwtProvider.getExpirationTime(tokenResponse.getRefreshToken()));
+    jwtProvider.addJwtToCookie(
+        response,
+        tokenResponse.getAccessToken(),
+        "ACCESS_TOKEN",
+        jwtProvider.getExpirationTime(tokenResponse.getAccessToken()));
 
-    long refreshTokenExpiration = jwtProvider.getExpiration(refreshToken);
+    log.info("카카오 로그인 성공: {}", user.getUsername());
 
-    redisTemplate
-        .opsForValue()
-        .set(
-            "RT:" + user.getUsername(),
-            refreshToken,
-            refreshTokenExpiration,
-            TimeUnit.MILLISECONDS);
-
-    log.info("소셜 로그인 성공: {}", user.getUsername());
-
-    response.addHeader("Authorization", "Bearer " + accessToken);
+    response.addHeader("Authorization", "Bearer " + tokenResponse.getAccessToken());
     response.sendRedirect("/swagger-ui/index.html#/");
   }
 }
