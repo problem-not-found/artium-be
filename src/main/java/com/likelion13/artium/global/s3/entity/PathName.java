@@ -11,5 +11,7 @@ public enum PathName {
   @Schema(description = "작품사진")
   PIECE,
   @Schema(description = "작품 디테일컷")
-  PIECE_DETAIL
+  PIECE_DETAIL,
+  @Schema(description = "전시 썸네일사진")
+  EXHIBITION
 }
