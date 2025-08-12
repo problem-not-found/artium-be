@@ -137,14 +137,18 @@ public class JwtProvider {
             .map(GrantedAuthority::getAuthority)
             .collect(Collectors.joining(","));
 
-    OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-    Map<String, Object> kakaoAccount = oAuth2User.getAttribute("kakao_account");
-
-    if (kakaoAccount == null || !kakaoAccount.containsKey("email")) {
-      throw new CustomException(UserErrorCode.UNAUTHORIZED);
+    String subject;
+    Object principal = authentication.getPrincipal();
+    if (principal instanceof OAuth2User oAuth2User) {
+      Map<String, Object> kakaoAccount = oAuth2User.getAttribute("kakao_account");
+      if (kakaoAccount == null || !kakaoAccount.containsKey("email")) {
+        throw new CustomException(UserErrorCode.UNAUTHORIZED);
+      }
+      subject = (String) kakaoAccount.get("email");
+    } else {
+      // 서비스 자체 로그인: authentication.getName() 사용 (username 또는 email)
+      subject = authentication.getName();
     }
-
-    String email = (String) kakaoAccount.get("email");
 
     long now = System.currentTimeMillis();
     Date validity;
@@ -157,7 +161,7 @@ public class JwtProvider {
     }
 
     return Jwts.builder()
-        .setSubject(email)
+        .setSubject(subject)
         .claim("auth", authorities)
         .claim("type", tokenType)
         .setIssuedAt(new Date(now))

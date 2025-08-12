@@ -14,6 +14,7 @@ import lombok.Getter;
 @AllArgsConstructor
 public enum AuthErrorCode implements BaseErrorCode {
   LOGIN_FAIL("AUTH_4001", "로그인 처리 중 오류가 발생하였습니다.", HttpStatus.BAD_REQUEST),
+  LOGOUT_FAIL("AUTH_4001", "로그아웃 처리 중 오류가 발생하였습니다.", HttpStatus.BAD_REQUEST),
   TOKEN_FAIL("AUTH_4002", "액세스 토큰 요청에 실패하였습니다.", HttpStatus.UNAUTHORIZED),
   USER_INFO_FAIL("AUTH_4003", "사용자 정보 요청에 실패하였습니다.", HttpStatus.UNAUTHORIZED),
   INVALID_ACCESS_TOKEN("AUTH_4004", "유효하지 않은 액세스 토큰입니다.", HttpStatus.UNAUTHORIZED),
