@@ -16,5 +16,5 @@ public class PieceLikeResponse {
   private Long pieceId;
 
   @Schema(description = "좋아요 여부", example = "true")
-  private Boolean isLiked;
+  private Boolean isLike;
 }

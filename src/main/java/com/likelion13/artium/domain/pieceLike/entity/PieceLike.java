@@ -3,6 +3,7 @@
  */
 package com.likelion13.artium.domain.pieceLike.entity;
 
+import com.likelion13.artium.global.common.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -35,7 +36,7 @@ import lombok.NoArgsConstructor;
           name = "uq_piece_like_piece_user",
           columnNames = {"piece_id", "user_id"})
     })
-public class PieceLike {
+public class PieceLike extends BaseTimeEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)

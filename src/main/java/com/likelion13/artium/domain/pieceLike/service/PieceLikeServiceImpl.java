@@ -3,6 +3,7 @@
  */
 package com.likelion13.artium.domain.pieceLike.service;
 
+import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import java.util.Optional;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -38,7 +39,8 @@ public class PieceLikeServiceImpl implements PieceLikeService {
   @Override
   @Transactional
   public PieceLikeResponse likePiece(CustomUserDetails userDetails, Long pieceId) {
-    User user = userRepository.getReferenceById(userDetails.getUser().getId());
+    User user = userRepository.findById(userDetails.getUser().getId()).orElseThrow(
+        () -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
     Piece piece =
         pieceRepository
@@ -49,7 +51,10 @@ public class PieceLikeServiceImpl implements PieceLikeService {
 
       pieceLikeRepository.save(pieceLike);
     } catch (DataIntegrityViolationException e) {
-      throw new CustomException(PieceLikeErrorCode.ALREADY_LIKED);
+      if(e.getMessage() != null && e.getMessage().contains("uq_piece_like_piece_user")) {
+        throw new CustomException(PieceLikeErrorCode.ALREADY_LIKED);
+      }
+      throw e;
     }
 
     return pieceLikeMapper.toPieceLikeResponse(pieceId, true);
@@ -62,12 +67,9 @@ public class PieceLikeServiceImpl implements PieceLikeService {
         .findById(pieceId)
         .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
 
-    Optional<PieceLike> pieceLike =
-        Optional.ofNullable(
-            pieceLikeRepository
-                .findByUser_IdAndPiece_Id(userDetails.getUser().getId(), pieceId)
-                .orElseThrow(() -> new CustomException(PieceLikeErrorCode.NOT_LIKED)));
-    pieceLike.ifPresent(pieceLikeRepository::delete);
+    PieceLike pieceLike = pieceLikeRepository.findByUser_IdAndPiece_Id(userDetails.getUser().getId(), pieceId)
+        .orElseThrow(() -> new CustomException(PieceLikeErrorCode.NOT_LIKED));
+    pieceLikeRepository.delete(pieceLike);
 
     return pieceLikeMapper.toPieceLikeResponse(pieceId, false);
   }

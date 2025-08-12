@@ -74,8 +74,9 @@ public class PieceControllerImpl implements PieceController {
       @RequestPart(value = "mainImage", required = false) MultipartFile mainImage,
       @RequestPart(value = "detailImages", required = false) List<MultipartFile> detailImages) {
 
+    int remainCount = updatePieceRequest.getRemainPieceDetailIds() == null ? 0 : updatePieceRequest.getRemainPieceDetailIds().size();
     if (detailImages != null
-        && updatePieceRequest.getRemainPieceDetailIds().size() + detailImages.size() > 5)
+        && remainCount + detailImages.size() > 5)
       throw new CustomException(PieceErrorCode.TOO_MANY_DETAIL_IMAGES);
     PieceResponse pieceResponse =
         pieceService.updatePiece(userDetails, pieceId, updatePieceRequest, mainImage, detailImages);

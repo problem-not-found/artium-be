@@ -21,24 +21,16 @@ public class PieceMapper {
   private final PieceDetailMapper pieceDetailMapper;
 
   public PieceResponse toPieceResponse(Piece piece) {
-    return PieceResponse.builder()
-        .pieceId(piece.getId())
-        .title(piece.getTitle())
-        .description(piece.getDescription())
-        .imageUrl(piece.getImageUrl())
-        .isPurchasable(piece.getIsPurchasable())
-        .status(piece.getStatus())
-        .userId(piece.getUser().getId())
-        .pieceDetails(
-            piece.getPieceDetails() == null
-                ? List.of()
-                : piece.getPieceDetails().stream()
-                    .map(pieceDetailMapper::toPieceDetailSummaryResponse)
-                    .toList())
+    return toPieceResponseWithLike(piece, null);
+  }
+
+  public PieceResponse toPieceResponseWithLike(Piece piece, Boolean isLike) {
+    return buildBasePieceResponse(piece)
+        .isLike(isLike)
         .build();
   }
 
-  public PieceResponse toPieceResponseWithLike(Piece piece, Boolean isLiked) {
+  private PieceResponse.PieceResponseBuilder buildBasePieceResponse(Piece piece) {
     return PieceResponse.builder()
         .pieceId(piece.getId())
         .title(piece.getTitle())
@@ -52,9 +44,7 @@ public class PieceMapper {
                 ? List.of()
                 : piece.getPieceDetails().stream()
                     .map(pieceDetailMapper::toPieceDetailSummaryResponse)
-                    .toList())
-        .isLike(isLiked)
-        .build();
+                    .toList());
   }
 
   public PieceSummaryResponse toPieceSummaryResponse(Piece piece) {

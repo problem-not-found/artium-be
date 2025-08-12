@@ -11,6 +11,6 @@ import com.likelion13.artium.domain.pieceLike.dto.response.PieceLikeResponse;
 public class PieceLikeMapper {
 
   public PieceLikeResponse toPieceLikeResponse(Long pieceId, Boolean isLike) {
-    return PieceLikeResponse.builder().pieceId(pieceId).isLiked(isLike).build();
+    return PieceLikeResponse.builder().pieceId(pieceId).isLike(isLike).build();
   }
 }
