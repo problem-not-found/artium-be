@@ -22,6 +22,7 @@ public class ExhibitionMapper {
         .startDate(request.getStartDate())
         .endDate(request.getEndDate())
         .address(request.getAddress())
+        .offlineDescription(request.getOfflineDescription())
         .accountNumber(request.getAccountNumber())
         .bankName(request.getBankName())
         .exhibitionStatus(status)

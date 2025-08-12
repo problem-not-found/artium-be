@@ -42,15 +42,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       String token = resolveToken(request);
 
       if (token != null && jwtProvider.validateToken(token)) {
-        String username = jwtProvider.getUsernameFromToken(token);
-        UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+                    String username = jwtProvider.getUsernameFromToken(token);
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-        UsernamePasswordAuthenticationToken authentication =
-            new UsernamePasswordAuthenticationToken(
-                userDetails, null, userDetails.getAuthorities());
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-
-        log.debug("SecurityContext에 '{}' 인증 정보를 저장했습니다.", username);
+                        UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails, null, userDetails.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                  }
       }
     } catch (JwtException | IllegalArgumentException e) {
       log.error("JWT 검증 실패 : {}", e.getMessage());
@@ -63,7 +63,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
   private String resolveToken(HttpServletRequest request) {
     String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-    log.debug("Authorization Header : {}", bearerToken);
     if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
       return bearerToken.substring(BEARER_PREFIX.length());
     }

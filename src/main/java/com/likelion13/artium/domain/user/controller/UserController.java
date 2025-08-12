@@ -20,19 +20,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
-@RestController
-@RequiredArgsConstructor
-@RequestMapping("/api/users")
 @Tag(name = "User", description = "User 관리 API")
-public class UserController {
+@RequestMapping("/api/users")
+public interface UserController {
 
-  private final UserService userService;
-
-  @Operation(summary = "회원가입 API", description = "사용자 회원가입을 위한 API")
   @PostMapping("/sign-up")
-  public ResponseEntity<BaseResponse<SignUpResponse>> signUp(
-      @RequestBody @Valid SignUpRequest signUpRequest) {
-    SignUpResponse signUpResponse = userService.signUp(signUpRequest);
-    return ResponseEntity.ok(BaseResponse.success("회원가입에 성공했습니다.", signUpResponse));
-  }
+  @Operation(summary = "회원가입", description = "서비스 자체 회원을 위한 회원가입을 처리합니다.")
+  ResponseEntity<BaseResponse<SignUpResponse>> signUp(@RequestBody @Valid SignUpRequest signUpRequest);
 }

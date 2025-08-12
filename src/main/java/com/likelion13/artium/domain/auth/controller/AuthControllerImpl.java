@@ -5,6 +5,7 @@ package com.likelion13.artium.domain.auth.controller;
 
 import jakarta.servlet.http.HttpServletResponse;
 
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -27,9 +28,9 @@ public class AuthControllerImpl implements AuthController {
 
   @Override
   public ResponseEntity<BaseResponse<String>> login(
-      HttpServletResponse response, @RequestBody LoginRequest loginRequest) {
+      HttpServletResponse response, @RequestBody @Valid LoginRequest loginRequest) {
 
-    TokenResponse tokenResponse = authService.login(response, loginRequest);
+    TokenResponse tokenResponse = authService.login(loginRequest);
 
     jwtProvider.addJwtToCookie(
         response,
@@ -52,7 +53,7 @@ public class AuthControllerImpl implements AuthController {
   public ResponseEntity<BaseResponse<String>> logout(
       @RequestHeader("Authorization") String header) {
 
-    String accessToken = header.replace("Bearer ", "");
+    String accessToken = header.substring(7).trim();
 
     return ResponseEntity.ok(BaseResponse.success(authService.logout(accessToken)));
   }
