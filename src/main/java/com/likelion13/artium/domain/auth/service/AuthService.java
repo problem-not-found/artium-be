@@ -3,8 +3,9 @@
  */
 package com.likelion13.artium.domain.auth.service;
 
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+
+import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -13,7 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.likelion13.artium.domain.auth.dto.request.LoginRequest;
-import com.likelion13.artium.domain.auth.dto.response.LoginResponse;
+import com.likelion13.artium.domain.auth.dto.response.TokenResponse;
 import com.likelion13.artium.domain.auth.mapper.AuthMapper;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
@@ -36,7 +37,7 @@ public class AuthService {
   private final RedisTemplate<String, String> redisTemplate;
 
   @Transactional
-  public LoginResponse login(LoginRequest loginRequest) {
+  public TokenResponse login(HttpServletResponse response, LoginRequest loginRequest) {
     User user =
         userRepository
             .findByUsername(loginRequest.getUsername())
@@ -48,25 +49,11 @@ public class AuthService {
 
     authenticationManager.authenticate(authenticationToken);
 
-    String accessToken =
-        jwtProvider.createAccessToken(user.getUsername(), user.getRole().toString(), "custom");
-    String refreshToken =
-        jwtProvider.createRefreshToken(user.getUsername(), UUID.randomUUID().toString());
+    TokenResponse tokenResponse = jwtProvider.createTokens(authenticationToken);
 
-    Long expirationTime = jwtProvider.getExpiration(accessToken);
+    log.info("로그인 성공: {}", user.getUsername());
 
-    long refreshTokenExpiration = jwtProvider.getExpiration(refreshToken);
-    redisTemplate
-        .opsForValue()
-        .set(
-            "RT:" + user.getUsername(),
-            refreshToken,
-            refreshTokenExpiration,
-            TimeUnit.MILLISECONDS);
-
-    log.info("Custom login success: {}", user.getUsername());
-
-    return authMapper.toLoginResponse(user, accessToken, expirationTime);
+    return tokenResponse;
   }
 
   public String getRefreshTokenFromRedis(String key) {
@@ -75,21 +62,27 @@ public class AuthService {
 
   @Transactional
   public void logout(String accessToken) {
-    String username = jwtProvider.getUsernameFromToken(accessToken);
-    String redisKey = "RT:" + username;
-    Boolean result = redisTemplate.delete(redisKey);
+    try {
+      String username = jwtProvider.getUsernameFromToken(accessToken);
+      String redisKey = "RT:" + username;
+      Boolean result = redisTemplate.delete(redisKey);
 
-    if (result) {
-      log.info("Logout success: refresh token for '{}' deleted from Redis.", username);
-    } else {
-      log.warn("Logout attempted, but no refresh token found for '{}'.", username);
+      if (result) {
+        log.info("Logout success: refresh token for '{}' deleted from Redis.", username);
+      } else {
+        log.warn("Logout attempted, but no refresh token found for '{}'.", username);
+      }
+
+      // 액세스 토큰 블랙리스트 처리
+      long expiration = jwtProvider.getExpirationTime(accessToken);
+      redisTemplate
+          .opsForValue()
+          .set("BL:" + accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
+
+      log.info("Access token for '{}' blacklisted until expiration.", username);
+    } catch (Exception e) {
+      log.error("Redis operation failed during logout for token: {}", accessToken, e);
+      throw new RuntimeException("로그아웃 처리 중 오류가 발생했습니다.", e);
     }
-
-    // 액세스 토큰 블랙리스트 처리
-    long expiration = jwtProvider.getExpiration(accessToken);
-    redisTemplate
-        .opsForValue()
-        .set("BL:" + accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
-    log.info("Access token for '{}' blacklisted until expiration.", username);
   }
 }
