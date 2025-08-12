@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Component;
 
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionResponse;
+import com.likelion13.artium.domain.piece.dto.response.PieceSummaryResponse;
 import com.likelion13.artium.global.page.response.PageResponse;
 
 @Component
@@ -25,6 +26,10 @@ public class PageMapper {
   }
 
   public PageResponse<ExhibitionResponse> toExhibitionPageResponse(Page<ExhibitionResponse> page) {
+    return toPageResponse(page);
+  }
+
+  public PageResponse<PieceSummaryResponse> toPiecePageResponse(Page<PieceSummaryResponse> page) {
     return toPageResponse(page);
   }
 }

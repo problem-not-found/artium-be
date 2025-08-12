@@ -5,6 +5,11 @@ package com.likelion13.artium.domain.piece.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,11 +26,12 @@ import com.likelion13.artium.domain.piece.repository.PieceRepository;
 import com.likelion13.artium.domain.pieceDetail.entity.PieceDetail;
 import com.likelion13.artium.domain.pieceDetail.service.PieceDetailService;
 import com.likelion13.artium.domain.pieceLike.repository.PieceLikeRepository;
-import com.likelion13.artium.domain.user.repository.UserRepository;
+import com.likelion13.artium.domain.user.service.UserService;
 import com.likelion13.artium.global.exception.CustomException;
+import com.likelion13.artium.global.page.mapper.PageMapper;
+import com.likelion13.artium.global.page.response.PageResponse;
 import com.likelion13.artium.global.s3.entity.PathName;
 import com.likelion13.artium.global.s3.service.S3Service;
-import com.likelion13.artium.global.security.CustomUserDetails;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,20 +45,37 @@ public class PieceServiceImpl implements PieceService {
   private final PieceMapper pieceMapper;
   private final S3Service s3Service;
   private final PieceDetailService pieceDetailService;
-  private final UserRepository userRepository;
   private final PieceLikeRepository pieceLikeRepository;
+  private final UserService userService;
+  private final PageMapper pageMapper;
 
   @Override
-  public List<PieceSummaryResponse> getAllPieces(CustomUserDetails userDetails) {
-    List<Piece> pieceList =
-        pieceRepository.findAllByUser_IdOrderByCreatedAtDesc(userDetails.getUser().getId());
-    return pieceList.stream().map(pieceMapper::toPieceSummaryResponse).toList();
+  public PageResponse<PieceSummaryResponse> getPiecePage(Long userId, Pageable pageable) {
+    Long requestUserId = userService.getCurrentUser().getId();
+
+    Pageable sortedPageable =
+        PageRequest.of(
+            pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Direction.DESC, "createdAt"));
+
+    Page<PieceSummaryResponse> page;
+    if (userId.equals(requestUserId)) {
+      page =
+          pieceRepository
+              .findByUserId(userId, sortedPageable)
+              .map(pieceMapper::toPieceSummaryResponse);
+    } else {
+      page =
+          pieceRepository
+              .findByUserIdAndStatusRegisteredOrOnDisplay(userId, sortedPageable)
+              .map(pieceMapper::toPieceSummaryResponse);
+    }
+
+    return pageMapper.toPiecePageResponse(page);
   }
 
   @Override
   @Transactional
   public PieceSummaryResponse createPiece(
-      CustomUserDetails userDetails,
       CreatePieceRequest createPieceRequest,
       MultipartFile mainImage,
       List<MultipartFile> detailImages) {
@@ -66,7 +89,7 @@ public class PieceServiceImpl implements PieceService {
             .isPurchasable(createPieceRequest.getIsPurchasable())
             .status(createPieceRequest.getStatus())
             .imageUrl(mainImageUrl)
-            .user(userDetails.getUser())
+            .user(userService.getCurrentUser())
             .build();
 
     pieceRepository.save(piece);
@@ -84,19 +107,17 @@ public class PieceServiceImpl implements PieceService {
   }
 
   @Override
-  public PieceResponse getPiece(CustomUserDetails userDetails, Long pieceId) {
-
+  public PieceResponse getPiece(Long pieceId) {
+    Long userId = userService.getCurrentUser().getId();
     Piece piece =
         pieceRepository
             .findById(pieceId)
             .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
-    if (!piece.getUser().getId().equals(userDetails.getUser().getId())
+    if (!piece.getUser().getId().equals(userId)
         && (piece.getStatus() != Status.REGISTERED && piece.getStatus() != Status.ON_DISPLAY)) {
       throw new CustomException(PieceErrorCode.UNAUTHORIZED);
     }
-    if (pieceLikeRepository
-        .findByUser_IdAndPiece_Id(userDetails.getUser().getId(), pieceId)
-        .isPresent()) {
+    if (pieceLikeRepository.findByUser_IdAndPiece_Id(userId, pieceId).isPresent()) {
       return pieceMapper.toPieceResponseWithLike(piece, true);
     } else {
       return pieceMapper.toPieceResponseWithLike(piece, false);
@@ -106,15 +127,21 @@ public class PieceServiceImpl implements PieceService {
   @Override
   @Transactional
   public PieceResponse updatePiece(
-      CustomUserDetails userDetails,
       Long pieceId,
       UpdatePieceRequest updatePieceRequest,
       MultipartFile mainImage,
       List<MultipartFile> detailImages) {
+
+    Long userId = userService.getCurrentUser().getId();
+
     Piece piece =
         pieceRepository
             .findById(pieceId)
             .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
+
+    if (!piece.getUser().getId().equals(userId)) {
+      throw new CustomException(PieceErrorCode.UNAUTHORIZED);
+    }
 
     List<Long> pieceDetailIds = piece.getPieceDetails().stream().map(PieceDetail::getId).toList();
     updatePieceRequest
@@ -161,9 +188,7 @@ public class PieceServiceImpl implements PieceService {
         updatePieceRequest.getDescription(),
         updatePieceRequest.getIsPurchasable(),
         updatePieceRequest.getStatus());
-    if (pieceLikeRepository
-        .findByUser_IdAndPiece_Id(userDetails.getUser().getId(), pieceId)
-        .isPresent()) {
+    if (pieceLikeRepository.findByUser_IdAndPiece_Id(userId, pieceId).isPresent()) {
       return pieceMapper.toPieceResponseWithLike(piece, true);
     } else {
       return pieceMapper.toPieceResponseWithLike(piece, false);
@@ -172,11 +197,17 @@ public class PieceServiceImpl implements PieceService {
 
   @Override
   @Transactional
-  public void deletePiece(CustomUserDetails userDetails, Long pieceId) {
+  public void deletePiece(Long pieceId) {
+    Long userId = userService.getCurrentUser().getId();
+
     Piece piece =
         pieceRepository
             .findById(pieceId)
             .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
+
+    if (!piece.getUser().getId().equals(userId)) {
+      throw new CustomException(PieceErrorCode.UNAUTHORIZED);
+    }
 
     if (piece.getImageUrl() != null) {
       s3Service.deleteFile(s3Service.extractKeyNameFromUrl(piece.getImageUrl()));
