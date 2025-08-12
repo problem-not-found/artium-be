@@ -1,28 +1,30 @@
 /* 
  * Copyright (c) LikeLion13th Problem not Found 
  */
-package com.likelion13.artium.domain.exhibition.dto.request;
+package com.likelion13.artium.domain.exhibition.dto.response;
 
 import java.time.LocalDate;
-import java.util.List;
 
 import com.likelion13.artium.domain.exhibition.entity.BankName;
+import com.likelion13.artium.domain.exhibition.entity.ExhibitionStatus;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@Schema(title = "ExhibitionRequest DTO", description = "전시 생성을 위한 데이터 전송")
-public class ExhibitionRequest {
+@Schema(title = "ExhibitionDetailResponse DTO", description = "전시 정보 응답 반환")
+public class ExhibitionDetailResponse {
 
-  @Schema(description = "전시에 포함될 작품 ID 리스트", example = "[1, 2, 3]")
-  private List<Long> pieceIdList;
+  @Schema(description = "전시 식별자", example = "1")
+  private Long exhibitionId;
+
+  @Schema(description = "썸네일 사진 URL", example = "")
+  private String thumbnailImageUrl;
+
+  @Schema(description = "전시 상태", example = "UPCOMING")
+  private ExhibitionStatus status;
 
   @Schema(description = "전시 제목", example = "성북구 신인 작가 합동 전시: 두 번째 여름")
   private String title;
@@ -47,4 +49,10 @@ public class ExhibitionRequest {
 
   @Schema(description = "거래 은행", example = "KOOKMIN")
   private BankName bankName;
+
+  @Schema(description = "전시 상태", example = "ONGOING")
+  private ExhibitionStatus exhibitionStatus;
+
+  @Schema(description = "등록 완료 여부", example = "true")
+  private Boolean fillAll;
 }
