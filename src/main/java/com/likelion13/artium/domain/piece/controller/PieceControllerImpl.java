@@ -42,17 +42,18 @@ public class PieceControllerImpl implements PieceController {
   }
 
   @Override
-  public ResponseEntity<BaseResponse<PieceResponse>> createPiece(
+  public ResponseEntity<BaseResponse<PieceSummaryResponse>> createPiece(
       @AuthenticationPrincipal CustomUserDetails userDetails,
       @RequestPart("data") @Valid CreatePieceRequest createPieceRequest,
       @RequestPart(value = "mainImage", required = false) MultipartFile mainImage,
       @RequestPart(value = "detailImages", required = false) List<MultipartFile> detailImages) {
+
     if (detailImages != null && detailImages.size() > 5)
       throw new CustomException(PieceErrorCode.TOO_MANY_DETAIL_IMAGES);
-    PieceResponse pieceResponse =
+    PieceSummaryResponse pieceSummaryResponse =
         pieceService.createPiece(userDetails, createPieceRequest, mainImage, detailImages);
 
-    return ResponseEntity.ok(BaseResponse.success("작품 등록에 성공했습니다.", pieceResponse));
+    return ResponseEntity.ok(BaseResponse.success("작품 등록에 성공했습니다.", pieceSummaryResponse));
   }
 
   @Override
@@ -72,12 +73,14 @@ public class PieceControllerImpl implements PieceController {
       @RequestPart("data") @Valid UpdatePieceRequest updatePieceRequest,
       @RequestPart(value = "mainImage", required = false) MultipartFile mainImage,
       @RequestPart(value = "detailImages", required = false) List<MultipartFile> detailImages) {
-    if (detailImages != null && detailImages.size() > 5)
+
+    if (detailImages != null
+        && updatePieceRequest.getRemainPieceDetailIds().size() + detailImages.size() > 5)
       throw new CustomException(PieceErrorCode.TOO_MANY_DETAIL_IMAGES);
     PieceResponse pieceResponse =
         pieceService.updatePiece(userDetails, pieceId, updatePieceRequest, mainImage, detailImages);
 
-    return ResponseEntity.ok(BaseResponse.success("작품 수정에 성공했습니다,", pieceResponse));
+    return ResponseEntity.ok(BaseResponse.success("작품 수정에 성공했습니다.", pieceResponse));
   }
 
   @Override

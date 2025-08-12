@@ -28,7 +28,7 @@ public interface PieceService {
    * @param detailImages 작품 디테일 컷들 (S3 업로드 로직, 없는 경우 처리 로직 포함)
    * @return 작품 정보 응답
    */
-  PieceResponse createPiece(
+  PieceSummaryResponse createPiece(
       CustomUserDetails userDetails,
       CreatePieceRequest createPieceRequest,
       MultipartFile mainImage,

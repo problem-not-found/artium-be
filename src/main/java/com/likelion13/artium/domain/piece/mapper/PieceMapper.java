@@ -33,8 +33,27 @@ public class PieceMapper {
             piece.getPieceDetails() == null
                 ? List.of()
                 : piece.getPieceDetails().stream()
-                    .map(pieceDetail -> pieceDetailMapper.toPieceDetailSummaryResponse(pieceDetail))
+                    .map(pieceDetailMapper::toPieceDetailSummaryResponse)
                     .toList())
+        .build();
+  }
+
+  public PieceResponse toPieceResponseWithLike(Piece piece, Boolean isLiked) {
+    return PieceResponse.builder()
+        .pieceId(piece.getId())
+        .title(piece.getTitle())
+        .description(piece.getDescription())
+        .imageUrl(piece.getImageUrl())
+        .isPurchasable(piece.getIsPurchasable())
+        .status(piece.getStatus())
+        .userId(piece.getUser().getId())
+        .pieceDetails(
+            piece.getPieceDetails() == null
+                ? List.of()
+                : piece.getPieceDetails().stream()
+                    .map(pieceDetailMapper::toPieceDetailSummaryResponse)
+                    .toList())
+        .isLike(isLiked)
         .build();
   }
 
