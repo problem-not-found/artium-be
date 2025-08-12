@@ -13,11 +13,11 @@ import com.likelion13.artium.global.exception.CustomException;
  * <p>사용자 인증과 관련된 주요 기능들을 제공합니다.
  *
  * <p>주요 기능:
+ *
  * <ul>
- *   <li>사용자 로그인</li>
- *   <li>사용자 로그아웃</li>
+ *   <li>사용자 로그인
+ *   <li>사용자 로그아웃
  * </ul>
- * </p>
  */
 public interface AuthService {
 

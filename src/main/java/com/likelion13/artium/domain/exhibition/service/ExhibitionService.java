@@ -16,16 +16,15 @@ import com.likelion13.artium.global.page.response.PageResponse;
  * ExhibitionService 인터페이스는 전시회(Exhibition) 관련 주요 기능들을 정의합니다.
  *
  * <p>주요 기능:
- * <ul>
- *   <li>전시회 생성</li>
- *   <li>전시회 상세 조회</li>
- *   <li>전시회 임시 저장 개수 조회</li>
- *   <li>전시회 목록 페이징 조회(정렬 기준에 따라)</li>
- *   <li>사용자별 전시회 목록 페이징 조회</li>
- *   <li>전시회 정보 수정</li>
- * </ul>
- * </p>
  *
+ * <ul>
+ *   <li>전시회 생성
+ *   <li>전시회 상세 조회
+ *   <li>전시회 임시 저장 개수 조회
+ *   <li>전시회 목록 페이징 조회(정렬 기준에 따라)
+ *   <li>사용자별 전시회 목록 페이징 조회
+ *   <li>전시회 정보 수정
+ * </ul>
  */
 public interface ExhibitionService {
 

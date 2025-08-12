@@ -14,11 +14,11 @@ import com.likelion13.artium.global.exception.CustomException;
  * 사용자 관련 주요 기능을 제공하는 서비스 인터페이스입니다.
  *
  * <p>주요 기능:
+ *
  * <ul>
- *   <li>회원가입 처리</li>
- *   <li>현재 인증된 사용자 조회</li>
+ *   <li>회원가입 처리
+ *   <li>현재 인증된 사용자 조회
  * </ul>
- * </p>
  */
 public interface UserService {
 
