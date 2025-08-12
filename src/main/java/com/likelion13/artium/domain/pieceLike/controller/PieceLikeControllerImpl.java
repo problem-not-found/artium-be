@@ -4,14 +4,12 @@
 package com.likelion13.artium.domain.pieceLike.controller;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.likelion13.artium.domain.pieceLike.dto.response.PieceLikeResponse;
 import com.likelion13.artium.domain.pieceLike.service.PieceLikeService;
 import com.likelion13.artium.global.response.BaseResponse;
-import com.likelion13.artium.global.security.CustomUserDetails;
 
 import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
@@ -24,20 +22,18 @@ public class PieceLikeControllerImpl implements PieceLikeController {
 
   @Override
   public ResponseEntity<BaseResponse<PieceLikeResponse>> likePiece(
-      @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId,
-      @AuthenticationPrincipal CustomUserDetails userDetails) {
+      @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId) {
 
-    PieceLikeResponse pieceLikeResponse = pieceLikeService.likePiece(userDetails, pieceId);
+    PieceLikeResponse pieceLikeResponse = pieceLikeService.likePiece(pieceId);
 
     return ResponseEntity.ok(BaseResponse.success("작품 좋아요 등록에 성공했습니다.", pieceLikeResponse));
   }
 
   @Override
   public ResponseEntity<BaseResponse<PieceLikeResponse>> unlikePiece(
-      @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId,
-      @AuthenticationPrincipal CustomUserDetails userDetails) {
+      @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId) {
 
-    PieceLikeResponse pieceLikeResponse = pieceLikeService.unlikePiece(userDetails, pieceId);
+    PieceLikeResponse pieceLikeResponse = pieceLikeService.unlikePiece(pieceId);
 
     return ResponseEntity.ok(BaseResponse.success("작품 좋아요 취소에 성공했습니다.", pieceLikeResponse));
   }

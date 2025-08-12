@@ -16,10 +16,9 @@ import com.likelion13.artium.domain.pieceLike.exception.PieceLikeErrorCode;
 import com.likelion13.artium.domain.pieceLike.mapper.PieceLikeMapper;
 import com.likelion13.artium.domain.pieceLike.repository.PieceLikeRepository;
 import com.likelion13.artium.domain.user.entity.User;
-import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.repository.UserRepository;
+import com.likelion13.artium.domain.user.service.UserService;
 import com.likelion13.artium.global.exception.CustomException;
-import com.likelion13.artium.global.security.CustomUserDetails;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,14 +32,13 @@ public class PieceLikeServiceImpl implements PieceLikeService {
   private final UserRepository userRepository;
   private final PieceLikeMapper pieceLikeMapper;
   private final PieceLikeRepository pieceLikeRepository;
+  private final UserService userService;
 
   @Override
   @Transactional
-  public PieceLikeResponse likePiece(CustomUserDetails userDetails, Long pieceId) {
-    User user =
-        userRepository
-            .findById(userDetails.getUser().getId())
-            .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+  public PieceLikeResponse likePiece(Long pieceId) {
+
+    User user = userService.getCurrentUser();
 
     Piece piece =
         pieceRepository
@@ -62,14 +60,17 @@ public class PieceLikeServiceImpl implements PieceLikeService {
 
   @Override
   @Transactional
-  public PieceLikeResponse unlikePiece(CustomUserDetails userDetails, Long pieceId) {
+  public PieceLikeResponse unlikePiece(Long pieceId) {
+
+    User user = userService.getCurrentUser();
+
     pieceRepository
         .findById(pieceId)
         .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
 
     PieceLike pieceLike =
         pieceLikeRepository
-            .findByUser_IdAndPiece_Id(userDetails.getUser().getId(), pieceId)
+            .findByUser_IdAndPiece_Id(user.getId(), pieceId)
             .orElseThrow(() -> new CustomException(PieceLikeErrorCode.NOT_LIKED));
     pieceLikeRepository.delete(pieceLike);
 
