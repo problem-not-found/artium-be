@@ -53,8 +53,8 @@ public class User extends BaseTimeEntity {
   @Column(name = "nickname", nullable = false, unique = true)
   private String nickname;
 
-  @Column(name = "provider", nullable = false)
-  private String provider;
+  @Column(name = "profile_image_url", nullable = false)
+  private String profileImageUrl;
 
   @Column(name = "role", nullable = false)
   @Enumerated(EnumType.STRING)
@@ -72,12 +72,12 @@ public class User extends BaseTimeEntity {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<ExhibitionUser> exhibitionUsers = new ArrayList<>();
 
-  public static User fromOAuth(String email, String provider, String nickname) {
+  public static User fromOAuth(String email, String nickname, String profileImageUrl) {
     return User.builder()
         .username(email)
         .password(UUID.randomUUID().toString())
         .nickname(nickname)
-        .provider(provider)
+        .profileImageUrl(profileImageUrl)
         .role(Role.USER)
         .build();
   }

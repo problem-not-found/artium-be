@@ -3,86 +3,39 @@
  */
 package com.likelion13.artium.domain.auth.service;
 
-import java.util.concurrent.TimeUnit;
-
-import jakarta.servlet.http.HttpServletResponse;
-
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.likelion13.artium.domain.auth.dto.request.LoginRequest;
 import com.likelion13.artium.domain.auth.dto.response.TokenResponse;
-import com.likelion13.artium.domain.auth.mapper.AuthMapper;
-import com.likelion13.artium.domain.user.entity.User;
-import com.likelion13.artium.domain.user.exception.UserErrorCode;
-import com.likelion13.artium.domain.user.repository.UserRepository;
 import com.likelion13.artium.global.exception.CustomException;
-import com.likelion13.artium.global.jwt.JwtProvider;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+/**
+ * 인증 서비스 인터페이스
+ *
+ * <p>사용자 인증과 관련된 기능을 정의합니다.
+ */
+public interface AuthService {
 
-@Service
-@Slf4j
-@RequiredArgsConstructor
-public class AuthService {
+  /**
+   * 로그인 메서드
+   *
+   * <p>사용자가 입력한 아이디와 비밀번호로 인증을 시도하고, 성공 시 JWT Access Token과 Refresh Token을 발급합니다. 발급된 토큰 정보는
+   * TokenResponse 객체로 반환됩니다.
+   *
+   * @param response HTTP 응답 객체. 필요 시 토큰을 헤더에 추가하는데 사용됩니다.
+   * @param loginRequest 로그인 요청 데이터로 사용자 이름과 비밀번호를 포함합니다.
+   * @return 로그인 성공 시 발급된 토큰 정보를 포함하는 TokenResponse 객체
+   * @throws CustomException 로그인 실패 또는 사용자 조회 실패 시 예외를 발생시킵니다.
+   */
+  TokenResponse login(LoginRequest loginRequest);
 
-  private final AuthenticationManager authenticationManager;
-  private final JwtProvider jwtProvider;
-  private final UserRepository userRepository;
-  private final AuthMapper authMapper;
-  private final RedisTemplate<String, String> redisTemplate;
-
-  @Transactional
-  public TokenResponse login(HttpServletResponse response, LoginRequest loginRequest) {
-    User user =
-        userRepository
-            .findByUsername(loginRequest.getUsername())
-            .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
-
-    UsernamePasswordAuthenticationToken authenticationToken =
-        new UsernamePasswordAuthenticationToken(
-            loginRequest.getUsername(), loginRequest.getPassword());
-
-    authenticationManager.authenticate(authenticationToken);
-
-    TokenResponse tokenResponse = jwtProvider.createTokens(authenticationToken);
-
-    log.info("로그인 성공: {}", user.getUsername());
-
-    return tokenResponse;
-  }
-
-  public String getRefreshTokenFromRedis(String key) {
-    return redisTemplate.opsForValue().get(key);
-  }
-
-  @Transactional
-  public void logout(String accessToken) {
-    try {
-      String username = jwtProvider.getUsernameFromToken(accessToken);
-      String redisKey = "RT:" + username;
-      Boolean result = redisTemplate.delete(redisKey);
-
-      if (result) {
-        log.info("Logout success: refresh token for '{}' deleted from Redis.", username);
-      } else {
-        log.warn("Logout attempted, but no refresh token found for '{}'.", username);
-      }
-
-      // 액세스 토큰 블랙리스트 처리
-      long expiration = jwtProvider.getExpirationTime(accessToken);
-      redisTemplate
-          .opsForValue()
-          .set("BL:" + accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
-
-      log.info("Access token for '{}' blacklisted until expiration.", username);
-    } catch (Exception e) {
-      log.error("Redis operation failed during logout for token: {}", accessToken, e);
-      throw new RuntimeException("로그아웃 처리 중 오류가 발생했습니다.", e);
-    }
-  }
+  /**
+   * 로그아웃 메서드
+   *
+   * <p>전달받은 Access Token을 기반으로 사용자를 식별하고, 해당 사용자의 Refresh Token을 Redis에서 삭제하며, Access Token을 블랙리스트에
+   * 등록하여 더 이상 사용할 수 없도록 만듭니다.
+   *
+   * @param accessToken 로그아웃 대상 사용자의 Access Token 문자열
+   * @return 로그아웃 성공 메시지 문자열
+   * @throws CustomException 로그아웃 처리 실패 시 예외를 발생시킵니다.
+   */
+  String logout(String accessToken);
 }

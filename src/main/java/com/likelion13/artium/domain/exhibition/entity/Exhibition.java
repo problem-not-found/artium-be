@@ -55,6 +55,9 @@ public class Exhibition {
   @Column(name = "address")
   private String address;
 
+  @Column(name = "offline_description")
+  private String offlineDescription;
+
   @Column(name = "account_number")
   private String accountNumber;
 

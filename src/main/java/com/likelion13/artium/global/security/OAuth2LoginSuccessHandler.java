@@ -10,7 +10,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -39,34 +38,15 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
   public void onAuthenticationSuccess(
       HttpServletRequest request, HttpServletResponse response, Authentication authentication)
       throws IOException {
+
     OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
-    String provider =
-        ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId();
-    String email = null;
+    Map<String, Object> kakaoAccount = oAuth2User.getAttribute("kakao_account");
 
-    switch (provider) {
-      case "kakao":
-        Map<String, Object> kakaoAccount = oAuth2User.getAttribute("kakao_account");
-        if (kakaoAccount != null) {
-          email = (String) kakaoAccount.get("email");
-        }
-        break;
-      case "naver":
-        Map<String, Object> naverResponse = oAuth2User.getAttribute("response");
-        if (naverResponse != null) {
-          email = (String) naverResponse.get("email");
-        }
-        break;
-      case "google":
-        email = oAuth2User.getAttribute("email");
-        break;
-      default:
-        throw new CustomException(UserErrorCode.USER_NOT_FOUND);
+    if (kakaoAccount == null || !kakaoAccount.containsKey("email")) {
+      throw new CustomException(UserErrorCode.UNAUTHORIZED);
     }
 
-    if (email == null) {
-      throw new CustomException(UserErrorCode.USER_NOT_FOUND);
-    }
+    String email = (String) kakaoAccount.get("email");
 
     User user =
         userRepository
@@ -74,7 +54,6 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
     TokenResponse tokenResponse = jwtProvider.createTokens(authentication);
-
     jwtProvider.addJwtToCookie(
         response,
         tokenResponse.getRefreshToken(),
