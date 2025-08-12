@@ -132,6 +132,7 @@ public class S3ServiceImpl implements S3Service {
       case PROFILE_IMAGE -> s3Config.getProfileImagePath();
       case PIECE -> s3Config.getPiecePath();
       case PIECE_DETAIL -> s3Config.getPieceDetailPath();
+      case EXHIBITION -> s3Config.getExhibitionPath();
     };
   }
 }
