@@ -3,7 +3,6 @@
  */
 package com.likelion13.artium.domain.pieceLike.entity;
 
-import com.likelion13.artium.global.common.BaseTimeEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -17,6 +16,7 @@ import jakarta.persistence.UniqueConstraint;
 
 import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.domain.user.entity.User;
+import com.likelion13.artium.global.common.BaseTimeEntity;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;

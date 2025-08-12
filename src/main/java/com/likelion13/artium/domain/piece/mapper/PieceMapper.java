@@ -25,9 +25,7 @@ public class PieceMapper {
   }
 
   public PieceResponse toPieceResponseWithLike(Piece piece, Boolean isLike) {
-    return buildBasePieceResponse(piece)
-        .isLike(isLike)
-        .build();
+    return buildBasePieceResponse(piece).isLike(isLike).build();
   }
 
   private PieceResponse.PieceResponseBuilder buildBasePieceResponse(Piece piece) {

@@ -3,9 +3,6 @@
  */
 package com.likelion13.artium.domain.pieceLike.service;
 
-import com.likelion13.artium.domain.user.exception.UserErrorCode;
-import java.util.Optional;
-
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +16,7 @@ import com.likelion13.artium.domain.pieceLike.exception.PieceLikeErrorCode;
 import com.likelion13.artium.domain.pieceLike.mapper.PieceLikeMapper;
 import com.likelion13.artium.domain.pieceLike.repository.PieceLikeRepository;
 import com.likelion13.artium.domain.user.entity.User;
+import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.repository.UserRepository;
 import com.likelion13.artium.global.exception.CustomException;
 import com.likelion13.artium.global.security.CustomUserDetails;
@@ -39,8 +37,10 @@ public class PieceLikeServiceImpl implements PieceLikeService {
   @Override
   @Transactional
   public PieceLikeResponse likePiece(CustomUserDetails userDetails, Long pieceId) {
-    User user = userRepository.findById(userDetails.getUser().getId()).orElseThrow(
-        () -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+    User user =
+        userRepository
+            .findById(userDetails.getUser().getId())
+            .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
     Piece piece =
         pieceRepository
@@ -51,7 +51,7 @@ public class PieceLikeServiceImpl implements PieceLikeService {
 
       pieceLikeRepository.save(pieceLike);
     } catch (DataIntegrityViolationException e) {
-      if(e.getMessage() != null && e.getMessage().contains("uq_piece_like_piece_user")) {
+      if (e.getMessage() != null && e.getMessage().contains("uq_piece_like_piece_user")) {
         throw new CustomException(PieceLikeErrorCode.ALREADY_LIKED);
       }
       throw e;
@@ -67,8 +67,10 @@ public class PieceLikeServiceImpl implements PieceLikeService {
         .findById(pieceId)
         .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
 
-    PieceLike pieceLike = pieceLikeRepository.findByUser_IdAndPiece_Id(userDetails.getUser().getId(), pieceId)
-        .orElseThrow(() -> new CustomException(PieceLikeErrorCode.NOT_LIKED));
+    PieceLike pieceLike =
+        pieceLikeRepository
+            .findByUser_IdAndPiece_Id(userDetails.getUser().getId(), pieceId)
+            .orElseThrow(() -> new CustomException(PieceLikeErrorCode.NOT_LIKED));
     pieceLikeRepository.delete(pieceLike);
 
     return pieceLikeMapper.toPieceLikeResponse(pieceId, false);
