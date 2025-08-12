@@ -45,6 +45,9 @@ public class S3Config {
   @Value("${cloud.aws.s3.path.piece-detail}")
   private String pieceDetailPath;
 
+  @Value("${cloud.aws.s3.path.exhibition}")
+  private String exhibitionPath;
+
   @PostConstruct
   public void init() {
     this.awsCredentials = new BasicAWSCredentials(accessKey, secretKey);

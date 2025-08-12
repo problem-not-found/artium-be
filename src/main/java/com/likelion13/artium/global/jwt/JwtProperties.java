@@ -12,9 +12,8 @@ import lombok.Setter;
 /**
  * JWT 관련 설정 속성
  *
- * <p>application.properties 또는 application.yml에서 jwt 접두사를 가진 속성들을 관리합니다.
+ * <p>application 또는 application.yml에서 jwt 접두사를 가진 속성들을 관리합니다.
  *
- * @author YFIVE
  * @since 1.0.0
  */
 @Component

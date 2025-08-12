@@ -14,11 +14,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.likelion13.artium.domain.auth.dto.request.LoginRequest;
-import com.likelion13.artium.domain.auth.dto.response.LoginResponse;
-import com.likelion13.artium.domain.auth.exception.AuthErrorCode;
+import com.likelion13.artium.domain.auth.dto.response.TokenResponse;
 import com.likelion13.artium.domain.auth.service.AuthService;
 import com.likelion13.artium.domain.user.repository.UserRepository;
-import com.likelion13.artium.global.exception.CustomException;
 import com.likelion13.artium.global.jwt.JwtProvider;
 import com.likelion13.artium.global.response.BaseResponse;
 
@@ -38,20 +36,23 @@ public class AuthController {
 
   @Operation(summary = "로그인", description = "사용자 로그인을 위한 API")
   @PostMapping("/login")
-  public ResponseEntity<BaseResponse<LoginResponse>> login(
-      @RequestBody @Valid LoginRequest loginRequest, HttpServletResponse response) {
-    LoginResponse loginResponse = authService.login(loginRequest);
+  public ResponseEntity<BaseResponse<String>> login(
+      HttpServletResponse response, @RequestBody @Valid LoginRequest loginRequest) {
 
-    String redisKey = "RT:" + loginRequest.getUsername();
-    String refreshToken = authService.getRefreshTokenFromRedis(redisKey);
+    TokenResponse tokenResponse = authService.login(response, loginRequest);
 
-    if (refreshToken == null) {
-      throw new CustomException(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND);
-    }
+    jwtProvider.addJwtToCookie(
+        response,
+        tokenResponse.getRefreshToken(),
+        "REFRESH_TOKEN",
+        jwtProvider.getExpirationTime(tokenResponse.getRefreshToken()));
+    jwtProvider.addJwtToCookie(
+        response,
+        tokenResponse.getAccessToken(),
+        "ACCESS_TOKEN",
+        jwtProvider.getExpirationTime(tokenResponse.getAccessToken()));
 
-    jwtProvider.addJwtToCookie(response, refreshToken, "refreshToken", 60 * 60 * 24 * 7);
-
-    return ResponseEntity.ok(BaseResponse.success("로그인에 성공했습니다.", loginResponse));
+    return ResponseEntity.ok(BaseResponse.success(tokenResponse.getUsername()));
   }
 
   @Operation(summary = "로그아웃", description = "사용자 로그아웃을 위한 API (Redis RT 삭제 + 액세스 토큰 블랙리스트 처리)")
