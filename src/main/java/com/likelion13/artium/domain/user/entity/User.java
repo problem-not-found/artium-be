@@ -19,7 +19,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.likelion13.artium.domain.exhibition.mapping.ExhibitionUser;
 import com.likelion13.artium.domain.piece.entity.Piece;
+import com.likelion13.artium.domain.pieceLike.entity.PieceLike;
 import com.likelion13.artium.global.common.BaseTimeEntity;
 
 import lombok.AccessLevel;
@@ -60,7 +62,15 @@ public class User extends BaseTimeEntity {
   private Role role = Role.USER;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  @Builder.Default
   private List<Piece> pieces = new ArrayList<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<PieceLike> pieceLikes = new ArrayList<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<ExhibitionUser> exhibitionUsers = new ArrayList<>();
 
   public static User fromOAuth(String email, String provider, String nickname) {
     return User.builder()

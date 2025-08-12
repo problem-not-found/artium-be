@@ -20,8 +20,7 @@ import com.likelion13.artium.domain.piece.mapper.PieceMapper;
 import com.likelion13.artium.domain.piece.repository.PieceRepository;
 import com.likelion13.artium.domain.pieceDetail.entity.PieceDetail;
 import com.likelion13.artium.domain.pieceDetail.service.PieceDetailService;
-import com.likelion13.artium.domain.user.entity.User;
-import com.likelion13.artium.domain.user.exception.UserErrorCode;
+import com.likelion13.artium.domain.pieceLike.repository.PieceLikeRepository;
 import com.likelion13.artium.domain.user.repository.UserRepository;
 import com.likelion13.artium.global.exception.CustomException;
 import com.likelion13.artium.global.s3.entity.PathName;
@@ -41,27 +40,23 @@ public class PieceServiceImpl implements PieceService {
   private final S3Service s3Service;
   private final PieceDetailService pieceDetailService;
   private final UserRepository userRepository;
+  private final PieceLikeRepository pieceLikeRepository;
 
   @Override
   public List<PieceSummaryResponse> getAllPieces(CustomUserDetails userDetails) {
-    Long userId = userDetails.getUser().getId();
-    List<Piece> pieceList = pieceRepository.findAllByUser_IdOrderByCreatedAtDesc(userId);
+    List<Piece> pieceList =
+        pieceRepository.findAllByUser_IdOrderByCreatedAtDesc(userDetails.getUser().getId());
     return pieceList.stream().map(pieceMapper::toPieceSummaryResponse).toList();
   }
 
   @Override
   @Transactional
-  public PieceResponse createPiece(
+  public PieceSummaryResponse createPiece(
       CustomUserDetails userDetails,
       CreatePieceRequest createPieceRequest,
       MultipartFile mainImage,
       List<MultipartFile> detailImages) {
 
-    Long userId = userDetails.getUser().getId();
-    User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
     String mainImageUrl =
         mainImage != null ? s3Service.uploadFile(PathName.PIECE, mainImage) : null;
     Piece piece =
@@ -71,9 +66,9 @@ public class PieceServiceImpl implements PieceService {
             .isPurchasable(createPieceRequest.getIsPurchasable())
             .status(createPieceRequest.getStatus())
             .imageUrl(mainImageUrl)
-            .user(user)
+            .user(userDetails.getUser())
             .build();
-    user.addPiece(piece);
+
     pieceRepository.save(piece);
 
     if (detailImages != null && !detailImages.isEmpty()) {
@@ -81,14 +76,11 @@ public class PieceServiceImpl implements PieceService {
           detailImages.stream()
               .map(detailImage -> s3Service.uploadFile(PathName.PIECE_DETAIL, detailImage))
               .toList();
-      List<PieceDetail> pieceDetails =
-          detailImageUrls.stream()
-              .map(detailImageUrl -> pieceDetailService.createPieceDetail(piece, detailImageUrl))
-              .toList();
-      piece.updatePieceDetails(pieceDetails);
+      detailImageUrls.forEach(
+          detailImageUrl -> pieceDetailService.createPieceDetail(piece, detailImageUrl));
     }
 
-    return pieceMapper.toPieceResponse(piece);
+    return pieceMapper.toPieceSummaryResponse(piece);
   }
 
   @Override
@@ -102,7 +94,13 @@ public class PieceServiceImpl implements PieceService {
         && (piece.getStatus() != Status.REGISTERED && piece.getStatus() != Status.ON_DISPLAY)) {
       throw new CustomException(PieceErrorCode.UNAUTHORIZED);
     }
-    return pieceMapper.toPieceResponse(piece);
+    if (pieceLikeRepository
+        .findByUser_IdAndPiece_Id(userDetails.getUser().getId(), pieceId)
+        .isPresent()) {
+      return pieceMapper.toPieceResponseWithLike(piece, true);
+    } else {
+      return pieceMapper.toPieceResponseWithLike(piece, false);
+    }
   }
 
   @Override
@@ -117,6 +115,16 @@ public class PieceServiceImpl implements PieceService {
         pieceRepository
             .findById(pieceId)
             .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
+
+    List<Long> pieceDetailIds = piece.getPieceDetails().stream().map(PieceDetail::getId).toList();
+    updatePieceRequest
+        .getRemainPieceDetailIds()
+        .forEach(
+            remainPieceDetailId -> {
+              if (!pieceDetailIds.contains(remainPieceDetailId)) {
+                throw new CustomException(PieceErrorCode.DETAIL_IMAGE_NOT_BELONG_TO_PIECE);
+              }
+            });
 
     if (mainImage != null && !mainImage.isEmpty()) {
       String mainImageUrl = s3Service.uploadFile(PathName.PIECE, mainImage);
@@ -144,6 +152,7 @@ public class PieceServiceImpl implements PieceService {
           detailImageUrls.stream()
               .map(detailImageUrl -> pieceDetailService.createPieceDetail(piece, detailImageUrl))
               .toList();
+
       pieceDetails.forEach(piece::addPieceDetail);
     }
 
@@ -152,7 +161,13 @@ public class PieceServiceImpl implements PieceService {
         updatePieceRequest.getDescription(),
         updatePieceRequest.getIsPurchasable(),
         updatePieceRequest.getStatus());
-    return pieceMapper.toPieceResponse(piece);
+    if (pieceLikeRepository
+        .findByUser_IdAndPiece_Id(userDetails.getUser().getId(), pieceId)
+        .isPresent()) {
+      return pieceMapper.toPieceResponseWithLike(piece, true);
+    } else {
+      return pieceMapper.toPieceResponseWithLike(piece, false);
+    }
   }
 
   @Override

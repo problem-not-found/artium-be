@@ -21,6 +21,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import com.likelion13.artium.domain.pieceDetail.entity.PieceDetail;
+import com.likelion13.artium.domain.pieceLike.entity.PieceLike;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.global.common.BaseTimeEntity;
 
@@ -57,14 +58,20 @@ public class Piece extends BaseTimeEntity {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "status", nullable = false)
+  @Builder.Default
   private Status status = Status.UNREGISTERED;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "user_id")
+  @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
   @OneToMany(mappedBy = "piece", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
   private List<PieceDetail> pieceDetails = new ArrayList<>();
+
+  @OneToMany(mappedBy = "piece", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<PieceLike> pieceLikes = new ArrayList<>();
 
   public void update(String title, String description, Boolean isPurchasable, Status status) {
     this.title = title;
@@ -79,14 +86,9 @@ public class Piece extends BaseTimeEntity {
     return oldImageUrl;
   }
 
-  public void updatePieceDetails(List<PieceDetail> pieceDetails) {
-    if (pieceDetails == null) return;
-    this.pieceDetails = pieceDetails;
-  }
-
   public void addPieceDetail(PieceDetail pieceDetail) {
     if (pieceDetail == null) return;
-    if (this.pieceDetails == null) this.pieceDetails = new ArrayList<>();
-    this.pieceDetails.add(pieceDetail);
+    if (this.pieceDetails == null) pieceDetails = new ArrayList<>();
+    pieceDetails.add(pieceDetail);
   }
 }

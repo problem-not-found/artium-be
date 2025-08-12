@@ -17,7 +17,7 @@ import lombok.Getter;
 @Schema(title = "PieceResponse DTO", description = "작품에 대한 응답 반환(디테일 컷 리스트 포함)")
 public class PieceResponse {
 
-  @Schema(description = "작품 아이디", example = "1")
+  @Schema(description = "작품 식별자", example = "1")
   private Long pieceId;
 
   @Schema(description = "작품 제목", example = "제주도의 집")
@@ -40,4 +40,8 @@ public class PieceResponse {
 
   @Schema(description = "디테일 컷 리스트")
   private List<PieceDetailSummaryResponse> pieceDetails;
+
+  @Schema(description = "요청 사용자의 좋아요 여부", example = "false")
+  @Builder.Default
+  private Boolean isLike = false;
 }

@@ -3,8 +3,6 @@
  */
 package com.likelion13.artium.global.config;
 
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -41,12 +39,6 @@ public class SecurityConfig {
         .csrf(AbstractHttpConfigurer::disable)
         // CORS 설정 활성화
         .cors(cors -> cors.configurationSource(corsConfig.corsConfigurationSource()))
-        .exceptionHandling(
-            exception ->
-                exception.authenticationEntryPoint(
-                    (request, response, authException) -> {
-                      response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
-                    }))
         // 세션을 생성하지 않음 (JWT 사용으로 인한 Stateless 설정
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

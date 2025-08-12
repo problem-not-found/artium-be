@@ -17,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>Redis를 사용하여 Refresh Token 및 블랙리스트 토큰을 관리합니다. Refresh Token은 사용자별로 저장되며, 블랙리스트는 로그아웃된 토큰을
  * 관리합니다.
  *
- * @author YFIVE
  * @since 1.0.0
  */
 @Slf4j

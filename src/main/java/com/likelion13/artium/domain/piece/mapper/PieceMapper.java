@@ -21,6 +21,14 @@ public class PieceMapper {
   private final PieceDetailMapper pieceDetailMapper;
 
   public PieceResponse toPieceResponse(Piece piece) {
+    return toPieceResponseWithLike(piece, null);
+  }
+
+  public PieceResponse toPieceResponseWithLike(Piece piece, Boolean isLike) {
+    return buildBasePieceResponse(piece).isLike(isLike).build();
+  }
+
+  private PieceResponse.PieceResponseBuilder buildBasePieceResponse(Piece piece) {
     return PieceResponse.builder()
         .pieceId(piece.getId())
         .title(piece.getTitle())
@@ -33,9 +41,8 @@ public class PieceMapper {
             piece.getPieceDetails() == null
                 ? List.of()
                 : piece.getPieceDetails().stream()
-                    .map(pieceDetail -> pieceDetailMapper.toPieceDetailSummaryResponse(pieceDetail))
-                    .toList())
-        .build();
+                    .map(pieceDetailMapper::toPieceDetailSummaryResponse)
+                    .toList());
   }
 
   public PieceSummaryResponse toPieceSummaryResponse(Piece piece) {

@@ -14,7 +14,7 @@ import lombok.Getter;
 @Schema(title = "PieceSummaryResponse DTO", description = "작품에 대한 응답 반환(디테일 컷 리스트 미포함)")
 public class PieceSummaryResponse {
 
-  @Schema(description = "작품 아이디", example = "1")
+  @Schema(description = "작품 식별자", example = "1")
   private Long pieceId;
 
   @Schema(description = "작품 제목", example = "제주도의 집")

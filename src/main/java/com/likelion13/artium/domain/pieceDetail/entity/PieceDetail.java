@@ -39,6 +39,6 @@ public class PieceDetail extends BaseTimeEntity {
   private String imageUrl;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "piece_id")
+  @JoinColumn(name = "piece_id", nullable = false)
   private Piece piece;
 }
