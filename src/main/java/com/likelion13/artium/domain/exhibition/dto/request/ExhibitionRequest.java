@@ -27,7 +27,7 @@ public class ExhibitionRequest {
   @Schema(description = "전시 제목", example = "성북구 신인 작가 합동 전시: 두 번째 여름")
   private String title;
 
-  @Schema(description = "전시 설명", example = "이번 전시는 성북구의 신인 작가들이 모여서 개최한 전시이다.")
+  @Schema(description = "전시 설명", example = "이번 전시는 성북구의 신인 작가들이 모여서 개최한 전시입니다.")
   private String description;
 
   @Schema(description = "시작일", example = "2025-01-01")
@@ -38,6 +38,9 @@ public class ExhibitionRequest {
 
   @Schema(description = "오프라인 전시 주소", example = "남대문로 9길 40")
   private String address;
+
+  @Schema(description = "오프라인 전시 설명", example = "이 전시는 남대문로에서 진행됩니다.")
+  private String offlineDescription;
 
   @Schema(description = "거래 계좌번호", example = "93800200854555")
   private String accountNumber;
