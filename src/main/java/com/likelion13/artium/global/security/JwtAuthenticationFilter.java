@@ -43,14 +43,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
       if (token != null && jwtProvider.validateToken(token)) {
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
-                    String username = jwtProvider.getUsernameFromToken(token);
-                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+          String username = jwtProvider.getUsernameFromToken(token);
+          UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                        UsernamePasswordAuthenticationToken authentication =
-                            new UsernamePasswordAuthenticationToken(
-                                    userDetails, null, userDetails.getAuthorities());
-                    SecurityContextHolder.getContext().setAuthentication(authentication);
-                  }
+          UsernamePasswordAuthenticationToken authentication =
+              new UsernamePasswordAuthenticationToken(
+                  userDetails, null, userDetails.getAuthorities());
+          SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
       }
     } catch (JwtException | IllegalArgumentException e) {
       log.error("JWT 검증 실패 : {}", e.getMessage());

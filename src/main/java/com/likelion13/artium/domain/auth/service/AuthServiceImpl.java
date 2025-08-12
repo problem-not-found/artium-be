@@ -5,8 +5,6 @@ package com.likelion13.artium.domain.auth.service;
 
 import java.util.concurrent.TimeUnit;
 
-import jakarta.servlet.http.HttpServletResponse;
-
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -77,9 +75,7 @@ public class AuthServiceImpl implements AuthService {
 
       // 액세스 토큰 블랙리스트 처리
       long expiration = jwtProvider.getExpirationTime(accessToken);
-      redisTemplate
-          .opsForValue()
-          .set("BL:" + accessToken, "logout", expiration, TimeUnit.SECONDS);
+      redisTemplate.opsForValue().set("BL:" + accessToken, "logout", expiration, TimeUnit.SECONDS);
 
       log.info("사용자 '{}'의 액세스 토큰이 만료까지 블랙리스트 처리되었습니다.", username);
 

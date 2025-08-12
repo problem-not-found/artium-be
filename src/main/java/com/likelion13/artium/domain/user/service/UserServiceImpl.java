@@ -1,4 +1,18 @@
+/* 
+ * Copyright (c) LikeLion13th Problem not Found 
+ */
 package com.likelion13.artium.domain.user.service;
+
+import java.util.Map;
+
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
@@ -8,16 +22,12 @@ import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.mapper.UserMapper;
 import com.likelion13.artium.domain.user.repository.UserRepository;
 import com.likelion13.artium.global.exception.CustomException;
-import java.util.Map;
+import com.likelion13.artium.global.s3.entity.PathName;
+import com.likelion13.artium.global.s3.exception.S3ErrorCode;
+import com.likelion13.artium.global.s3.service.S3Service;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -27,16 +37,24 @@ public class UserServiceImpl implements UserService {
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
   private final UserMapper userMapper;
+  private final S3Service s3Service;
 
   @Override
   @Transactional
-  public SignUpResponse signUp(SignUpRequest request) {
+  public SignUpResponse signUp(SignUpRequest request, MultipartFile image) {
     if (userRepository.existsByUsername(request.getUsername())) {
       throw new CustomException(UserErrorCode.USERNAME_ALREADY_EXISTS);
     }
 
     // 비밀번호 인코딩
     String encodedPassword = passwordEncoder.encode(request.getPassword());
+    String imageUrl;
+
+    try {
+      imageUrl = s3Service.uploadFile(PathName.PROFILE_IMAGE, image);
+    } catch (Exception e) {
+      throw new CustomException(S3ErrorCode.FILE_SERVER_ERROR);
+    }
 
     // 유저 엔티티 생성
     User user =
@@ -44,7 +62,7 @@ public class UserServiceImpl implements UserService {
             .username(request.getUsername())
             .password(encodedPassword)
             .nickname(request.getNickname())
-            .provider("custom")
+            .profileImageUrl(imageUrl)
             .role(Role.USER)
             .build();
 
