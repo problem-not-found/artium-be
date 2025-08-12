@@ -20,6 +20,7 @@ import jakarta.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.likelion13.artium.domain.piece.entity.Piece;
+import com.likelion13.artium.domain.pieceLike.entity.PieceLike;
 import com.likelion13.artium.global.common.BaseTimeEntity;
 
 import lombok.AccessLevel;
@@ -60,7 +61,12 @@ public class User extends BaseTimeEntity {
   private Role role = Role.USER;
 
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
+  @Builder.Default
   private List<Piece> pieces = new ArrayList<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<PieceLike> pieceLikes = new ArrayList<>();
 
   public static User fromOAuth(String email, String provider, String nickname) {
     return User.builder()
@@ -70,11 +76,5 @@ public class User extends BaseTimeEntity {
         .provider(provider)
         .role(Role.USER)
         .build();
-  }
-
-  public void addPiece(Piece piece) {
-    if (piece == null) return;
-    if (this.pieces == null) this.pieces = new ArrayList<>();
-    this.pieces.add(piece);
   }
 }
