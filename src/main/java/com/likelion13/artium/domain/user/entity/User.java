@@ -3,8 +3,6 @@
  */
 package com.likelion13.artium.domain.user.entity;
 
-import com.likelion13.artium.domain.exhibition.mapping.ExhibitionUser;
-import com.likelion13.artium.domain.pieceLike.entity.PieceLike;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -21,7 +19,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.likelion13.artium.domain.exhibition.mapping.ExhibitionUser;
 import com.likelion13.artium.domain.piece.entity.Piece;
+import com.likelion13.artium.domain.pieceLike.entity.PieceLike;
 import com.likelion13.artium.global.common.BaseTimeEntity;
 
 import lombok.AccessLevel;
