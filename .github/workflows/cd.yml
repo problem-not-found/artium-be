@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+      - develop
 
 jobs:
   build:
@@ -26,9 +27,16 @@ jobs:
       - name: Grant execute permission for Gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
+      - name: Set Spring profile by branch
         run: |
-          ./gradlew clean bootjar -Pprofile=dev
+          if [ "${GITHUB_REF##*/}" = "develop" ]; then
+            echo "PROFILE=dev" >> $GITHUB_ENV
+          elif [ "${GITHUB_REF##*/}" = "main" ]; then
+            echo "PROFILE=prod" >> $GITHUB_ENV
+          fi
+
+      - name: Build with Gradle
+        run: ./gradlew clean bootjar -Pprofile=${PROFILE}
 
       - name: Docker build & push
         run: |
@@ -50,7 +58,12 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "${{ secrets.ENV_FILE }}" > /home/ubuntu/actions-runner/_work/artium-be/artium-be/.env
+            if [ "${PROFILE}" = "dev" ]; then
+              echo "${{ secrets.ENV_DEV }}" > /home/ubuntu/actions-runner/_work/artium-be/artium-be/.env
+            elif [ "${PROFILE}" = "prod" ]; then
+              echo "${{ secrets.ENV_PROD }}" > /home/ubuntu/actions-runner/_work/artium-be/artium-be/.env
+            fi
+            
             cd /home/ubuntu/actions-runner/_work/artium-be/artium-be
             docker compose down
             docker compose pull
