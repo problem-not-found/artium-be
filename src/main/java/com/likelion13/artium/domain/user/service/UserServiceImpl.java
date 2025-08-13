@@ -6,6 +6,7 @@ package com.likelion13.artium.domain.user.service;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -85,20 +86,16 @@ public class UserServiceImpl implements UserService {
       throw new CustomException(UserErrorCode.CANNOT_LIKE_SELF);
     }
 
-    boolean alreadyLiked =
-        currentUser.getLikedUsers().stream()
-            .anyMatch(userLike -> userLike.getLiked().getId().equals(targetUser.getId()));
+    try {
+      UserLike userLike = UserLike.builder().liker(currentUser).liked(targetUser).build();
 
-    if (alreadyLiked) {
+      currentUser.getLikedUsers().add(userLike);
+      targetUser.getLikedByUsers().add(userLike);
+
+      return userMapper.toLikeResponse(currentUser.getNickname(), targetUser.getNickname());
+    } catch (DataIntegrityViolationException e) {
       throw new CustomException(UserErrorCode.ALREADY_LIKED);
     }
-
-    UserLike userLike = UserLike.builder().liker(targetUser).liked(currentUser).build();
-
-    currentUser.getLikedUsers().add(userLike);
-    targetUser.getLikedByUsers().add(userLike);
-
-    return userMapper.toLikeResponse(currentUser.getNickname(), targetUser.getNickname());
   }
 
   @Override
@@ -160,7 +157,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public Boolean checkNicknameAvailability(String nickname) {
+  public Boolean checkNicknameDuplicated(String nickname) {
 
     boolean exists = userRepository.existsByNickname(nickname);
 
@@ -195,10 +192,15 @@ public class UserServiceImpl implements UserService {
       return user.getProfileImageUrl();
     }
 
-    String newImageUrl = user.getProfileImageUrl();
+    String oldImageUrl = user.getProfileImageUrl();
+    String newImageUrl;
 
     try {
       newImageUrl = s3Service.uploadFile(PathName.PROFILE_IMAGE, profileImage);
+
+      if (oldImageUrl != null && !oldImageUrl.isEmpty()) {
+        s3Service.deleteFile(oldImageUrl);
+      }
     } catch (Exception e) {
       log.error("S3 파일 업로드 실패(교체) - userId: {}", user.getId(), e);
       throw new CustomException(S3ErrorCode.FILE_SERVER_ERROR);

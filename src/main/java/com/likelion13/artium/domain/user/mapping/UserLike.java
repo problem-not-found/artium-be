@@ -8,9 +8,11 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.global.common.BaseTimeEntity;
@@ -26,7 +28,17 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
-@Table(name = "user_like")
+@Table(
+    name = "user_like",
+    uniqueConstraints = {
+      @UniqueConstraint(
+          name = "uq_user_like_liked_liker",
+          columnNames = {"liked_id", "liker_id"})
+    },
+    indexes = {
+      @Index(name = "idx_user_like_liked_id", columnList = "liked_id"),
+      @Index(name = "idx_user_like_liker_id", columnList = "liker_id")
+    })
 public class UserLike extends BaseTimeEntity {
 
   @Id

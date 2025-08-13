@@ -54,7 +54,7 @@ public class UserControllerImpl implements UserController {
   @Override
   public ResponseEntity<BaseResponse<Boolean>> checkNicknameDuplicated(
       @RequestParam String nickname) {
-    return ResponseEntity.ok(BaseResponse.success(userService.checkNicknameAvailability(nickname)));
+    return ResponseEntity.ok(BaseResponse.success(userService.checkNicknameDuplicated(nickname)));
   }
 
   @Override

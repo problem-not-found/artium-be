@@ -52,12 +52,12 @@ public class UserMapper {
                 .map(ExhibitionParticipant::getId)
                 .collect(Collectors.toList()))
         .likedUsersIds(
-            user.getLikedByUsers().stream()
-                .map(userLike -> userLike.getLiker().getId())
-                .collect(Collectors.toList()))
-        .likedByUsersIds(
             user.getLikedUsers().stream()
                 .map(userLike -> userLike.getLiked().getId())
+                .collect(Collectors.toList()))
+        .likedByUsersIds(
+            user.getLikedByUsers().stream()
+                .map(userLike -> userLike.getLiker().getId())
                 .collect(Collectors.toList()))
         .exhibitionLikeIds(
             user.getExhibitionLikes().stream()

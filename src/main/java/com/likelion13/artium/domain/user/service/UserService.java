@@ -69,7 +69,7 @@ public interface UserService {
    * @param nickname 확인할 닉네임 문자열
    * @return true이면 사용 가능, false면 중복
    */
-  Boolean checkNicknameAvailability(String nickname);
+  Boolean checkNicknameDuplicated(String nickname);
 
   /**
    * 사용자의 닉네임을 변경합니다.
