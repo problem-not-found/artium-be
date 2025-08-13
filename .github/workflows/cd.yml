@@ -3,10 +3,13 @@ on:
   push:
     branches:
       - main
+      - develop
 
 jobs:
   build:
     runs-on: self-hosted
+    outputs:
+      profile: ${{ steps.set-profile.outputs.profile }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,9 +29,23 @@ jobs:
       - name: Grant execute permission for Gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
+      - name: Set Spring profile by branch
+        id: set-profile
         run: |
-          ./gradlew clean bootjar -Pprofile=dev
+            if [ "${GITHUB_REF##*/}" = "develop" ]; then
+              echo "PROFILE=dev" >> $GITHUB_ENV
+              echo "profile=dev" >> $GITHUB_OUTPUT
+            elif [ "${GITHUB_REF##*/}" = "main" ]; then
+              echo "PROFILE=prod" >> $GITHUB_ENV
+              echo "profile=prod" >> $GITHUB_OUTPUT
+            else
+              # 안전한 기본값
+              echo "PROFILE=dev" >> $GITHUB_ENV
+              echo "profile=dev" >> $GITHUB_OUTPUT
+            fi
+
+      - name: Build with Gradle
+        run: ./gradlew clean bootjar -Pprofile=${PROFILE}
 
       - name: Docker build & push
         run: |
@@ -44,13 +61,22 @@ jobs:
 
       - name: Deploy on server
         uses: appleboy/ssh-action@master
+        env:
+          PROFILE: ${{ needs.build.outputs.profile }}
         with:
+          envs: PROFILE
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "${{ secrets.ENV_FILE }}" > /home/ubuntu/actions-runner/_work/artium-be/artium-be/.env
+            if [ "${PROFILE}" = "dev" ]; then
+              printf '%s\n' "${{ secrets.ENV_DEV }}" > /home/ubuntu/actions-runner/_work/artium-be/artium-be/.env
+            elif [ "${PROFILE}" = "prod" ]; then
+              printf '%s\n' "${{ secrets.ENV_PROD }}" > /home/ubuntu/actions-runner/_work/artium-be/artium-be/.env
+            fi
+            echo "PROFILE=${PROFILE}" >> /home/ubuntu/actions-runner/_work/artium-be/artium-be/.env
+            
             cd /home/ubuntu/actions-runner/_work/artium-be/artium-be
             docker compose down
             docker compose pull

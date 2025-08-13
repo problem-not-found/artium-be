@@ -3,8 +3,10 @@
  */
 package com.likelion13.artium.domain.user.service;
 
+import java.util.List;
 import java.util.Map;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,11 +17,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
+import com.likelion13.artium.domain.user.dto.response.LikeResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
-import com.likelion13.artium.domain.user.entity.Role;
+import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.mapper.UserMapper;
+import com.likelion13.artium.domain.user.mapping.UserLike;
 import com.likelion13.artium.domain.user.repository.UserRepository;
 import com.likelion13.artium.global.exception.CustomException;
 import com.likelion13.artium.global.s3.entity.PathName;
@@ -46,6 +50,10 @@ public class UserServiceImpl implements UserService {
       throw new CustomException(UserErrorCode.USERNAME_ALREADY_EXISTS);
     }
 
+    if (userRepository.existsByNickname(request.getNickname())) {
+      throw new CustomException(UserErrorCode.NICKNAME_ALREADY_EXISTS);
+    }
+
     // 비밀번호 인코딩
     String encodedPassword = passwordEncoder.encode(request.getPassword());
     String imageUrl;
@@ -56,23 +64,42 @@ public class UserServiceImpl implements UserService {
       throw new CustomException(S3ErrorCode.FILE_SERVER_ERROR);
     }
 
-    // 유저 엔티티 생성
-    User user =
-        User.builder()
-            .username(request.getUsername())
-            .password(encodedPassword)
-            .nickname(request.getNickname())
-            .profileImageUrl(imageUrl)
-            .role(Role.USER)
-            .build();
-
+    User user = userMapper.toUser(request, encodedPassword, imageUrl);
     User savedUser = userRepository.save(user);
-    log.info("새로운 사용자 생성: {}", savedUser.getUsername());
 
+    log.info("새로운 사용자 생성: {}", savedUser.getUsername());
     return userMapper.toSignUpResponse(savedUser);
   }
 
   @Override
+  @Transactional
+  public LikeResponse createUserLike(Long userId) {
+
+    User currentUser = getCurrentUser();
+
+    User targetUser =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+
+    if (currentUser.getId().equals(targetUser.getId())) {
+      throw new CustomException(UserErrorCode.CANNOT_LIKE_SELF);
+    }
+
+    try {
+      UserLike userLike = UserLike.builder().liker(currentUser).liked(targetUser).build();
+
+      currentUser.getLikedUsers().add(userLike);
+      targetUser.getLikedByUsers().add(userLike);
+
+      return userMapper.toLikeResponse(currentUser.getNickname(), targetUser.getNickname());
+    } catch (DataIntegrityViolationException e) {
+      throw new CustomException(UserErrorCode.ALREADY_LIKED);
+    }
+  }
+
+  @Override
+  @Transactional(readOnly = true)
   public User getCurrentUser() {
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -118,5 +145,117 @@ public class UserServiceImpl implements UserService {
     return userRepository
         .findByUsername(username)
         .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public UserDetailResponse getUserDetail() {
+
+    User currentUser = getCurrentUser();
+
+    return userMapper.toUserDetailResponse(currentUser);
+  }
+
+  @Override
+  public Boolean checkNicknameDuplicated(String nickname) {
+
+    boolean exists = userRepository.existsByNickname(nickname);
+
+    log.info("닉네임 중복 체크 - nickname: {}, exists: {}", nickname, exists);
+    return exists;
+  }
+
+  @Override
+  @Transactional
+  public String updateNickname(String newNickname) {
+    User user = getCurrentUser();
+
+    if (userRepository.existsByNickname(newNickname)) {
+      log.error("닉네임 중복 시도 - userId: {}, nickname: {}", user.getId(), newNickname);
+      throw new CustomException(UserErrorCode.NICKNAME_ALREADY_EXISTS);
+    }
+
+    user.updateNickname(newNickname);
+    log.info("사용자 닉네임 변경 - userId: {}, newNickname: {}", user.getId(), newNickname);
+
+    return newNickname;
+  }
+
+  @Override
+  @Transactional
+  public String updateProfileImage(MultipartFile profileImage) {
+
+    User user = getCurrentUser();
+
+    if (profileImage == null || profileImage.isEmpty()) {
+      log.warn("프로필 이미지 변경 요청이 비어있음 - userId: {}", user.getId());
+      return user.getProfileImageUrl();
+    }
+
+    String oldImageUrl = user.getProfileImageUrl();
+    String newImageUrl;
+
+    try {
+      newImageUrl = s3Service.uploadFile(PathName.PROFILE_IMAGE, profileImage);
+
+      if (oldImageUrl != null && !oldImageUrl.isEmpty()) {
+        s3Service.deleteFile(oldImageUrl);
+      }
+    } catch (Exception e) {
+      log.error("S3 파일 업로드 실패(교체) - userId: {}", user.getId(), e);
+      throw new CustomException(S3ErrorCode.FILE_SERVER_ERROR);
+    }
+
+    user.updateProfileImageUrl(newImageUrl);
+    log.info("사용자 프로필 이미지 변경 - userId: {}, newImageUrl: {}", user.getId(), newImageUrl);
+
+    return newImageUrl;
+  }
+
+  @Override
+  @Transactional
+  public String deleteUser() {
+
+    User user = getCurrentUser();
+    user.softDelete();
+
+    log.info("사용자 소프트 삭제 - userId: {}", user.getId());
+    return "사용자 계정이 성공적으로 삭제(soft delete)되었습니다.";
+  }
+
+  @Override
+  @Transactional
+  public LikeResponse deleteUserLike(Long userId) {
+
+    User user = getCurrentUser();
+
+    User targetUser =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+
+    if (user.getId().equals(targetUser.getId())) {
+      throw new CustomException(UserErrorCode.CANNOT_LIKE_SELF);
+    }
+
+    UserLike userLike =
+        user.getLikedUsers().stream()
+            .filter(ul -> ul.getLiked().getId().equals(targetUser.getId()))
+            .findFirst()
+            .orElseThrow(() -> new CustomException(UserErrorCode.LIKE_NOT_FOUND));
+
+    user.getLikedUsers().remove(userLike);
+    targetUser.getLikedByUsers().remove(userLike);
+
+    return userMapper.toLikeResponse(user.getNickname(), targetUser.getNickname());
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<UserDetailResponse> getAllUsers() {
+
+    List<User> users = userRepository.findAll();
+
+    return users.stream().map(userMapper::toUserDetailResponse).toList();
   }
 }
