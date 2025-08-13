@@ -33,6 +33,8 @@ public class CorsConfig {
     configuration.setExposedHeaders(List.of("Authorization"));
     // 쿠키나 인증 정보를 포함하는 요청 허용
     configuration.setAllowCredentials(true);
+    // 쿠키의 만료 시간을 3600초로 설정
+    configuration.setMaxAge(3600L);
     // 모든 경로에 대해 위의 CORS 설정을 적용
     UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
     source.registerCorsConfiguration("/**", configuration);
