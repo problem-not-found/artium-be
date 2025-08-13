@@ -3,15 +3,66 @@
  */
 package com.likelion13.artium.domain.user.mapper;
 
+import java.util.stream.Collectors;
+
 import org.springframework.stereotype.Component;
 
+import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
+import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
+import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
+import com.likelion13.artium.domain.user.dto.response.LikeResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
+import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
+import com.likelion13.artium.domain.user.entity.Role;
 import com.likelion13.artium.domain.user.entity.User;
 
 @Component
 public class UserMapper {
 
+  public User toUser(SignUpRequest request, String encodedPassword, String imageUrl) {
+    return User.builder()
+        .username(request.getUsername())
+        .password(encodedPassword)
+        .nickname(request.getNickname())
+        .profileImageUrl(imageUrl)
+        .role(Role.USER)
+        .isDeleted(false)
+        .build();
+  }
+
   public SignUpResponse toSignUpResponse(User user) {
     return SignUpResponse.builder().userId(user.getId()).username(user.getUsername()).build();
+  }
+
+  public LikeResponse toLikeResponse(String currentUser, String targetUser) {
+    return LikeResponse.builder()
+        .currentUserNickname(currentUser)
+        .targetUserNickname(targetUser)
+        .build();
+  }
+
+  public UserDetailResponse toUserDetailResponse(User user) {
+    return UserDetailResponse.builder()
+        .userId(user.getId())
+        .username(user.getUsername())
+        .nickname(user.getNickname())
+        .profileImageUrl(user.getProfileImageUrl())
+        .exhibitionParticipantIds(
+            user.getExhibitionParticipants().stream()
+                .map(ExhibitionParticipant::getId)
+                .collect(Collectors.toList()))
+        .likedUsersIds(
+            user.getLikedByUsers().stream()
+                .map(userLike -> userLike.getLiker().getId())
+                .collect(Collectors.toList()))
+        .likedByUsersIds(
+            user.getLikedUsers().stream()
+                .map(userLike -> userLike.getLiked().getId())
+                .collect(Collectors.toList()))
+        .exhibitionLikeIds(
+            user.getExhibitionLikes().stream()
+                .map(ExhibitionLike::getId)
+                .collect(Collectors.toList()))
+        .build();
   }
 }

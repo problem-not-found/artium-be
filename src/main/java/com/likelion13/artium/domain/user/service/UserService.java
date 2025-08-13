@@ -3,10 +3,14 @@
  */
 package com.likelion13.artium.domain.user.service;
 
+import java.util.List;
+
 import org.springframework.web.multipart.MultipartFile;
 
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
+import com.likelion13.artium.domain.user.dto.response.LikeResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
+import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.global.exception.CustomException;
 
@@ -35,6 +39,14 @@ public interface UserService {
   SignUpResponse signUp(SignUpRequest request, MultipartFile image);
 
   /**
+   * 사용자 좋아요(Like)를 생성합니다.
+   *
+   * @param userId 좋아요를 생성할 대상 사용자 ID
+   * @return 생성된 좋아요 정보를 담은 {@link LikeResponse}
+   */
+  LikeResponse createUserLike(Long userId);
+
+  /**
    * 현재 인증된 사용자의 정보를 조회합니다.
    *
    * <p>인증 정보가 없거나 유효하지 않으면 예외를 던지며, OAuth2 로그인과 자체 로그인 모두 지원합니다.
@@ -43,4 +55,59 @@ public interface UserService {
    * @throws CustomException 인증 실패, 사용자 미존재 시 발생
    */
   User getCurrentUser();
+
+  /**
+   * 현재 인증된 사용자의 상세 정보를 조회합니다.
+   *
+   * @return {@link UserDetailResponse} 현재 인증된 사용자의 상세 정보
+   */
+  UserDetailResponse getUserDetail();
+
+  /**
+   * 닉네임 사용 가능 여부를 확인합니다.
+   *
+   * @param nickname 확인할 닉네임 문자열
+   * @return true이면 사용 가능, false면 중복
+   */
+  Boolean checkNicknameAvailability(String nickname);
+
+  /**
+   * 사용자의 닉네임을 변경합니다.
+   *
+   * @param newNickname 변경할 새로운 닉네임
+   * @return 변경 완료 메시지 문자열
+   * @throws CustomException 닉네임 중복 등 변경 불가 시 발생
+   */
+  String updateNickname(String newNickname);
+
+  /**
+   * 사용자의 프로필 이미지를 변경합니다.
+   *
+   * @param profileImage 변경할 프로필 이미지 파일
+   * @return 변경 완료 메시지 문자열
+   */
+  String updateProfileImage(MultipartFile profileImage);
+
+  /**
+   * 사용자를 탈퇴 처리합니다.
+   *
+   * @return 탈퇴 완료 메시지 문자열
+   * @throws CustomException 탈퇴 불가 시 발생
+   */
+  String deleteUser();
+
+  /**
+   * 사용자 좋아요(Like)를 삭제합니다.
+   *
+   * @param userId 좋아요를 삭제할 대상 사용자 ID
+   * @return 삭제된 좋아요 정보를 담은 {@link LikeResponse}
+   */
+  LikeResponse deleteUserLike(Long userId);
+
+  /**
+   * 모든 사용자의 상세 정보를 조회합니다.
+   *
+   * @return 모든 사용자의 {@link UserDetailResponse} 목록
+   */
+  List<UserDetailResponse> getAllUsers();
 }
