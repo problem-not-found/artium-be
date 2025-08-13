@@ -3,6 +3,7 @@
  */
 package com.likelion13.artium.domain.user.entity;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -23,6 +24,7 @@ import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
 import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.domain.pieceLike.entity.PieceLike;
+import com.likelion13.artium.domain.user.mapping.UserLike;
 import com.likelion13.artium.global.common.BaseTimeEntity;
 
 import lombok.AccessLevel;
@@ -62,6 +64,13 @@ public class User extends BaseTimeEntity {
   @Builder.Default
   private Role role = Role.USER;
 
+  @Column(name = "is_deleted", nullable = false)
+  @Builder.Default
+  private boolean isDeleted = false;
+
+  @Column(name = "deleted_at")
+  private LocalDateTime deletedAt;
+
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL)
   @Builder.Default
   private List<Piece> pieces = new ArrayList<>();
@@ -78,6 +87,16 @@ public class User extends BaseTimeEntity {
   @Builder.Default
   private List<ExhibitionLike> exhibitionLikes = new ArrayList<>();
 
+  // 내가 좋아요 한 사용자
+  @OneToMany(mappedBy = "liker", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<UserLike> likedUsers = new ArrayList<>();
+
+  // 나를 좋아요 한 사용자
+  @OneToMany(mappedBy = "liked", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<UserLike> likedByUsers = new ArrayList<>();
+
   public static User fromOAuth(String email, String nickname, String profileImageUrl) {
     return User.builder()
         .username(email)
@@ -88,9 +107,16 @@ public class User extends BaseTimeEntity {
         .build();
   }
 
-  public void addPiece(Piece piece) {
-    if (piece == null) return;
-    if (this.pieces == null) this.pieces = new ArrayList<>();
-    this.pieces.add(piece);
+  public void updateNickname(String newNickname) {
+    this.nickname = newNickname;
+  }
+
+  public void updateProfileImageUrl(String profileImageUrl) {
+    this.profileImageUrl = profileImageUrl;
+  }
+
+  public void softDelete() {
+    this.isDeleted = true;
+    this.deletedAt = LocalDateTime.now();
   }
 }
