@@ -5,7 +5,8 @@ package com.likelion13.artium.domain.piece.dto.response;
 
 import java.util.List;
 
-import com.likelion13.artium.domain.piece.entity.Status;
+import com.likelion13.artium.domain.piece.entity.ProgressStatus;
+import com.likelion13.artium.domain.piece.entity.SaveStatus;
 import com.likelion13.artium.domain.pieceDetail.dto.response.PieceDetailSummaryResponse;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -32,8 +33,11 @@ public class PieceResponse {
   @Schema(description = "작품 구매 가능 여부", example = "true")
   private Boolean isPurchasable;
 
-  @Schema(description = "작품 상태", example = "REGISTERED")
-  private Status status;
+  @Schema(description = "작품 저장 상태", example = "APPLICATION")
+  private SaveStatus saveStatus;
+
+  @Schema(description = "작품 진행 상태", example = "WAITING")
+  private ProgressStatus progressStatus;
 
   @Schema(description = "사용자 ID", example = "2")
   private Long userId;

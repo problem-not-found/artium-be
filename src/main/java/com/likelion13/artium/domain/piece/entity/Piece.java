@@ -57,9 +57,13 @@ public class Piece extends BaseTimeEntity {
   private Boolean isPurchasable;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "status", nullable = false)
+  @Column(name = "save_status", nullable = false)
+  private SaveStatus saveStatus;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "progress_status")
   @Builder.Default
-  private Status status = Status.UNREGISTERED;
+  private ProgressStatus progressStatus = ProgressStatus.WAITING;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
@@ -73,11 +77,12 @@ public class Piece extends BaseTimeEntity {
   @Builder.Default
   private List<PieceLike> pieceLikes = new ArrayList<>();
 
-  public void update(String title, String description, Boolean isPurchasable, Status status) {
+  public void update(
+      String title, String description, Boolean isPurchasable, SaveStatus saveStatus) {
     this.title = title;
     this.description = description;
     this.isPurchasable = isPurchasable;
-    this.status = status;
+    this.saveStatus = saveStatus;
   }
 
   public String updateImageUrl(String imageUrl) {
