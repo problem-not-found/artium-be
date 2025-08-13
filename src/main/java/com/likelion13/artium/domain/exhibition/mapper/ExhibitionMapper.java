@@ -58,7 +58,6 @@ public class ExhibitionMapper {
         .offlineDescription(exhibition.getOfflineDescription())
         .accountNumber(exhibition.getAccountNumber())
         .bankName(exhibition.getBankName())
-        .exhibitionStatus(exhibition.getExhibitionStatus())
         .fillAll(exhibition.getFillAll())
         .build();
   }

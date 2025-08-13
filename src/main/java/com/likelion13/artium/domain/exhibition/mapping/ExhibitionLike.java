@@ -16,6 +16,7 @@ import com.likelion13.artium.domain.exhibition.entity.Exhibition;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.global.common.BaseTimeEntity;
 
+import jakarta.persistence.UniqueConstraint;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -27,7 +28,13 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Table(name = "exhibition_user")
+@Table(
+      name = "exhibition_like",
+uniqueConstraints = {
+         @UniqueConstraint(
+        name = "uq_exhibition_like_exhibition_user",
+             columnNames = {"exhibition_id", "user_id"})
+        })
 public class ExhibitionLike extends BaseTimeEntity {
 
   @Id

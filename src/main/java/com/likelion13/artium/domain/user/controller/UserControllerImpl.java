@@ -30,6 +30,6 @@ public class UserControllerImpl implements UserController {
 
     SignUpResponse signUpResponse = userService.signUp(signUpRequest, image);
 
-    return ResponseEntity.ok(BaseResponse.success("회원가입에 성공했습니다.", signUpResponse));
+    return ResponseEntity.ok(BaseResponse.success(201, "회원가입에 성공하였습니다.", signUpResponse));
   }
 }

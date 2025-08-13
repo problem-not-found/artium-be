@@ -77,7 +77,8 @@ public class Exhibition extends BaseTimeEntity {
   private ExhibitionStatus exhibitionStatus;
 
   @Column(name = "fill_all")
-  private Boolean fillAll;
+  @Builder.Default
+  private Boolean fillAll = Boolean.FALSE;
 
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id")
@@ -97,6 +98,7 @@ public class Exhibition extends BaseTimeEntity {
     this.offlineDescription = exhibition.getOfflineDescription();
     this.accountNumber = exhibition.getAccountNumber();
     this.bankName = exhibition.getBankName();
+    this.exhibitionStatus = exhibition.getExhibitionStatus();
     this.fillAll = exhibition.getFillAll();
     this.user = exhibition.getUser();
   }

@@ -34,11 +34,11 @@ public class ExhibitionControllerImpl implements ExhibitionController {
 
   @Override
   public ResponseEntity<BaseResponse<ExhibitionDetailResponse>> createExhibition(
-      @RequestPart(required = false) MultipartFile image,
-      @RequestPart(required = false) ExhibitionRequest request) {
+      @RequestPart(value = "image", required = false) MultipartFile image,
+      @Valid @RequestPart(value = "request", required = false) ExhibitionRequest request) {
 
     return ResponseEntity.ok(
-        BaseResponse.success(exhibitionService.createExhibition(image, request)));
+        BaseResponse.success(201, "전시 정보 생성에 성공하였습니다.",exhibitionService.createExhibition(image, request)));
   }
 
   @Override
@@ -90,8 +90,8 @@ public class ExhibitionControllerImpl implements ExhibitionController {
   @Override
   public ResponseEntity<BaseResponse<ExhibitionDetailResponse>> updateExhibition(
       @PathVariable Long id,
-      @RequestPart("image") MultipartFile image,
-      @Valid @RequestPart("request") ExhibitionRequest request) {
+      @RequestPart(value = "image", required = false) MultipartFile image,
+      @Valid @RequestPart(value = "request", required = false) ExhibitionRequest request) {
 
     return ResponseEntity.ok(
         BaseResponse.success(exhibitionService.updateExhibition(id, image, request)));

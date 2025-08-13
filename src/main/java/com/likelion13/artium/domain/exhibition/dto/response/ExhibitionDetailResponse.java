@@ -50,9 +50,6 @@ public class ExhibitionDetailResponse {
   @Schema(description = "거래 은행", example = "KOOKMIN")
   private BankName bankName;
 
-  @Schema(description = "전시 상태", example = "ONGOING")
-  private ExhibitionStatus exhibitionStatus;
-
   @Schema(description = "등록 완료 여부", example = "true")
   private Boolean fillAll;
 }
