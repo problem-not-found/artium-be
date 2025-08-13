@@ -35,7 +35,8 @@ public class PieceMapper {
         .description(piece.getDescription())
         .imageUrl(piece.getImageUrl())
         .isPurchasable(piece.getIsPurchasable())
-        .status(piece.getStatus())
+        .savaStatus(piece.getSaveStatus())
+        .progressStatus(piece.getProgressStatus())
         .userId(piece.getUser().getId())
         .pieceDetails(
             piece.getPieceDetails() == null
@@ -52,7 +53,8 @@ public class PieceMapper {
         .description(piece.getDescription())
         .imageUrl(piece.getImageUrl())
         .isPurchasable(piece.getIsPurchasable())
-        .status(piece.getStatus())
+        .savaStatus(piece.getSaveStatus())
+        .progressStatus(piece.getProgressStatus())
         .userId(piece.getUser().getId())
         .build();
   }
