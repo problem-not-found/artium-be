@@ -17,12 +17,13 @@ import lombok.*;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Table(name = "exhibition_user")
-public class ExhibitionUser extends BaseTimeEntity {
+public class ExhibitionParticipant extends BaseTimeEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @Setter
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "exhibition_id", nullable = false)
   private Exhibition exhibition;
@@ -30,7 +31,4 @@ public class ExhibitionUser extends BaseTimeEntity {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
-
-  @Column(name = "fill_all")
-  private Boolean fillAll;
 }

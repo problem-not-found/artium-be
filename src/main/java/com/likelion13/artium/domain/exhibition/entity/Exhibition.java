@@ -22,6 +22,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
+import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.global.common.BaseTimeEntity;
 
@@ -83,6 +84,10 @@ public class Exhibition extends BaseTimeEntity {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id")
   private User user;
+
+  @OneToMany(mappedBy = "exhibition", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<ExhibitionParticipant> exhibitionParticipants = new ArrayList<>();
 
   @OneToMany(mappedBy = "exhibition", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default

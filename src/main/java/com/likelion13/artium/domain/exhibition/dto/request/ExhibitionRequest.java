@@ -21,8 +21,11 @@ import lombok.NoArgsConstructor;
 @Schema(title = "ExhibitionRequest DTO", description = "전시 생성을 위한 데이터 전송")
 public class ExhibitionRequest {
 
-  @Schema(description = "전시에 포함될 작품 ID 리스트", example = "[1, 2, 3]")
+  @Schema(description = "전시에 포함될 작품 식별자 리스트", example = "[1, 2, 3]")
   private List<Long> pieceIdList;
+
+  @Schema(description = "전시에 참여할 사용자 식별자 리스트", example = "[1, 2, 3]")
+  private List<Long> userIdList;
 
   @Schema(description = "전시 제목", example = "성북구 신인 작가 합동 전시: 두 번째 여름")
   private String title;

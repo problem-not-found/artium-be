@@ -5,6 +5,8 @@ package com.likelion13.artium.domain.exhibition.service;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -23,9 +25,11 @@ import com.likelion13.artium.domain.exhibition.entity.ExhibitionStatus;
 import com.likelion13.artium.domain.exhibition.entity.SortBy;
 import com.likelion13.artium.domain.exhibition.exception.ExhibitionErrorCode;
 import com.likelion13.artium.domain.exhibition.mapper.ExhibitionMapper;
-import com.likelion13.artium.domain.exhibition.mapper.ExhibitionUserMapper;
+import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
 import com.likelion13.artium.domain.exhibition.repository.ExhibitionRepository;
 import com.likelion13.artium.domain.user.entity.User;
+import com.likelion13.artium.domain.user.exception.UserErrorCode;
+import com.likelion13.artium.domain.user.repository.UserRepository;
 import com.likelion13.artium.domain.user.service.UserService;
 import com.likelion13.artium.global.exception.CustomException;
 import com.likelion13.artium.global.page.mapper.PageMapper;
@@ -42,10 +46,10 @@ import lombok.extern.slf4j.Slf4j;
 public class ExhibitionServiceImpl implements ExhibitionService {
 
   private final ExhibitionRepository exhibitionRepository;
+  private final UserRepository userRepository;
   private final UserService userService;
   private final S3Service s3Service;
   private final ExhibitionMapper exhibitionMapper;
-  private final ExhibitionUserMapper exhibitionUserMapper;
   private final PageMapper pageMapper;
 
   @Override
@@ -57,26 +61,26 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     }
 
     String imageUrl = null;
-    ExhibitionStatus status = ExhibitionStatus.UPCOMING;
-    LocalDate now = LocalDate.now(ZoneId.of("Asia/Seoul"));
+    ExhibitionStatus status = determineStatus(request.getStartDate(), request.getEndDate());
 
     if (image != null) {
       imageUrl = s3Service.uploadFile(PathName.EXHIBITION, image);
     }
 
-    if (request.getEndDate().isBefore(now) || request.getEndDate().isEqual(now)) {
-      status = ExhibitionStatus.ENDED;
-    } else if (request.getStartDate().isBefore(now) || request.getStartDate().isEqual(now)) {
-      status = ExhibitionStatus.ONGOING;
-    }
+    List<ExhibitionParticipant> participants = buildParticipants(request.getUserIdList());
+    User currentUser = userService.getCurrentUser();
 
     Exhibition exhibition =
-        exhibitionMapper.toExhibition(imageUrl, request, status, userService.getCurrentUser());
+        exhibitionMapper.toExhibition(imageUrl, request, status, currentUser, participants);
+
+    participants.forEach(p -> p.setExhibition(exhibition));
 
     try {
       exhibitionRepository.save(exhibition);
     } catch (Exception e) {
-      s3Service.deleteFile(s3Service.extractKeyNameFromUrl(imageUrl));
+      if (imageUrl != null) {
+        s3Service.deleteFile(s3Service.extractKeyNameFromUrl(imageUrl));
+      }
       throw new CustomException(ExhibitionErrorCode.EXHIBITION_API_ERROR);
     }
     log.info(
@@ -169,6 +173,11 @@ public class ExhibitionServiceImpl implements ExhibitionService {
             .findById(id)
             .orElseThrow(() -> new CustomException(ExhibitionErrorCode.EXHIBITION_NOT_FOUND));
 
+    User currentUser = userService.getCurrentUser();
+    if (!exhibition.getUser().equals(currentUser)) {
+      throw new CustomException(ExhibitionErrorCode.EXHIBITION_ACCESS_DENIED);
+    }
+
     if (request.getStartDate().isAfter(request.getEndDate())) {
       throw new CustomException(ExhibitionErrorCode.INVALID_DATE_RANGE);
     }
@@ -187,17 +196,14 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     }
 
     try {
-      LocalDate now = LocalDate.now(ZoneId.of("Asia/Seoul"));
-      ExhibitionStatus status = ExhibitionStatus.UPCOMING;
+      ExhibitionStatus status = determineStatus(request.getStartDate(), request.getEndDate());
 
-      if (request.getEndDate().isBefore(now) || request.getEndDate().isEqual(now)) {
-        status = ExhibitionStatus.ENDED;
-      } else if (request.getStartDate().isBefore(now) || request.getStartDate().isEqual(now)) {
-        status = ExhibitionStatus.ONGOING;
-      }
+      List<ExhibitionParticipant> participants = buildParticipants(request.getUserIdList());
+
+      participants.forEach(p -> p.setExhibition(exhibition));
 
       Exhibition updatedExhibition =
-          exhibitionMapper.toExhibition(imageUrl, request, status, userService.getCurrentUser());
+          exhibitionMapper.toExhibition(imageUrl, request, status, currentUser, participants);
 
       exhibition.update(updatedExhibition);
     } catch (Exception e) {
@@ -208,5 +214,34 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     log.info(
         "전시 정보 수정 성공 - id: {}, status: {}", exhibition.getId(), exhibition.getExhibitionStatus());
     return exhibitionMapper.toExhibitionDetailResponse(exhibition);
+  }
+
+  private ExhibitionStatus determineStatus(LocalDate startDate, LocalDate endDate) {
+    if (startDate == null || endDate == null) {
+      throw new CustomException(ExhibitionErrorCode.INVALID_DATE_RANGE);
+    }
+    LocalDate now = LocalDate.now(ZoneId.of("Asia/Seoul"));
+
+    if (endDate.isBefore(now) || endDate.isEqual(now)) {
+      return ExhibitionStatus.ENDED;
+    } else if (startDate.isBefore(now) || startDate.isEqual(now)) {
+      return ExhibitionStatus.ONGOING;
+    } else {
+      return ExhibitionStatus.UPCOMING;
+    }
+  }
+
+  private List<ExhibitionParticipant> buildParticipants(List<Long> userIds) {
+    return userIds.stream()
+        .distinct()
+        .map(
+            userId -> {
+              User participantUser =
+                  userRepository
+                      .findById(userId)
+                      .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+              return ExhibitionParticipant.builder().exhibition(null).user(participantUser).build();
+            })
+        .collect(Collectors.toList());
   }
 }

@@ -38,7 +38,8 @@ public class ExhibitionControllerImpl implements ExhibitionController {
       @Valid @RequestPart(value = "request", required = false) ExhibitionRequest request) {
 
     return ResponseEntity.ok(
-        BaseResponse.success(201, "전시 정보 생성에 성공하였습니다.",exhibitionService.createExhibition(image, request)));
+        BaseResponse.success(
+            201, "전시 정보 생성에 성공하였습니다.", exhibitionService.createExhibition(image, request)));
   }
 
   @Override

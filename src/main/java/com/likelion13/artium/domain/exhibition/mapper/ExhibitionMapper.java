@@ -3,6 +3,8 @@
  */
 package com.likelion13.artium.domain.exhibition.mapper;
 
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 
 import com.likelion13.artium.domain.exhibition.dto.request.ExhibitionRequest;
@@ -10,13 +12,18 @@ import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionDetailResp
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionResponse;
 import com.likelion13.artium.domain.exhibition.entity.Exhibition;
 import com.likelion13.artium.domain.exhibition.entity.ExhibitionStatus;
+import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
 import com.likelion13.artium.domain.user.entity.User;
 
 @Component
 public class ExhibitionMapper {
 
   public Exhibition toExhibition(
-      String imageUrl, ExhibitionRequest request, ExhibitionStatus status, User user) {
+      String imageUrl,
+      ExhibitionRequest request,
+      ExhibitionStatus status,
+      User user,
+      List<ExhibitionParticipant> exhibitionParticipantList) {
     return Exhibition.builder()
         .thumbnailImageUrl(imageUrl)
         .title(request.getTitle())
@@ -30,6 +37,7 @@ public class ExhibitionMapper {
         .exhibitionStatus(status)
         .fillAll(validateExhibitionFields(imageUrl, request, status))
         .user(user)
+        .exhibitionParticipants(exhibitionParticipantList)
         .build();
   }
 
