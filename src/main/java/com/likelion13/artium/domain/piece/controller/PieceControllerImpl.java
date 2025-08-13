@@ -47,7 +47,8 @@ public class PieceControllerImpl implements PieceController {
     Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
 
     return ResponseEntity.ok(
-        BaseResponse.success("작품 리스트 조회에 성공했습니다.", pieceService.getPiecePage(userId, pageable)));
+        BaseResponse.success(
+            200, "작품 리스트 조회에 성공했습니다.", pieceService.getPiecePage(userId, pageable)));
   }
 
   @Override
@@ -61,7 +62,7 @@ public class PieceControllerImpl implements PieceController {
     PieceSummaryResponse pieceSummaryResponse =
         pieceService.createPiece(createPieceRequest, mainImage, detailImages);
 
-    return ResponseEntity.ok(BaseResponse.success("작품 등록에 성공했습니다.", pieceSummaryResponse));
+    return ResponseEntity.ok(BaseResponse.success(201, "작품 등록에 성공했습니다.", pieceSummaryResponse));
   }
 
   @Override
@@ -70,7 +71,7 @@ public class PieceControllerImpl implements PieceController {
 
     PieceResponse pieceResponse = pieceService.getPiece(pieceId);
 
-    return ResponseEntity.ok(BaseResponse.success("작품 조회에 성공했습니다.", pieceResponse));
+    return ResponseEntity.ok(BaseResponse.success(200, "작품 조회에 성공했습니다.", pieceResponse));
   }
 
   @Override
@@ -89,7 +90,7 @@ public class PieceControllerImpl implements PieceController {
     PieceResponse pieceResponse =
         pieceService.updatePiece(pieceId, updatePieceRequest, mainImage, detailImages);
 
-    return ResponseEntity.ok(BaseResponse.success("작품 수정에 성공했습니다.", pieceResponse));
+    return ResponseEntity.ok(BaseResponse.success(200, "작품 수정에 성공했습니다.", pieceResponse));
   }
 
   @Override

@@ -10,13 +10,21 @@ import java.util.List;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import com.likelion13.artium.domain.exhibition.mapping.ExhibitionUser;
+import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
+import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
+import com.likelion13.artium.domain.user.entity.User;
+import com.likelion13.artium.global.common.BaseTimeEntity;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -30,7 +38,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Table(name = "exhibition")
-public class Exhibition {
+public class Exhibition extends BaseTimeEntity {
 
   @Id
   @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -62,11 +70,41 @@ public class Exhibition {
   private String accountNumber;
 
   @Column(name = "bank_name")
+  @Enumerated(EnumType.STRING)
   private BankName bankName;
 
   @Column(name = "status")
+  @Enumerated(EnumType.STRING)
   private ExhibitionStatus exhibitionStatus;
 
+  @Column(name = "fill_all")
+  @Builder.Default
+  private Boolean fillAll = Boolean.FALSE;
+
+  @ManyToOne(fetch = FetchType.LAZY)
+  @JoinColumn(name = "user_id")
+  private User user;
+
   @OneToMany(mappedBy = "exhibition", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<ExhibitionUser> exhibitionUsers = new ArrayList<>();
+  @Builder.Default
+  private List<ExhibitionParticipant> exhibitionParticipants = new ArrayList<>();
+
+  @OneToMany(mappedBy = "exhibition", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<ExhibitionLike> exhibitionLikes = new ArrayList<>();
+
+  public void update(Exhibition exhibition) {
+    this.thumbnailImageUrl = exhibition.getThumbnailImageUrl();
+    this.title = exhibition.getTitle();
+    this.description = exhibition.getDescription();
+    this.startDate = exhibition.getStartDate();
+    this.endDate = exhibition.getEndDate();
+    this.address = exhibition.getAddress();
+    this.offlineDescription = exhibition.getOfflineDescription();
+    this.accountNumber = exhibition.getAccountNumber();
+    this.bankName = exhibition.getBankName();
+    this.exhibitionStatus = exhibition.getExhibitionStatus();
+    this.fillAll = exhibition.getFillAll();
+    this.user = exhibition.getUser();
+  }
 }
