@@ -10,7 +10,16 @@ import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.global.exception.CustomException;
 
-/** 사용자 관련 주요 기능을 제공하는 서비스 인터페이스입니다. */
+/**
+ * 사용자 관련 주요 기능을 제공하는 서비스 인터페이스입니다.
+ *
+ * <p>주요 기능:
+ *
+ * <ul>
+ *   <li>회원가입 처리
+ *   <li>현재 인증된 사용자 조회
+ * </ul>
+ */
 public interface UserService {
 
   /**
@@ -19,6 +28,7 @@ public interface UserService {
    * <p>회원가입 시 중복된 아이디가 존재하면 예외를 발생시키며, 비밀번호는 인코딩되어 저장됩니다.
    *
    * @param request 회원가입 요청 데이터 (아이디, 비밀번호, 닉네임 등)
+   * @param image 회원 프로필 이미지 파일
    * @return 회원가입 성공 시 생성된 사용자 정보를 담은 응답 DTO
    * @throws CustomException 중복된 아이디 등 가입 불가 사유 발생 시
    */

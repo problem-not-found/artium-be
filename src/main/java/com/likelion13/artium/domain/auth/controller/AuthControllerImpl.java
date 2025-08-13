@@ -45,8 +45,7 @@ public class AuthControllerImpl implements AuthController {
 
     return ResponseEntity.ok(
         BaseResponse.success(
-            "사용자 ID: " + tokenResponse.getUsername(),
-            "Access Token: " + tokenResponse.getAccessToken()));
+            200, tokenResponse.getUsername(), "Access Token: " + tokenResponse.getAccessToken()));
   }
 
   @Override

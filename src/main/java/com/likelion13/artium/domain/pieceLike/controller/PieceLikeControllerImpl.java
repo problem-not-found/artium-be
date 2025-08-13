@@ -26,7 +26,7 @@ public class PieceLikeControllerImpl implements PieceLikeController {
 
     PieceLikeResponse pieceLikeResponse = pieceLikeService.likePiece(pieceId);
 
-    return ResponseEntity.ok(BaseResponse.success("작품 좋아요 등록에 성공했습니다.", pieceLikeResponse));
+    return ResponseEntity.ok(BaseResponse.success(201, "작품 좋아요 등록에 성공했습니다.", pieceLikeResponse));
   }
 
   @Override
@@ -35,6 +35,6 @@ public class PieceLikeControllerImpl implements PieceLikeController {
 
     PieceLikeResponse pieceLikeResponse = pieceLikeService.unlikePiece(pieceId);
 
-    return ResponseEntity.ok(BaseResponse.success("작품 좋아요 취소에 성공했습니다.", pieceLikeResponse));
+    return ResponseEntity.ok(BaseResponse.success(200, "작품 좋아요 취소에 성공했습니다.", pieceLikeResponse));
   }
 }
