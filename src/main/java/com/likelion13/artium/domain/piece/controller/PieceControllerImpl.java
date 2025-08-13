@@ -47,7 +47,8 @@ public class PieceControllerImpl implements PieceController {
     Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
 
     return ResponseEntity.ok(
-        BaseResponse.success(200, "작품 리스트 조회에 성공했습니다.", pieceService.getPiecePage(userId, pageable)));
+        BaseResponse.success(
+            200, "작품 리스트 조회에 성공했습니다.", pieceService.getPiecePage(userId, pageable)));
   }
 
   @Override
