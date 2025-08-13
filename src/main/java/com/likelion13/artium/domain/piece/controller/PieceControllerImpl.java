@@ -56,7 +56,7 @@ public class PieceControllerImpl implements PieceController {
     Pageable pageable = validatePageable(pageNum, pageSize);
 
     return ResponseEntity.ok(
-        BaseResponse.success(
+        BaseResponse.success(200,
             "내 작품 리스트 조회에 성공했습니다.", pieceService.getMyPiecePage(applicated, pageable)));
   }
 
@@ -117,7 +117,7 @@ public class PieceControllerImpl implements PieceController {
   public ResponseEntity<BaseResponse<Integer>> getPieceDraftCount() {
 
     return ResponseEntity.ok(
-        BaseResponse.success("임시저장 작품 개수 조회에 성공했습니다.", pieceService.getPieceDraftCount()));
+        BaseResponse.success(200, "임시저장 작품 개수 조회에 성공했습니다.", pieceService.getPieceDraftCount()));
   }
 
   private Pageable validatePageable(Integer pageNum, Integer pageSize) {
