@@ -347,7 +347,7 @@ public class JwtProvider {
     cookie.setHttpOnly(true);
     // cookie.setSecure(true);
     cookie.setPath("/");
-    cookie.setMaxAge((int) (maxAge / 1000));
+    cookie.setMaxAge((int) maxAge);
     response.addCookie(cookie);
 
     log.info("JWT 쿠키가 설정되었습니다 - 이름: {}, 만료: {}초", name, cookie.getMaxAge());
