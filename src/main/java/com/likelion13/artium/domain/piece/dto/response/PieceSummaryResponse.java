@@ -31,7 +31,7 @@ public class PieceSummaryResponse {
   private Boolean isPurchasable;
 
   @Schema(description = "작품 저장 상태", example = "APPLICATION")
-  private SaveStatus savaStatus;
+  private SaveStatus saveStatus;
 
   @Schema(description = "작품 진행 상태", example = "WAITING")
   private ProgressStatus progressStatus;

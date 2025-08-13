@@ -63,9 +63,11 @@ public class PieceServiceImpl implements PieceService {
         PageRequest.of(
             pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Direction.DESC, "createdAt"));
 
+    List<ProgressStatus> statuses = List.of(ProgressStatus.REGISTERED, ProgressStatus.ON_DISPLAY);
+
     Page<PieceSummaryResponse> page =
         pieceRepository
-            .findByUserIdAndProgressStatusRegisteredOrOnDisplay(userId, sortedPageable)
+            .findByUserIdAndProgressStatusIn(userId, statuses, sortedPageable)
             .map(pieceMapper::toPieceSummaryResponse);
 
     return pageMapper.toPiecePageResponse(page);
@@ -82,10 +84,10 @@ public class PieceServiceImpl implements PieceService {
     Page<PieceSummaryResponse> page =
         applicated
             ? pieceRepository
-                .findByUserIdAndSaveStatusNotDraft(userId, sortedPageable)
+                .findByUserIdAndSaveStatusNot(userId, SaveStatus.DRAFT, sortedPageable)
                 .map(pieceMapper::toPieceSummaryResponse)
             : pieceRepository
-                .findByUserIdAndSaveStatusDraft(userId, sortedPageable)
+                .findByUserIdAndSaveStatus(userId, SaveStatus.DRAFT, sortedPageable)
                 .map(pieceMapper::toPieceSummaryResponse);
 
     return pageMapper.toPiecePageResponse(page);
@@ -171,7 +173,12 @@ public class PieceServiceImpl implements PieceService {
       throw new CustomException(PieceErrorCode.UNAUTHORIZED);
     }
 
-    boolean isValidatedPiece = validateUpdatePieceFields(updatePieceRequest, mainImage);
+    boolean isValidatedPiece;
+    if (piece.getImageUrl() == null) {
+      isValidatedPiece = validateUpdatePieceFields(updatePieceRequest, mainImage);
+    } else {
+      isValidatedPiece = validateUpdatePieceFields(updatePieceRequest);
+    }
 
     if (saveStatus == SaveStatus.APPLICATION && !isValidatedPiece) {
       throw new CustomException(PieceErrorCode.INVALID_APPLICATION);
@@ -276,5 +283,11 @@ public class PieceServiceImpl implements PieceService {
         && updatePieceRequest.getDescription() != null
         && updatePieceRequest.getIsPurchasable() != null
         && mainImage != null;
+  }
+
+  private boolean validateUpdatePieceFields(UpdatePieceRequest updatePieceRequest) {
+    return updatePieceRequest.getTitle() != null
+        && updatePieceRequest.getDescription() != null
+        && updatePieceRequest.getIsPurchasable() != null;
   }
 }

@@ -56,13 +56,13 @@ public class PieceControllerImpl implements PieceController {
     Pageable pageable = validatePageable(pageNum, pageSize);
 
     return ResponseEntity.ok(
-        BaseResponse.success(200,
-            "내 작품 리스트 조회에 성공했습니다.", pieceService.getMyPiecePage(applicated, pageable)));
+        BaseResponse.success(
+            200, "내 작품 리스트 조회에 성공했습니다.", pieceService.getMyPiecePage(applicated, pageable)));
   }
 
   @Override
   public ResponseEntity<BaseResponse<PieceSummaryResponse>> createPiece(
-      @RequestParam SaveStatus savaStatus,
+      @RequestParam SaveStatus saveStatus,
       @RequestPart("data") CreatePieceRequest createPieceRequest,
       @RequestPart(value = "mainImage", required = false) MultipartFile mainImage,
       @RequestPart(value = "detailImages", required = false) List<MultipartFile> detailImages) {
@@ -70,7 +70,7 @@ public class PieceControllerImpl implements PieceController {
     if (detailImages != null && detailImages.size() > 5)
       throw new CustomException(PieceErrorCode.TOO_MANY_DETAIL_IMAGES);
     PieceSummaryResponse pieceSummaryResponse =
-        pieceService.createPiece(createPieceRequest, savaStatus, mainImage, detailImages);
+        pieceService.createPiece(createPieceRequest, saveStatus, mainImage, detailImages);
 
     return ResponseEntity.ok(BaseResponse.success(201, "작품 등록에 성공했습니다.", pieceSummaryResponse));
   }
@@ -87,7 +87,7 @@ public class PieceControllerImpl implements PieceController {
   @Override
   public ResponseEntity<BaseResponse<PieceResponse>> updatePiece(
       @PathVariable(value = "piece-id") Long pieceId,
-      @RequestParam SaveStatus savaStatus,
+      @RequestParam SaveStatus saveStatus,
       @RequestPart("data") UpdatePieceRequest updatePieceRequest,
       @RequestPart(value = "mainImage", required = false) MultipartFile mainImage,
       @RequestPart(value = "detailImages", required = false) List<MultipartFile> detailImages) {
@@ -99,7 +99,7 @@ public class PieceControllerImpl implements PieceController {
     if (detailImages != null && remainCount + detailImages.size() > 5)
       throw new CustomException(PieceErrorCode.TOO_MANY_DETAIL_IMAGES);
     PieceResponse pieceResponse =
-        pieceService.updatePiece(pieceId, updatePieceRequest, savaStatus, mainImage, detailImages);
+        pieceService.updatePiece(pieceId, updatePieceRequest, saveStatus, mainImage, detailImages);
 
     return ResponseEntity.ok(BaseResponse.success(200, "작품 수정에 성공했습니다.", pieceResponse));
   }
