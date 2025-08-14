@@ -3,7 +3,10 @@
  */
 package com.likelion13.artium.domain.piece.service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,13 +29,17 @@ import com.likelion13.artium.domain.piece.mapper.PieceMapper;
 import com.likelion13.artium.domain.piece.repository.PieceRepository;
 import com.likelion13.artium.domain.pieceDetail.entity.PieceDetail;
 import com.likelion13.artium.domain.pieceDetail.service.PieceDetailService;
+import com.likelion13.artium.domain.pieceLike.exception.PieceLikeErrorCode;
 import com.likelion13.artium.domain.pieceLike.repository.PieceLikeRepository;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.repository.UserRepository;
 import com.likelion13.artium.domain.user.service.UserService;
+import com.likelion13.artium.global.ai.vector.VectorUtils;
 import com.likelion13.artium.global.exception.CustomException;
 import com.likelion13.artium.global.page.mapper.PageMapper;
 import com.likelion13.artium.global.page.response.PageResponse;
+import com.likelion13.artium.global.qdrant.entity.CollectionName;
+import com.likelion13.artium.global.qdrant.service.QdrantService;
 import com.likelion13.artium.global.s3.entity.PathName;
 import com.likelion13.artium.global.s3.service.S3Service;
 
@@ -52,6 +59,7 @@ public class PieceServiceImpl implements PieceService {
   private final UserService userService;
   private final PageMapper pageMapper;
   private final UserRepository userRepository;
+  private final QdrantService qdrantService;
 
   @Override
   public PageResponse<PieceSummaryResponse> getPiecePage(Long userId, Pageable pageable) {
@@ -238,7 +246,7 @@ public class PieceServiceImpl implements PieceService {
 
   @Override
   @Transactional
-  public void deletePiece(Long pieceId) {
+  public String deletePiece(Long pieceId) {
     Long userId = userService.getCurrentUser().getId();
 
     Piece piece =
@@ -260,6 +268,8 @@ public class PieceServiceImpl implements PieceService {
                 s3Service.deleteFile(s3Service.extractKeyNameFromUrl(pieceDetail.getImageUrl())));
 
     pieceRepository.delete(piece);
+
+    return piece.getId() + "번 작품 삭제에 성공했습니다.";
   }
 
   @Override
@@ -267,6 +277,89 @@ public class PieceServiceImpl implements PieceService {
 
     return pieceRepository.countByUserIdAndSaveStatus(
         userService.getCurrentUser().getId(), SaveStatus.DRAFT);
+  }
+
+  @Override
+  public PageResponse<PieceSummaryResponse> getLikePieces(Pageable pageable) {
+    Long userId = userService.getCurrentUser().getId();
+
+    Pageable sortedPageable =
+        PageRequest.of(
+            pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Direction.DESC, "createdAt"));
+
+    Page<PieceSummaryResponse> page =
+        pieceLikeRepository
+            .findPieceByUser_Id(userId, sortedPageable)
+            .map(pieceMapper::toPieceSummaryResponse);
+
+    return pageMapper.toPiecePageResponse(page);
+  }
+
+  @Override
+  public PageResponse<PieceSummaryResponse> getRecommendationPiecePage(Pageable pageable) {
+    Long userId = userService.getCurrentUser().getId();
+
+    Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+
+    List<Long> recommendPieceIds = recommendPieceIds(userId, 50);
+
+    Page<PieceSummaryResponse> page =
+        pieceRepository
+            .findByIdIn(recommendPieceIds, sortedPageable)
+            .map(pieceMapper::toPieceSummaryResponse);
+
+    return pageMapper.toPiecePageResponse(page);
+  }
+
+  private List<Long> recommendPieceIds(Long userId, int topN) {
+    int limit = (topN < 0) ? 50 : topN;
+
+    List<Long> likeIds = pieceLikeRepository.findIdsByUser_Id(userId);
+
+    if (likeIds == null || likeIds.isEmpty()) {
+      throw new CustomException(PieceLikeErrorCode.PIECE_LIKE_NOT_FOUND);
+    }
+
+    List<float[]> likeVecs = qdrantService.retrieveVectorsByIds(likeIds, CollectionName.PIECE);
+    float[] userVector = VectorUtils.normalize(VectorUtils.mean(likeVecs));
+
+    List<Long> excludeIds = new ArrayList<>(likeIds);
+    List<Long> myPieceIds =
+        pieceRepository.findByUser_Id(userId).stream().map(Piece::getId).toList();
+    excludeIds.addAll(myPieceIds);
+
+    List<Map<String, Object>> result =
+        qdrantService.search(userVector, limit, excludeIds, CollectionName.PIECE);
+
+    List<Map<String, Object>> sorted = new ArrayList<>(result);
+    sorted.sort(
+        (a, b) -> {
+          double sb = ((Number) b.get("score")).doubleValue();
+          double sa = ((Number) a.get("score")).doubleValue();
+          return Double.compare(sb, sa);
+        });
+    sorted = sorted.subList(0, Math.min(limit, sorted.size()));
+
+    List<Long> candidateIds =
+        sorted.stream()
+            .map(m -> (Map<String, Object>) m.get("payload"))
+            .filter(Objects::nonNull)
+            .map(p -> ((Number) p.get("pieceId")).longValue())
+            .toList();
+
+    List<Long> recommendIds =
+        candidateIds.isEmpty()
+            ? List.of()
+            : pieceRepository
+                .findIdsByIdsInAndProgressStatusIn(
+                    candidateIds,
+                    List.of(ProgressStatus.REGISTERED, ProgressStatus.ON_DISPLAY),
+                    Pageable.unpaged())
+                .getContent()
+                .stream()
+                .toList();
+
+    return recommendIds;
   }
 
   private boolean validateCreatePieceFields(
