@@ -5,7 +5,6 @@ package com.likelion13.artium.global.config;
 
 import java.time.Duration;
 
-import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,11 +12,12 @@ import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import lombok.Getter;
 import reactor.netty.http.client.HttpClient;
 
 @Getter
 @Configuration
-public class QdrantWebClientConfig {
+public class QdrantConfig {
 
   @Value("${qdrant.collection-name.piece}")
   private String pieceCollection;
