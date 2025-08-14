@@ -24,6 +24,7 @@ import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
 import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.domain.pieceLike.entity.PieceLike;
+import com.likelion13.artium.domain.review.entity.Review;
 import com.likelion13.artium.domain.user.mapping.UserLike;
 import com.likelion13.artium.global.common.BaseTimeEntity;
 
@@ -86,6 +87,10 @@ public class User extends BaseTimeEntity {
   @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default
   private List<ExhibitionLike> exhibitionLikes = new ArrayList<>();
+
+  @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<Review> reviews = new ArrayList<>();
 
   // 내가 좋아요 한 사용자
   @OneToMany(mappedBy = "liker", cascade = CascadeType.ALL, orphanRemoval = true)

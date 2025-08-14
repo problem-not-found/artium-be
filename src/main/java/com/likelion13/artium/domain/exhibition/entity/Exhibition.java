@@ -23,6 +23,7 @@ import jakarta.persistence.Table;
 
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
+import com.likelion13.artium.domain.review.entity.Review;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.global.common.BaseTimeEntity;
 
@@ -92,6 +93,10 @@ public class Exhibition extends BaseTimeEntity {
   @OneToMany(mappedBy = "exhibition", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default
   private List<ExhibitionLike> exhibitionLikes = new ArrayList<>();
+
+  @OneToMany(mappedBy = "exhibition", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<Review> reviews = new ArrayList<>();
 
   public void update(Exhibition exhibition) {
     this.thumbnailImageUrl = exhibition.getThumbnailImageUrl();
