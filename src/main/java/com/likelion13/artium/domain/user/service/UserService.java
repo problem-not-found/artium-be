@@ -111,19 +111,19 @@ public interface UserService {
    */
   List<UserDetailResponse> getAllUsers();
 
-    /**
-     * 사용자가 등록 신청한 작품을 승인합니다.
-     *
-     * @param pieceId 작품 식별자
-     * @return 승인 완료 문자열
-     */
-    String approvePiece(Long pieceId);
+  /**
+   * 사용자가 등록 신청한 작품을 승인합니다.
+   *
+   * @param pieceId 작품 식별자
+   * @return 승인 완료 문자열
+   */
+  String approvePiece(Long pieceId);
 
-    /**
-     * 사용자가 등록 신청한 작품을 거절합니다.
-     *
-     * @param pieceId 작품 식별자
-     * @return 거절 완료 문자열
-     */
-    String rejectPiece(Long pieceId);
+  /**
+   * 사용자가 등록 신청한 작품을 거절합니다.
+   *
+   * @param pieceId 작품 식별자
+   * @return 거절 완료 문자열
+   */
+  String rejectPiece(Long pieceId);
 }
