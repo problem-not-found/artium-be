@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    image: artium-app:latest
+    image: artium:latest
     container_name: artium-app
     ports:
       - "8080:8080"
@@ -68,7 +68,6 @@ services:
     container_name: artium-qdrant
     ports:
       - "6333:6333"
-      - "6334:6334"
     volumes:
       - qdrant-data:/qdrant/storage
     networks:
