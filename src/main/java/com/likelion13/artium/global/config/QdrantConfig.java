@@ -35,8 +35,7 @@ public class QdrantConfig {
   private String distance;
 
   @Bean
-  public WebClient qdrantWebClient(
-      @Value("${qdrant.base-url}") String baseUrl, @Value("${qdrant.api-key:}") String apiKey) {
+  public WebClient qdrantWebClient(@Value("${qdrant.base-url}") String baseUrl) {
     HttpClient http = HttpClient.create().responseTimeout(Duration.ofSeconds(10)).compress(true);
 
     WebClient.Builder b =
@@ -48,9 +47,6 @@ public class QdrantConfig {
                     .codecs(c -> c.defaultCodecs().maxInMemorySize(16 * 1024 * 1024))
                     .build());
 
-    if (!apiKey.isBlank()) {
-      b.defaultHeader("api-key", apiKey);
-    }
     b.defaultHeader("Accept", "application/json");
 
     return b.build();
