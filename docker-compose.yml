@@ -63,6 +63,17 @@ services:
       retries: 5
       start_period: 10s
 
+  dozzle:
+    image: amir20/dozzle:latest
+    container_name: artium-dozzle
+    ports:
+      - "9999:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - artium-network
+    restart: unless-stopped
+
   qdrant:
     image: qdrant/qdrant:v1.12.3
     container_name: artium-qdrant
