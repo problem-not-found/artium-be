@@ -85,6 +85,10 @@ public class Piece extends BaseTimeEntity {
     this.saveStatus = saveStatus;
   }
 
+  public void updateProgressStatus(ProgressStatus progressStatus) {
+    this.progressStatus = progressStatus;
+  }
+
   public String updateImageUrl(String imageUrl) {
     String oldImageUrl = this.imageUrl;
     this.imageUrl = imageUrl;
