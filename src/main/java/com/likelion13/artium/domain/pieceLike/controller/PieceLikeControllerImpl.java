@@ -24,17 +24,15 @@ public class PieceLikeControllerImpl implements PieceLikeController {
   public ResponseEntity<BaseResponse<PieceLikeResponse>> likePiece(
       @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId) {
 
-    PieceLikeResponse pieceLikeResponse = pieceLikeService.likePiece(pieceId);
-
-    return ResponseEntity.ok(BaseResponse.success(201, "작품 좋아요 등록에 성공했습니다.", pieceLikeResponse));
+    return ResponseEntity.status(201)
+        .body(BaseResponse.success(pieceLikeService.likePiece(pieceId)));
   }
 
   @Override
   public ResponseEntity<BaseResponse<PieceLikeResponse>> unlikePiece(
       @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId) {
 
-    PieceLikeResponse pieceLikeResponse = pieceLikeService.unlikePiece(pieceId);
-
-    return ResponseEntity.ok(BaseResponse.success(200, "작품 좋아요 취소에 성공했습니다.", pieceLikeResponse));
+    return ResponseEntity.status(204)
+        .body(BaseResponse.success(pieceLikeService.unlikePiece(pieceId)));
   }
 }
