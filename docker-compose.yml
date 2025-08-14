@@ -57,7 +57,7 @@ services:
       - artium-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "redis-cli", "ping", "-a", "${REDIS_PASS}"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASS}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
