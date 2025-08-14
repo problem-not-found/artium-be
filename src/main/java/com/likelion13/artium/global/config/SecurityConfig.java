@@ -46,14 +46,8 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             request ->
                 request
-                    // Swagger 경로는 인증 없이 허용
-                    .requestMatchers(
-                        "/swagger-ui/**",
-                        "/v3/api-docs/**",
-                        "/dozzle/**",
-                        "/qdrant/**",
-                        "/assets/**"   // 정적 리소스 인증 제외
-                    )
+                    // 정적 리소스는 인증 없이 허용
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/dozzle/**", "/qdrant/**")
                     .permitAll()
                     // 인증 없이 허용할 경로
                     .requestMatchers("/api/**")
