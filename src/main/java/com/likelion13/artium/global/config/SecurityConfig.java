@@ -49,6 +49,8 @@ public class SecurityConfig {
                     // Swagger 경로는 인증 없이 허용
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
                     .permitAll()
+                    .requestMatchers("/dozzle/**", "/qdrant/**")
+                    .permitAll()
                     // 인증 없이 허용할 경로
                     .requestMatchers("/api/**")
                     .permitAll()
