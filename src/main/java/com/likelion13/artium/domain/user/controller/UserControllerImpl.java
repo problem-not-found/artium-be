@@ -88,4 +88,16 @@ public class UserControllerImpl implements UserController {
 
     return ResponseEntity.ok(BaseResponse.success(userDetailResponses));
   }
+
+  @Override
+  public ResponseEntity<BaseResponse<String>> approvePiece(Long pieceId) {
+
+    return ResponseEntity.status(200).body(BaseResponse.success(userService.approvePiece(pieceId)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<String>> rejectPiece(Long pieceId) {
+
+    return ResponseEntity.status(200).body(BaseResponse.success(userService.rejectPiece(pieceId)));
+  }
 }

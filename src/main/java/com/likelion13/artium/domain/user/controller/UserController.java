@@ -91,4 +91,14 @@ public interface UserController {
   @GetMapping("/devs")
   @Operation(summary = "[개발자]사용자 전체 조회", description = "스웨거를 사용해 전체 사용자를 조회합니다.")
   ResponseEntity<BaseResponse<List<UserDetailResponse>>> getAllUsers();
+
+  @PutMapping("/{piece-id}/approve")
+  @Operation(summary = "[관리자]등록 신청한 작품 승인", description = "사용자가 등록 신청한 작품을 승인합니다.")
+  ResponseEntity<BaseResponse<String>> approvePiece(
+      @Parameter(description = "작품 식별자", example = "1") Long pieceId);
+
+  @PutMapping("/{piece-id}/reject")
+  @Operation(summary = "[관리자]등록 신청한 작품 거절", description = "사용자가 등록 신청한 작품을 거절합니다.")
+  ResponseEntity<BaseResponse<String>> rejectPiece(
+      @Parameter(description = "작품 식별자", example = "1") Long pieceId);
 }
