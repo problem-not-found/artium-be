@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   app:
-    image: artium:latest
+    image: unijuni/artium:latest
     container_name: artium-app
     ports:
       - "8080:8080"
