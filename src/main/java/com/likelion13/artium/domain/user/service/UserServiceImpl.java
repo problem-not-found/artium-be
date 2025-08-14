@@ -3,6 +3,12 @@
  */
 package com.likelion13.artium.domain.user.service;
 
+import com.likelion13.artium.domain.piece.entity.Piece;
+import com.likelion13.artium.domain.piece.entity.ProgressStatus;
+import com.likelion13.artium.domain.piece.entity.SaveStatus;
+import com.likelion13.artium.domain.piece.exception.PieceErrorCode;
+import com.likelion13.artium.domain.user.entity.Role;
+import com.likelion13.artium.global.qdrant.entity.CollectionName;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +30,7 @@ import com.likelion13.artium.domain.piece.repository.PieceRepository;
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
 import com.likelion13.artium.domain.user.dto.response.LikeResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
+import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.entity.Role;
 import com.likelion13.artium.domain.user.entity.User;
@@ -80,6 +87,7 @@ public class UserServiceImpl implements UserService {
     User savedUser = userRepository.save(user);
 
     log.info("새로운 사용자 생성: {}", savedUser.getUsername());
+
     return userMapper.toSignUpResponse(savedUser);
   }
 
@@ -271,56 +279,56 @@ public class UserServiceImpl implements UserService {
     return users.stream().map(userMapper::toUserDetailResponse).toList();
   }
 
-  @Override
-  @Transactional
-  public String approvePiece(Long pieceId) {
-    User user = getCurrentUser();
+    @Override
+    @Transactional
+    public String approvePiece(Long pieceId) {
+        User user = getCurrentUser();
 
-    if (!user.getRole().equals(Role.ADMIN)) {
-      throw new CustomException(UserErrorCode.UNAUTHORIZED);
+        if (!user.getRole().equals(Role.ADMIN)) {
+            throw new CustomException(UserErrorCode.UNAUTHORIZED);
+        }
+
+        Piece piece =
+            pieceRepository
+                .findById(pieceId)
+                .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
+
+        if (!piece.getSaveStatus().equals(SaveStatus.APPLICATION)
+            || !piece.getProgressStatus().equals(ProgressStatus.WAITING)) {
+            throw new CustomException(PieceErrorCode.INVALID_APPLICATION);
+        }
+
+        piece.updateProgressStatus(ProgressStatus.REGISTERED);
+
+        String content = (piece.getTitle() + "\n\n" + piece.getDescription()).trim();
+        float[] vector = embeddingService.embed(content);
+
+        qdrantService.upsertPointUtil(pieceId, vector, piece, CollectionName.PIECE);
+
+        return pieceId + "번 작품 등록을 승인했습니다.";
     }
 
-    Piece piece =
-        pieceRepository
-            .findById(pieceId)
-            .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
+    @Override
+    @Transactional
+    public String rejectPiece(Long pieceId) {
+        User user = getCurrentUser();
 
-    if (!piece.getSaveStatus().equals(SaveStatus.APPLICATION)
-        || !piece.getProgressStatus().equals(ProgressStatus.WAITING)) {
-      throw new CustomException(PieceErrorCode.INVALID_APPLICATION);
+        if (!user.getRole().equals(Role.ADMIN)) {
+            throw new CustomException(UserErrorCode.UNAUTHORIZED);
+        }
+
+        Piece piece =
+            pieceRepository
+                .findById(pieceId)
+                .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
+
+        if (!piece.getSaveStatus().equals(SaveStatus.APPLICATION)
+            || !piece.getProgressStatus().equals(ProgressStatus.WAITING)) {
+            throw new CustomException(PieceErrorCode.INVALID_APPLICATION);
+        }
+
+        piece.updateProgressStatus(ProgressStatus.UNREGISTERED);
+
+        return pieceId + "번 작품 등록을 거절했습니다.";
     }
-
-    piece.updateProgressStatus(ProgressStatus.REGISTERED);
-
-    String content = (piece.getTitle() + "\n\n" + piece.getDescription()).trim();
-    float[] vector = embeddingService.embed(content);
-
-    qdrantService.upsertPointUtil(pieceId, vector, piece, CollectionName.PIECE);
-
-    return pieceId + "번 작품 등록을 승인했습니다.";
-  }
-
-  @Override
-  @Transactional
-  public String rejectPiece(Long pieceId) {
-    User user = getCurrentUser();
-
-    if (!user.getRole().equals(Role.ADMIN)) {
-      throw new CustomException(UserErrorCode.UNAUTHORIZED);
-    }
-
-    Piece piece =
-        pieceRepository
-            .findById(pieceId)
-            .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
-
-    if (!piece.getSaveStatus().equals(SaveStatus.APPLICATION)
-        || !piece.getProgressStatus().equals(ProgressStatus.WAITING)) {
-      throw new CustomException(PieceErrorCode.INVALID_APPLICATION);
-    }
-
-    piece.updateProgressStatus(ProgressStatus.UNREGISTERED);
-
-    return pieceId + "번 작품 등록을 거절했습니다.";
-  }
 }
