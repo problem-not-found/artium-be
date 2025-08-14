@@ -17,12 +17,22 @@ import com.likelion13.artium.domain.piece.entity.SaveStatus;
 
 public interface PieceRepository extends JpaRepository<Piece, Long> {
 
+  Page<Piece> findByIdIn(List<Long> ids, Pageable pageable);
+
+  List<Piece> findByUser_Id(Long userId);
+
   @Query("SELECT p FROM Piece p WHERE p.user.id = :userId")
   Page<Piece> findByUserId(@Param("userId") Long userId, Pageable pageable);
 
   @Query("SELECT p FROM Piece p WHERE p.user.id = :userId AND p.progressStatus IN :statuses")
   Page<Piece> findByUserIdAndProgressStatusIn(
       @Param("userId") Long userId,
+      @Param("statuses") List<ProgressStatus> statuses,
+      Pageable pageable);
+
+  @Query("SELECT p.id FROM Piece p WHERE p.id In :pieceIds AND p.progressStatus IN :statuses")
+  Page<Long> findIdsByIdsInAndProgressStatusIn(
+      @Param("pieceIds") List<Long> pieceIds,
       @Param("statuses") List<ProgressStatus> statuses,
       Pageable pageable);
 

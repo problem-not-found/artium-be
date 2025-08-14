@@ -67,11 +67,28 @@ public interface PieceService {
 
   /**
    * @param pieceId 작품 식별자 (크리에이터가 아닐 시 삭제 실패)
+   * @return 작품 삭제 성공 메시지
    */
-  void deletePiece(Long pieceId);
+  String deletePiece(Long pieceId);
 
   /**
    * @return 임시 저장된 작품의 개수 (크리에이터가 아닐 시 조회 실패)
    */
   Integer getPieceDraftCount();
+
+  /**
+   * 좋아요 한 작품 리스트 조회 메서드
+   *
+   * @param pageable 페이징 처리값 객체
+   * @return 좋아요 한 작품 리스트
+   */
+  PageResponse<PieceSummaryResponse> getLikePieces(Pageable pageable);
+
+  /**
+   * 좋아요 기반 추천 작품 리스트 조회 메서드
+   *
+   * @param pageable 페이징 처리값 객체
+   * @return 추천 작품 리스트
+   */
+  PageResponse<PieceSummaryResponse> getRecommendationPiecePage(Pageable pageable);
 }

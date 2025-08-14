@@ -28,6 +28,8 @@ dependencies {
     // Web
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework:spring-webflux'
+    implementation 'io.projectreactor.netty:reactor-netty-http'
 
     // Test
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
@@ -47,6 +49,9 @@ dependencies {
     // Spring Security
     implementation 'org.springframework.boot:spring-boot-starter-security'
     testImplementation 'org.springframework.security:spring-security-test'
+
+    // Spring Ai
+    implementation 'org.springframework.ai:spring-ai-starter-model-openai:1.0.1'
 
     // OAuth2
     implementation 'org.springframework.boot:spring-boot-starter-oauth2-client'

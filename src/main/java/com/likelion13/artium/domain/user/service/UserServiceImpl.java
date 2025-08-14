@@ -16,16 +16,25 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.likelion13.artium.domain.piece.entity.Piece;
+import com.likelion13.artium.domain.piece.entity.ProgressStatus;
+import com.likelion13.artium.domain.piece.entity.SaveStatus;
+import com.likelion13.artium.domain.piece.exception.PieceErrorCode;
+import com.likelion13.artium.domain.piece.repository.PieceRepository;
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
 import com.likelion13.artium.domain.user.dto.response.LikeResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
+import com.likelion13.artium.domain.user.entity.Role;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.mapper.UserMapper;
 import com.likelion13.artium.domain.user.mapping.UserLike;
 import com.likelion13.artium.domain.user.repository.UserRepository;
+import com.likelion13.artium.global.ai.embedding.service.EmbeddingService;
 import com.likelion13.artium.global.exception.CustomException;
+import com.likelion13.artium.global.qdrant.entity.CollectionName;
+import com.likelion13.artium.global.qdrant.service.QdrantService;
 import com.likelion13.artium.global.s3.entity.PathName;
 import com.likelion13.artium.global.s3.exception.S3ErrorCode;
 import com.likelion13.artium.global.s3.service.S3Service;
@@ -42,6 +51,9 @@ public class UserServiceImpl implements UserService {
   private final PasswordEncoder passwordEncoder;
   private final UserMapper userMapper;
   private final S3Service s3Service;
+  private final PieceRepository pieceRepository;
+  private final EmbeddingService embeddingService;
+  private final QdrantService qdrantService;
 
   @Override
   @Transactional
@@ -68,6 +80,7 @@ public class UserServiceImpl implements UserService {
     User savedUser = userRepository.save(user);
 
     log.info("새로운 사용자 생성: {}", savedUser.getUsername());
+
     return userMapper.toSignUpResponse(savedUser);
   }
 
@@ -257,5 +270,58 @@ public class UserServiceImpl implements UserService {
     List<User> users = userRepository.findAll();
 
     return users.stream().map(userMapper::toUserDetailResponse).toList();
+  }
+
+  @Override
+  @Transactional
+  public String approvePiece(Long pieceId) {
+    User user = getCurrentUser();
+
+    if (!user.getRole().equals(Role.ADMIN)) {
+      throw new CustomException(UserErrorCode.UNAUTHORIZED);
+    }
+
+    Piece piece =
+        pieceRepository
+            .findById(pieceId)
+            .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
+
+    if (!piece.getSaveStatus().equals(SaveStatus.APPLICATION)
+        || !piece.getProgressStatus().equals(ProgressStatus.WAITING)) {
+      throw new CustomException(PieceErrorCode.INVALID_APPLICATION);
+    }
+
+    String content = (piece.getTitle() + "\n\n" + piece.getDescription()).trim();
+    float[] vector = embeddingService.embed(content);
+
+    qdrantService.upsertPiecePoint(pieceId, vector, piece, CollectionName.PIECE);
+
+    piece.updateProgressStatus(ProgressStatus.REGISTERED);
+
+    return pieceId + "번 작품 등록을 승인했습니다.";
+  }
+
+  @Override
+  @Transactional
+  public String rejectPiece(Long pieceId) {
+    User user = getCurrentUser();
+
+    if (!user.getRole().equals(Role.ADMIN)) {
+      throw new CustomException(UserErrorCode.UNAUTHORIZED);
+    }
+
+    Piece piece =
+        pieceRepository
+            .findById(pieceId)
+            .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
+
+    if (!piece.getSaveStatus().equals(SaveStatus.APPLICATION)
+        || !piece.getProgressStatus().equals(ProgressStatus.WAITING)) {
+      throw new CustomException(PieceErrorCode.INVALID_APPLICATION);
+    }
+
+    piece.updateProgressStatus(ProgressStatus.UNREGISTERED);
+
+    return pieceId + "번 작품 등록을 거절했습니다.";
   }
 }
