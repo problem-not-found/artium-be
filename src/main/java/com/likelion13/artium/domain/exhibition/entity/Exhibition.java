@@ -52,7 +52,7 @@ public class Exhibition extends BaseTimeEntity {
   @Column(name = "title")
   private String title;
 
-  @Column(name = "description")
+  @Column(name = "description", columnDefinition = "TEXT")
   private String description;
 
   @Column(name = "start_date")
@@ -64,7 +64,7 @@ public class Exhibition extends BaseTimeEntity {
   @Column(name = "address")
   private String address;
 
-  @Column(name = "offline_description")
+  @Column(name = "offline_description", columnDefinition = "TEXT")
   private String offlineDescription;
 
   @Column(name = "account_number")

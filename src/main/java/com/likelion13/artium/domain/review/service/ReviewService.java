@@ -3,10 +3,11 @@
  */
 package com.likelion13.artium.domain.review.service;
 
-import java.util.List;
+import org.springframework.data.domain.Pageable;
 
 import com.likelion13.artium.domain.review.dto.request.ReviewRequest;
 import com.likelion13.artium.domain.review.dto.response.ReviewResponse;
+import com.likelion13.artium.global.page.response.PageResponse;
 
 /**
  * 리뷰 관련 주요 기능을 제공하는 서비스 인터페이스입니다.
@@ -37,7 +38,7 @@ public interface ReviewService {
    * @param exhibitionId 조회할 전시회 ID
    * @return 해당 전시회의 모든 리뷰 목록
    */
-  List<ReviewResponse> getReviewByExhibitionId(Long exhibitionId);
+  PageResponse<ReviewResponse> getReviewByExhibitionId(Long exhibitionId, Pageable pageable);
 
   /**
    * 특정 전시회에 등록된 리뷰를 수정합니다.

@@ -3,18 +3,22 @@
  */
 package com.likelion13.artium.domain.review.controller;
 
-import java.util.List;
-
 import jakarta.validation.Valid;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.likelion13.artium.domain.review.dto.request.ReviewRequest;
 import com.likelion13.artium.domain.review.dto.response.ReviewResponse;
 import com.likelion13.artium.domain.review.service.ReviewService;
+import com.likelion13.artium.global.exception.CustomException;
+import com.likelion13.artium.global.page.exception.PageErrorStatus;
+import com.likelion13.artium.global.page.response.PageResponse;
 import com.likelion13.artium.global.response.BaseResponse;
 
 import lombok.RequiredArgsConstructor;
@@ -36,11 +40,22 @@ public class ReviewControllerImpl implements ReviewController {
   }
 
   @Override
-  public ResponseEntity<BaseResponse<List<ReviewResponse>>> getReviewByExhibitionId(
-      @PathVariable(name = "exhibition-id") Long exhibitionId) {
+  public ResponseEntity<BaseResponse<PageResponse<ReviewResponse>>> getReviewByExhibitionId(
+      @PathVariable(name = "exhibition-id") Long exhibitionId,
+      @RequestParam Integer pageNum,
+      @RequestParam Integer pageSize) {
+
+    if (pageNum < 1) {
+      throw new CustomException(PageErrorStatus.PAGE_NOT_FOUND);
+    }
+    if (pageSize < 1) {
+      throw new CustomException(PageErrorStatus.PAGE_SIZE_ERROR);
+    }
+
+    Pageable pageable = PageRequest.of(pageNum - 1, pageSize);
 
     return ResponseEntity.status(200)
-        .body(BaseResponse.success(reviewService.getReviewByExhibitionId(exhibitionId)));
+        .body(BaseResponse.success(reviewService.getReviewByExhibitionId(exhibitionId, pageable)));
   }
 
   @Override

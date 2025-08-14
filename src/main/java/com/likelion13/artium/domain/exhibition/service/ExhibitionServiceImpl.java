@@ -93,6 +93,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public ExhibitionDetailResponse getExhibition(Long id) {
 
     Exhibition exhibition =
@@ -104,6 +105,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Integer getExhibitionDraftCount() {
 
     return exhibitionRepository
@@ -112,6 +114,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public PageResponse<ExhibitionResponse> getExhibitionPageByType(
       SortBy sortBy, Pageable pageable) {
     Page<ExhibitionResponse> page;
@@ -142,6 +145,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public PageResponse<ExhibitionResponse> getExhibitionPageByUser(
       Boolean fillAll, Pageable pageable) {
     User user = userService.getCurrentUser();

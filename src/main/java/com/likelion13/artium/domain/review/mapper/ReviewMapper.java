@@ -18,11 +18,12 @@ public class ReviewMapper {
     return Review.builder().content(request.getContent()).exhibition(exhibition).user(user).build();
   }
 
-  public ReviewResponse toReviewResponse(Review review) {
+  public ReviewResponse toReviewResponse(Review review, Boolean isAuthor) {
     return ReviewResponse.builder()
         .reviewId(review.getId())
         .content(review.getContent())
         .createdAt(review.getCreatedAt())
+        .isAuthor(isAuthor)
         .build();
   }
 }

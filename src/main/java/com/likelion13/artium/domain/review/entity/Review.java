@@ -35,7 +35,7 @@ public class Review extends BaseTimeEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  @Column(name = "content", nullable = false)
+  @Column(name = "content", nullable = false, columnDefinition = "TEXT")
   private String content;
 
   @ManyToOne(fetch = FetchType.LAZY)

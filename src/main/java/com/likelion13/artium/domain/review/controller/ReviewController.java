@@ -3,8 +3,6 @@
  */
 package com.likelion13.artium.domain.review.controller;
 
-import java.util.List;
-
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
@@ -15,9 +13,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import com.likelion13.artium.domain.review.dto.request.ReviewRequest;
 import com.likelion13.artium.domain.review.dto.response.ReviewResponse;
+import com.likelion13.artium.global.page.response.PageResponse;
 import com.likelion13.artium.global.response.BaseResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -29,7 +29,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public interface ReviewController {
 
   @PostMapping
-  @Operation(summary = "감상평 작성", description = "좋아요 할 사용자의 식별자를 요청 받아 좋아요를 등록합니다.")
+  @Operation(summary = "감상평 작성", description = "전시 식별자와 감상평 내용을 요청 받아 감상평을 등록합니다.")
   ResponseEntity<BaseResponse<ReviewResponse>> createReview(
       @Parameter(description = "감상평을 작성할 전시 식별자", example = "1")
           @PathVariable(name = "exhibition-id")
@@ -37,11 +37,13 @@ public interface ReviewController {
       @Parameter(description = "감상평 작성 요청 정보") @Valid @RequestBody ReviewRequest request);
 
   @GetMapping
-  @Operation(summary = "감상평 조회", description = "전시 식별자에 대한 감상평 리스트를 조회합니다.")
-  ResponseEntity<BaseResponse<List<ReviewResponse>>> getReviewByExhibitionId(
+  @Operation(summary = "감상평 리스트 조회", description = "전시 식별자에 대한 최신순 감상평 리스트를 페이지로 조회합니다.")
+  ResponseEntity<BaseResponse<PageResponse<ReviewResponse>>> getReviewByExhibitionId(
       @Parameter(description = "감상평을 조회할 전시 식별자", example = "1")
           @PathVariable(name = "exhibition-id")
-          Long exhibitionId);
+          Long exhibitionId,
+      @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
+      @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
 
   @PutMapping("/{review-id}")
   @Operation(summary = "감상평 수정", description = "감상평 식별자를 요청 받아 사용자가 작성했던 감상평을 수정합니다.")
