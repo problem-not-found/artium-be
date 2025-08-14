@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.likelion13.artium.domain.exhibition.entity.Exhibition;
 import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.global.config.QdrantConfig;
 import com.likelion13.artium.global.exception.CustomException;
@@ -36,12 +37,13 @@ public class QdrantServiceImpl implements QdrantService {
   @Override
   public void ensureAllCollections() {
     for (CollectionName collectionName : CollectionName.values()) {
-      creatIfAbsent(collectionName);
+      createIfAbsent(collectionName);
     }
   }
 
   @Override
-  public void upsertPointUtil(Long id, float[] vector, Piece piece, CollectionName collectionName) {
+  public void upsertPiecePoint(
+      Long id, float[] vector, Piece piece, CollectionName collectionName) {
     upsertPoint(
         id,
         vector,
@@ -53,8 +55,21 @@ public class QdrantServiceImpl implements QdrantService {
   }
 
   @Override
+  public void upsertExhibitionPoint(
+      Long id, float[] vector, Exhibition exhibition, CollectionName collectionName) {
+    upsertPoint(
+        id,
+        vector,
+        Map.of(
+            "exhibitionId", exhibition.getId(),
+            "lang", "ko",
+            "createdAt", exhibition.getCreatedAt().toString()),
+        collectionName);
+  }
+
+  @Override
   public void upsertPoint(
-      Object id, float[] vector, Map<String, Object> payload, CollectionName collectionName) {
+      Long id, float[] vector, Map<String, Object> payload, CollectionName collectionName) {
     if (vector.length != qdrantConfig.getVectorSize())
       throw new CustomException(QdrantErrorCode.VECTOR_SIZE_MISMATCH);
 
@@ -96,10 +111,7 @@ public class QdrantServiceImpl implements QdrantService {
                 s -> s.is4xxClientError() || s.is5xxServerError(),
                 r ->
                     r.bodyToMono(String.class)
-                        .map(
-                            msg ->
-                                new IllegalStateException(
-                                    "Qdrant retrieve failed: " + r.statusCode() + " - " + msg)))
+                        .map(msg -> new CustomException(QdrantErrorCode.VECTOR_SIZE_MISMATCH)))
             .bodyToMono(Map.class)
             .block();
 
@@ -118,7 +130,7 @@ public class QdrantServiceImpl implements QdrantService {
   public List<Map<String, Object>> search(
       float[] query, int limit, List<Long> excludeIds, CollectionName collectionName) {
     if (query.length != qdrantConfig.getVectorSize())
-      throw new IllegalArgumentException("Query size mismatch");
+      throw new CustomException(QdrantErrorCode.VECTOR_SIZE_MISMATCH);
 
     String objectId =
         switch (collectionName) {
@@ -167,7 +179,7 @@ public class QdrantServiceImpl implements QdrantService {
    *
    * @param collectionName 컬렉션 이름
    */
-  private void creatIfAbsent(CollectionName collectionName) {
+  private void createIfAbsent(CollectionName collectionName) {
 
     String collection = getPrefix(collectionName);
 

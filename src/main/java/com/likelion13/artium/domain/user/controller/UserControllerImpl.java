@@ -8,6 +8,7 @@ import java.util.List;
 import jakarta.validation.Valid;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
@@ -90,13 +91,13 @@ public class UserControllerImpl implements UserController {
   }
 
   @Override
-  public ResponseEntity<BaseResponse<String>> approvePiece(Long pieceId) {
+  public ResponseEntity<BaseResponse<String>> approvePiece(@PathVariable("piece-id") Long pieceId) {
 
     return ResponseEntity.status(200).body(BaseResponse.success(userService.approvePiece(pieceId)));
   }
 
   @Override
-  public ResponseEntity<BaseResponse<String>> rejectPiece(Long pieceId) {
+  public ResponseEntity<BaseResponse<String>> rejectPiece(@PathVariable("piece-id") Long pieceId) {
 
     return ResponseEntity.status(200).body(BaseResponse.success(userService.rejectPiece(pieceId)));
   }

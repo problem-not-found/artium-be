@@ -9,6 +9,9 @@ import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.embedding.EmbeddingResponse;
 import org.springframework.stereotype.Service;
 
+import com.likelion13.artium.global.ai.exception.EmbeddingErrorCode;
+import com.likelion13.artium.global.exception.CustomException;
+
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -19,6 +22,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
 
   @Override
   public float[] embed(String text) {
+    if (text == null) throw new CustomException(EmbeddingErrorCode.EMBEDDING_ILLEGAL_ARGUMENT);
     EmbeddingResponse resp = embeddingModel.embedForResponse(List.of(text));
     return resp.getResults().get(0).getOutput();
   }

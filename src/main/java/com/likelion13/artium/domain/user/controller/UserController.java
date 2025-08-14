@@ -11,6 +11,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -95,10 +96,10 @@ public interface UserController {
   @PutMapping("/{piece-id}/approve")
   @Operation(summary = "[관리자]등록 신청한 작품 승인", description = "사용자가 등록 신청한 작품을 승인합니다.")
   ResponseEntity<BaseResponse<String>> approvePiece(
-      @Parameter(description = "작품 식별자", example = "1") Long pieceId);
+      @Parameter(description = "작품 식별자", example = "1") @PathVariable("piece-id") Long pieceId);
 
   @PutMapping("/{piece-id}/reject")
   @Operation(summary = "[관리자]등록 신청한 작품 거절", description = "사용자가 등록 신청한 작품을 거절합니다.")
   ResponseEntity<BaseResponse<String>> rejectPiece(
-      @Parameter(description = "작품 식별자", example = "1") Long pieceId);
+      @Parameter(description = "작품 식별자", example = "1") @PathVariable("piece-id") Long pieceId);
 }

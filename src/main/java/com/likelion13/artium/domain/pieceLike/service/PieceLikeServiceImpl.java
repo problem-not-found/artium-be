@@ -46,7 +46,7 @@ public class PieceLikeServiceImpl implements PieceLikeService {
             .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
 
     if (piece.getUser().getId().equals(user.getId())) {
-      throw new CustomException(PieceLikeErrorCode.SELF_LIKE_NOT_ALLOWRED);
+      throw new CustomException(PieceLikeErrorCode.SELF_LIKE_NOT_ALLOWED);
     }
 
     try {

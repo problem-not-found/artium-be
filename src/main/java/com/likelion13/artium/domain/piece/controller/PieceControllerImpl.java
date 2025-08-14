@@ -107,7 +107,7 @@ public class PieceControllerImpl implements PieceController {
   public ResponseEntity<BaseResponse<String>> deletePiece(
       @PathVariable(value = "piece-id") Long pieceId) {
 
-    return ResponseEntity.status(204).body(BaseResponse.success(pieceService.deletePiece(pieceId)));
+    return ResponseEntity.status(200).body(BaseResponse.success(pieceService.deletePiece(pieceId)));
   }
 
   @Override

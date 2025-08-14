@@ -4,6 +4,8 @@
 package com.likelion13.artium.domain.piece.service;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -29,7 +31,6 @@ import com.likelion13.artium.domain.piece.mapper.PieceMapper;
 import com.likelion13.artium.domain.piece.repository.PieceRepository;
 import com.likelion13.artium.domain.pieceDetail.entity.PieceDetail;
 import com.likelion13.artium.domain.pieceDetail.service.PieceDetailService;
-import com.likelion13.artium.domain.pieceLike.exception.PieceLikeErrorCode;
 import com.likelion13.artium.domain.pieceLike.repository.PieceLikeRepository;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.repository.UserRepository;
@@ -317,7 +318,7 @@ public class PieceServiceImpl implements PieceService {
     List<Long> likeIds = pieceLikeRepository.findIdsByUser_Id(userId);
 
     if (likeIds == null || likeIds.isEmpty()) {
-      throw new CustomException(PieceLikeErrorCode.PIECE_LIKE_NOT_FOUND);
+      return List.of();
     }
 
     List<float[]> likeVecs = qdrantService.retrieveVectorsByIds(likeIds, CollectionName.PIECE);
@@ -347,7 +348,10 @@ public class PieceServiceImpl implements PieceService {
             .map(p -> ((Number) p.get("pieceId")).longValue())
             .toList();
 
-    List<Long> recommendIds =
+    Map<Long, Integer> pos = new HashMap<>();
+    for (int i = 0; i < candidateIds.size(); i++) pos.put(candidateIds.get(i), i);
+
+    List<Long> filtered =
         candidateIds.isEmpty()
             ? List.of()
             : pieceRepository
@@ -358,6 +362,11 @@ public class PieceServiceImpl implements PieceService {
                 .getContent()
                 .stream()
                 .toList();
+
+    List<Long> recommendIds =
+        filtered.stream()
+            .sorted(Comparator.comparingInt(id -> pos.getOrDefault(id, Integer.MAX_VALUE)))
+            .toList();
 
     return recommendIds;
   }

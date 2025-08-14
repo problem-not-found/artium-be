@@ -16,7 +16,7 @@ public enum PieceLikeErrorCode implements BaseErrorCode {
   ALREADY_LIKED("PIECE_LIKE_4091", "이미 좋아요 상태입니다.", HttpStatus.CONFLICT),
   NOT_LIKED("PIECE_LIKE_4092", "좋아요한 상태가 아닙니다.", HttpStatus.CONFLICT),
   PIECE_LIKE_NOT_FOUND("PIECE_LIKE_4041", "좋아요 목록을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
-  SELF_LIKE_NOT_ALLOWRED("PIECE_LIKE_4001", "본인 작품은 좋아요 할 수 없습니다.", HttpStatus.BAD_REQUEST);
+  SELF_LIKE_NOT_ALLOWED("PIECE_LIKE_4001", "본인 작품은 좋아요 할 수 없습니다.", HttpStatus.BAD_REQUEST);
 
   private final String code;
   private final String message;

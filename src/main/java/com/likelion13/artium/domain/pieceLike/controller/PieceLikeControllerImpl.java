@@ -32,7 +32,7 @@ public class PieceLikeControllerImpl implements PieceLikeController {
   public ResponseEntity<BaseResponse<PieceLikeResponse>> unlikePiece(
       @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId) {
 
-    return ResponseEntity.status(204)
+    return ResponseEntity.status(200)
         .body(BaseResponse.success(pieceLikeService.unlikePiece(pieceId)));
   }
 }

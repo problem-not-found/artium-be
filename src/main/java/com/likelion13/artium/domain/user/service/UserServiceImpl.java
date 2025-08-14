@@ -291,12 +291,12 @@ public class UserServiceImpl implements UserService {
       throw new CustomException(PieceErrorCode.INVALID_APPLICATION);
     }
 
-    piece.updateProgressStatus(ProgressStatus.REGISTERED);
-
     String content = (piece.getTitle() + "\n\n" + piece.getDescription()).trim();
     float[] vector = embeddingService.embed(content);
 
-    qdrantService.upsertPointUtil(pieceId, vector, piece, CollectionName.PIECE);
+    qdrantService.upsertPiecePoint(pieceId, vector, piece, CollectionName.PIECE);
+
+    piece.updateProgressStatus(ProgressStatus.REGISTERED);
 
     return pieceId + "번 작품 등록을 승인했습니다.";
   }

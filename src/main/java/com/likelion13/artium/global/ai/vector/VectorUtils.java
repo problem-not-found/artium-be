@@ -9,7 +9,14 @@ public class VectorUtils {
 
   public static float[] mean(List<float[]> vecs) {
     if (vecs == null || vecs.isEmpty()) return null;
-    int d = vecs.get(0).length;
+    int d = -1;
+    for (float[] vec : vecs) {
+      if (vec != null) {
+        d = vec.length;
+        break;
+      }
+    }
+    if (d <= 0) return null;
     float[] sum = new float[d];
     int n = 0;
     for (float[] v : vecs) {
@@ -27,7 +34,7 @@ public class VectorUtils {
     double norm = 0;
     for (float x : v) norm += x * x;
     norm = Math.sqrt(norm);
-    if (norm == 0) return v;
+    if (norm == 0) return v.clone();
     float[] out = new float[v.length];
     for (int i = 0; i < v.length; i++) out[i] = (float) (v[i] / norm);
     return out;
