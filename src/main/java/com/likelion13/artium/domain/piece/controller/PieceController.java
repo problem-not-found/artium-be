@@ -87,4 +87,18 @@ public interface PieceController {
   @Operation(summary = "임시저장된 작품 개수 조회", description = "사용자가 임시 저장한 작품의 총 개수를 반환하기 위한 API")
   @GetMapping("/draft-count")
   ResponseEntity<BaseResponse<Integer>> getPieceDraftCount();
+
+  @Operation(summary = "좋아요 한 작품 리스트 조회", description = "사용자가 좋아요 한 작품의 리스트를 반환하는 API")
+  @GetMapping("/likes")
+  ResponseEntity<BaseResponse<PageResponse<PieceSummaryResponse>>> getLikePieces(
+      @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
+      @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
+
+  @Operation(
+      summary = "취향 기반 추천 작품 리스트 조회",
+      description = "사용자가 좋아요 한 작품을 기반으로 추천 작품 리스트를 조회하기 위한 API")
+  @GetMapping("/recommendations")
+  ResponseEntity<BaseResponse<PageResponse<PieceSummaryResponse>>> getRecommendationPieces(
+      @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
+      @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
 }
