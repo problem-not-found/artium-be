@@ -33,4 +33,13 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
       @Param("startDate") LocalDate startDate,
       @Param("status") ExhibitionStatus exhibitionStatus,
       Pageable pageable);
+
+  @Query(
+      """
+        SELECT e
+        FROM Exhibition e
+        JOIN e.exhibitionLikes el
+        WHERE el.user.id = :userId
+        """)
+  Page<Exhibition> findLikedExhibitionsByUserId(@Param("userId") Long userId, Pageable pageable);
 }
