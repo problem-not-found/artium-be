@@ -5,14 +5,23 @@ package com.likelion13.artium.domain.user.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
+import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
+import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
+import com.likelion13.artium.domain.user.entity.Age;
+import com.likelion13.artium.domain.user.entity.FormatPreference;
+import com.likelion13.artium.domain.user.entity.Gender;
+import com.likelion13.artium.domain.user.entity.MoodPreference;
+import com.likelion13.artium.domain.user.entity.ThemePreference;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.global.exception.CustomException;
+import com.likelion13.artium.global.page.response.PageResponse;
 
 /**
  * 사용자 관련 주요 기능을 제공하는 서비스 인터페이스입니다.
@@ -126,4 +135,36 @@ public interface UserService {
    * @return 거절 완료 문자열
    */
   String rejectPiece(Long pieceId);
+
+  /**
+   * 성별, 연령대, 주제 취향, 분위기 취향, 형식 취향을 기반으로 취향 저장 및 임베딩된 값도 저장
+   *
+   * @param gender 성별
+   * @param age 연령대
+   * @param themePreferences 주제 취향
+   * @param moodPreferences 분위기 취향
+   * @param formatPreferences 형식 취향
+   * @return 성공 완료 문자열
+   */
+  String setPreferences(
+      Gender gender,
+      Age age,
+      List<ThemePreference> themePreferences,
+      List<MoodPreference> moodPreferences,
+      List<FormatPreference> formatPreferences);
+
+  /**
+   * 저장된 사용자의 관심사를 조회합니다.
+   *
+   * @return 사용자의 관심사 응답 객체
+   */
+  PreferenceResponse getPreferences();
+
+  /**
+   * 사용자가 좋아요 한 크리에이터 페이지를 반환
+   *
+   * @param pageable 페이지 객체
+   * @return 좋아요 한 크리에이터 페이지 응답값
+   */
+  PageResponse<UserSummaryResponse> getLikes(Pageable pageable);
 }

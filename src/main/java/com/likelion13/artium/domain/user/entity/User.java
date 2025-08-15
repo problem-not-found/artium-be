@@ -9,13 +9,16 @@ import java.util.List;
 import java.util.UUID;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
@@ -57,8 +60,43 @@ public class User extends BaseTimeEntity {
   @Column(name = "nickname", nullable = false, unique = true)
   private String nickname;
 
+  @Column(name = "gender")
+  @Enumerated(EnumType.STRING)
+  private Gender gender;
+
+  @Column(name = "age")
+  @Enumerated(EnumType.STRING)
+  private Age age;
+
+  @ElementCollection
+  @CollectionTable(name = "user_theme_preferences", joinColumns = @JoinColumn(name = "user_id"))
+  @Column(name = "theme_preference")
+  @Enumerated(EnumType.STRING)
+  private List<ThemePreference> themePreferences = new ArrayList<>();
+
+  @ElementCollection
+  @CollectionTable(name = "user_mood_preferences", joinColumns = @JoinColumn(name = "user_id"))
+  @Column(name = "mood_preference")
+  @Enumerated(EnumType.STRING)
+  private List<MoodPreference> moodPreferences = new ArrayList<>();
+
+  @ElementCollection
+  @CollectionTable(name = "user_format_preferences", joinColumns = @JoinColumn(name = "user_id"))
+  @Column(name = "format_preference")
+  @Enumerated(EnumType.STRING)
+  private List<FormatPreference> formatPreferences = new ArrayList<>();
+
   @Column(name = "profile_image_url", nullable = false)
   private String profileImageUrl;
+
+  @Column(name = "introduction")
+  private String introduction;
+
+  @Column(name = "email")
+  private String email;
+
+  @Column(name = "instagram")
+  private String instagram;
 
   @Column(name = "role", nullable = false)
   @Enumerated(EnumType.STRING)
@@ -118,6 +156,28 @@ public class User extends BaseTimeEntity {
 
   public void updateProfileImageUrl(String profileImageUrl) {
     this.profileImageUrl = profileImageUrl;
+  }
+
+  public void updatePreferences(
+      Gender gender,
+      Age age,
+      List<ThemePreference> themePreferences,
+      List<MoodPreference> moodPreferences,
+      List<FormatPreference> formatPreferences) {
+    this.gender = gender;
+    this.age = age;
+    this.themePreferences.clear();
+    if (themePreferences != null) {
+      this.themePreferences.addAll(themePreferences);
+    }
+    this.moodPreferences.clear();
+    if (moodPreferences != null) {
+      this.moodPreferences.addAll(moodPreferences);
+    }
+    this.formatPreferences.clear();
+    if (formatPreferences != null) {
+      this.formatPreferences.addAll(formatPreferences);
+    }
   }
 
   public void softDelete() {

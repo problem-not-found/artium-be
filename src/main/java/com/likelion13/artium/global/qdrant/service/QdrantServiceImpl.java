@@ -16,6 +16,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import com.likelion13.artium.domain.exhibition.entity.Exhibition;
 import com.likelion13.artium.domain.piece.entity.Piece;
+import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.global.config.QdrantConfig;
 import com.likelion13.artium.global.exception.CustomException;
 import com.likelion13.artium.global.qdrant.entity.CollectionName;
@@ -68,6 +69,18 @@ public class QdrantServiceImpl implements QdrantService {
   }
 
   @Override
+  public void upsertUserPoint(Long id, float[] vector, User user, CollectionName collectionName) {
+    upsertPoint(
+        id,
+        vector,
+        Map.of(
+            "userId", user.getId(),
+            "lang", "ko",
+            "createdAt", user.getCreatedAt().toString()),
+        collectionName);
+  }
+
+  @Override
   public void upsertPoint(
       Long id, float[] vector, Map<String, Object> payload, CollectionName collectionName) {
     if (vector.length != qdrantConfig.getVectorSize())
@@ -88,6 +101,39 @@ public class QdrantServiceImpl implements QdrantService {
         .retrieve()
         .bodyToMono(String.class)
         .block();
+  }
+
+  @Override
+  public float[] retrieveVectorById(Long id, CollectionName collectionName) {
+    if (id == null) return null;
+
+    Map resp =
+        qdrantWebClient
+            .get()
+            .uri(
+                uriBuilder ->
+                    uriBuilder
+                        .path("/collections/{name}/points/{id}")
+                        .queryParam("with_vector", true)
+                        .queryParam("with_payload", false)
+                        .build(getPrefix(collectionName), id))
+            .retrieve()
+            .onStatus(
+                s -> s.is4xxClientError() || s.is5xxServerError(),
+                r ->
+                    r.bodyToMono(String.class)
+                        .map(msg -> new CustomException(QdrantErrorCode.VECTOR_SIZE_MISMATCH)))
+            .bodyToMono(Map.class)
+            .block();
+
+    Map<String, Object> result = (Map<String, Object>) resp.get("result");
+
+    List<Double> v = (List<Double>) result.get("vector");
+
+    float[] f = new float[v.size()];
+    for (int i = 0; i < v.size(); i++) f[i] = v.get(i).floatValue();
+
+    return f;
   }
 
   @Override

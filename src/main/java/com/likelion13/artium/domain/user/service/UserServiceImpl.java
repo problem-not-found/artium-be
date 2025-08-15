@@ -7,6 +7,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,10 +27,17 @@ import com.likelion13.artium.domain.piece.entity.SaveStatus;
 import com.likelion13.artium.domain.piece.exception.PieceErrorCode;
 import com.likelion13.artium.domain.piece.repository.PieceRepository;
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
+import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
+import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
+import com.likelion13.artium.domain.user.entity.Age;
+import com.likelion13.artium.domain.user.entity.FormatPreference;
+import com.likelion13.artium.domain.user.entity.Gender;
+import com.likelion13.artium.domain.user.entity.MoodPreference;
 import com.likelion13.artium.domain.user.entity.Role;
+import com.likelion13.artium.domain.user.entity.ThemePreference;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.mapper.UserMapper;
@@ -34,6 +46,8 @@ import com.likelion13.artium.domain.user.repository.UserLikeRepository;
 import com.likelion13.artium.domain.user.repository.UserRepository;
 import com.likelion13.artium.global.ai.embedding.service.EmbeddingService;
 import com.likelion13.artium.global.exception.CustomException;
+import com.likelion13.artium.global.page.mapper.PageMapper;
+import com.likelion13.artium.global.page.response.PageResponse;
 import com.likelion13.artium.global.qdrant.entity.CollectionName;
 import com.likelion13.artium.global.qdrant.service.QdrantService;
 import com.likelion13.artium.global.s3.entity.PathName;
@@ -56,6 +70,7 @@ public class UserServiceImpl implements UserService {
   private final UserLikeRepository userLikeRepository;
   private final EmbeddingService embeddingService;
   private final QdrantService qdrantService;
+  private final PageMapper pageMapper;
 
   @Override
   @Transactional
@@ -331,5 +346,68 @@ public class UserServiceImpl implements UserService {
     piece.updateProgressStatus(ProgressStatus.UNREGISTERED);
 
     return pieceId + "번 작품 등록을 거절했습니다.";
+  }
+
+  @Override
+  @Transactional
+  public String setPreferences(
+      Gender gender,
+      Age age,
+      List<ThemePreference> themePreferences,
+      List<MoodPreference> moodPreferences,
+      List<FormatPreference> formatPreferences) {
+    User user = getCurrentUser();
+
+    user.updatePreferences(gender, age, themePreferences, moodPreferences, formatPreferences);
+    String content =
+        makeEmbeddingPreference(gender, age, themePreferences, moodPreferences, formatPreferences);
+
+    float[] vector = embeddingService.embed(content);
+
+    qdrantService.upsertUserPoint(user.getId(), vector, user, CollectionName.USER);
+
+    return "사용자 관심사 설정에 성공했습니다.";
+  }
+
+  @Override
+  public PreferenceResponse getPreferences() {
+    return userMapper.toPreferenceResponse(getCurrentUser());
+  }
+
+  @Override
+  public PageResponse<UserSummaryResponse> getLikes(Pageable pageable) {
+
+    Pageable sortedPageable =
+        PageRequest.of(
+            pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Direction.DESC, "createdAt"));
+
+    Page<UserSummaryResponse> page =
+        userLikeRepository
+            .findLikedUserByLikerId(getCurrentUser().getId(), sortedPageable)
+            .map(userMapper::toUserSummaryResponse);
+
+    return pageMapper.toUserSummaryPageResponse(page);
+  }
+
+  private String makeEmbeddingPreference(
+      Gender gender,
+      Age age,
+      List<ThemePreference> themePreferences,
+      List<MoodPreference> moodPreferences,
+      List<FormatPreference> formatPreferences) {
+    return "gender : "
+        + gender.getKo()
+        + "\n"
+        + "age : "
+        + age.getKo()
+        + "\n"
+        + "theme_preferences : "
+        + themePreferences.stream().map(ThemePreference::getKo).toList()
+        + "\n"
+        + "mood_preferences : "
+        + moodPreferences.stream().map(MoodPreference::getKo).toList()
+        + "\n"
+        + "formatPreferences : "
+        + formatPreferences.stream().map(FormatPreference::getKo).toList();
   }
 }
