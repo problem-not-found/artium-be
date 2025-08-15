@@ -14,6 +14,7 @@ import com.likelion13.artium.domain.user.mapping.UserLike;
 
 public interface UserLikeRepository extends JpaRepository<UserLike, Long> {
 
-  @Query("select ul.liked " + "from UserLike ul " + "where ul.liker.id = :likerId order by ul.id desc")
+  @Query(
+      "select ul.liked " + "from UserLike ul " + "where ul.liker.id = :likerId order by ul.id desc")
   Page<User> findLikedUserByLikerId(@Param("likerId") Long likerId, Pageable pageable);
 }

@@ -167,15 +167,15 @@ public class User extends BaseTimeEntity {
     this.gender = gender;
     this.age = age;
     this.themePreferences.clear();
-    if(themePreferences != null) {
+    if (themePreferences != null) {
       this.themePreferences.addAll(themePreferences);
     }
     this.moodPreferences.clear();
-    if(moodPreferences != null) {
+    if (moodPreferences != null) {
       this.moodPreferences.addAll(moodPreferences);
     }
     this.formatPreferences.clear();
-    if(formatPreferences != null) {
+    if (formatPreferences != null) {
       this.formatPreferences.addAll(formatPreferences);
     }
   }

@@ -352,14 +352,13 @@ public class UserServiceImpl implements UserService {
       List<FormatPreference> formatPreferences) {
     User user = getCurrentUser();
 
-      user.updatePreferences(gender, age, themePreferences, moodPreferences, formatPreferences);
-      String content =
-          makeEmbeddingPreference(
-              gender, age, themePreferences, moodPreferences, formatPreferences);
+    user.updatePreferences(gender, age, themePreferences, moodPreferences, formatPreferences);
+    String content =
+        makeEmbeddingPreference(gender, age, themePreferences, moodPreferences, formatPreferences);
 
-      float[] vector = embeddingService.embed(content);
+    float[] vector = embeddingService.embed(content);
 
-      qdrantService.upsertUserPoint(user.getId(), vector, user, CollectionName.USER);
+    qdrantService.upsertUserPoint(user.getId(), vector, user, CollectionName.USER);
 
     return "사용자 관심사 설정에 성공했습니다.";
   }
