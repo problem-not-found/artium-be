@@ -59,11 +59,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Generate users.yml on server
-        run: |
-          mkdir -p /home/ubuntu/actions-runner/_work/artium-be/artium-be/dozzle
-          echo "${{ secrets.DOZZLE_USERS_YML }}" > /home/ubuntu/actions-runner/_work/artium-be/artium-be/dozzle/users.yml
-
       - name: Deploy on server
         uses: appleboy/ssh-action@master
         env:

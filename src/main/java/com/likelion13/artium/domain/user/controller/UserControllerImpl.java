@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
-import com.likelion13.artium.domain.user.dto.response.LikeResponse;
 import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
+import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
 import com.likelion13.artium.domain.user.entity.Age;
 import com.likelion13.artium.domain.user.entity.FormatPreference;
@@ -52,10 +52,10 @@ public class UserControllerImpl implements UserController {
   }
 
   @Override
-  public ResponseEntity<BaseResponse<LikeResponse>> createUserLike(@RequestParam Long userId) {
+  public ResponseEntity<BaseResponse<UserLikeResponse>> createUserLike(@PathVariable Long id) {
 
     return ResponseEntity.ok(
-        BaseResponse.success(201, "사용자 좋아요에 성공하였습니다.", userService.createUserLike(userId)));
+        BaseResponse.success(201, "사용자 좋아요에 성공하였습니다.", userService.createUserLike(id)));
   }
 
   @Override
@@ -117,9 +117,9 @@ public class UserControllerImpl implements UserController {
   }
 
   @Override
-  public ResponseEntity<BaseResponse<LikeResponse>> deleteUserLike(@RequestParam Long userId) {
+  public ResponseEntity<BaseResponse<UserLikeResponse>> deleteUserLike(@PathVariable Long id) {
 
-    return ResponseEntity.ok(BaseResponse.success(userService.deleteUserLike(userId)));
+    return ResponseEntity.ok(BaseResponse.success(userService.deleteUserLike(id)));
   }
 
   @Override

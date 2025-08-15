@@ -47,8 +47,7 @@ public class SecurityConfig {
             request ->
                 request
                     // 정적 리소스는 인증 없이 허용
-                    .requestMatchers(
-                        "/swagger-ui/**", "/v3/api-docs/**", "/dozzle/**", "/qdrant/**")
+                    .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
                     .permitAll()
                     // 인증 없이 허용할 경로
                     .requestMatchers("/api/**")

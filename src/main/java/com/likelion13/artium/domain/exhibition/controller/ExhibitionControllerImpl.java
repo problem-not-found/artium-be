@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -16,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.likelion13.artium.domain.exhibition.dto.request.ExhibitionRequest;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionDetailResponse;
+import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionLikeResponse;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionResponse;
 import com.likelion13.artium.domain.exhibition.entity.SortBy;
 import com.likelion13.artium.domain.exhibition.service.ExhibitionService;
@@ -37,22 +39,37 @@ public class ExhibitionControllerImpl implements ExhibitionController {
       @RequestPart(value = "image", required = false) MultipartFile image,
       @Valid @RequestPart(value = "request", required = false) ExhibitionRequest request) {
 
-    return ResponseEntity.ok(
-        BaseResponse.success(
-            201, "전시 정보 생성에 성공하였습니다.", exhibitionService.createExhibition(image, request)));
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(
+            BaseResponse.success(
+                201, "전시 정보 생성에 성공하였습니다.", exhibitionService.createExhibition(image, request)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<ExhibitionLikeResponse>> createExhibitionLike(
+      @PathVariable Long id) {
+
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(
+            BaseResponse.success(
+                201, "전시 좋아요에 성공하였습니다.", exhibitionService.createExhibitionLike(id)));
   }
 
   @Override
   public ResponseEntity<BaseResponse<ExhibitionDetailResponse>> getExhibition(
       @PathVariable Long id) {
 
-    return ResponseEntity.ok(BaseResponse.success(exhibitionService.getExhibition(id)));
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(BaseResponse.success(200, "전시 정보 조회에 성공하였습니다.", exhibitionService.getExhibition(id)));
   }
 
   @Override
   public ResponseEntity<BaseResponse<Integer>> getExhibitionDraftCount() {
 
-    return ResponseEntity.ok(BaseResponse.success(exhibitionService.getExhibitionDraftCount()));
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(
+            BaseResponse.success(
+                200, "임시저장된 전시 개수 조회에 성공하였습니다.", exhibitionService.getExhibitionDraftCount()));
   }
 
   @Override
@@ -61,8 +78,12 @@ public class ExhibitionControllerImpl implements ExhibitionController {
 
     Pageable pageable = validatePageable(pageNum, pageSize);
 
-    return ResponseEntity.ok(
-        BaseResponse.success(exhibitionService.getExhibitionPageByType(sortBy, pageable)));
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(
+            BaseResponse.success(
+                200,
+                sortBy.toString() + " 기준으로 전시 페이지 조회에 성공하였습니다.",
+                exhibitionService.getExhibitionPageByType(sortBy, pageable)));
   }
 
   @Override
@@ -73,8 +94,48 @@ public class ExhibitionControllerImpl implements ExhibitionController {
 
     Pageable pageable = validatePageable(pageNum, pageSize);
 
-    return ResponseEntity.ok(
-        BaseResponse.success(exhibitionService.getExhibitionPageByUser(fillAll, pageable)));
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(
+            BaseResponse.success(
+                200,
+                "사용자가 등록한 전시 페이지 조회에 성공하였습니다.",
+                exhibitionService.getExhibitionPageByUser(fillAll, pageable)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<PageResponse<ExhibitionResponse>>> getExhibitionPageByLike(
+      @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
+
+    Pageable pageable = validatePageable(pageNum, pageSize);
+
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(
+            BaseResponse.success(
+                200,
+                "사용자가 좋아요 한 전시 페이지 조회에 성공하였습니다.",
+                exhibitionService.getExhibitionPageByLike(pageable)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<ExhibitionDetailResponse>> updateExhibition(
+      @PathVariable Long id,
+      @RequestPart(value = "image", required = false) MultipartFile image,
+      @Valid @RequestPart(value = "request", required = false) ExhibitionRequest request) {
+
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(
+            BaseResponse.success(
+                200, "전시 정보 수정에 성공하였습니다.", exhibitionService.updateExhibition(id, image, request)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<ExhibitionLikeResponse>> deleteExhibitionLike(
+      @PathVariable Long id) {
+
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(
+            BaseResponse.success(
+                200, "전시 좋아요 삭제에 성공하였습니다.", exhibitionService.deleteExhibitionLike(id)));
   }
 
   private Pageable validatePageable(Integer pageNum, Integer pageSize) {
@@ -86,15 +147,5 @@ public class ExhibitionControllerImpl implements ExhibitionController {
     }
 
     return PageRequest.of(pageNum - 1, pageSize);
-  }
-
-  @Override
-  public ResponseEntity<BaseResponse<ExhibitionDetailResponse>> updateExhibition(
-      @PathVariable Long id,
-      @RequestPart(value = "image", required = false) MultipartFile image,
-      @Valid @RequestPart(value = "request", required = false) ExhibitionRequest request) {
-
-    return ResponseEntity.ok(
-        BaseResponse.success(exhibitionService.updateExhibition(id, image, request)));
   }
 }
