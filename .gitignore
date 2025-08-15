@@ -28,7 +28,6 @@ out/
 src/main/resources/*.properties
 src/main/resources/*.yml
 .env.*
-dozzle
 
 ### NetBeans ###
 /nbproject/private/
