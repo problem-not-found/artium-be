@@ -22,14 +22,15 @@ import com.likelion13.artium.domain.piece.entity.SaveStatus;
 import com.likelion13.artium.domain.piece.exception.PieceErrorCode;
 import com.likelion13.artium.domain.piece.repository.PieceRepository;
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
-import com.likelion13.artium.domain.user.dto.response.LikeResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
+import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
 import com.likelion13.artium.domain.user.entity.Role;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.mapper.UserMapper;
 import com.likelion13.artium.domain.user.mapping.UserLike;
+import com.likelion13.artium.domain.user.repository.UserLikeRepository;
 import com.likelion13.artium.domain.user.repository.UserRepository;
 import com.likelion13.artium.global.ai.embedding.service.EmbeddingService;
 import com.likelion13.artium.global.exception.CustomException;
@@ -52,6 +53,7 @@ public class UserServiceImpl implements UserService {
   private final UserMapper userMapper;
   private final S3Service s3Service;
   private final PieceRepository pieceRepository;
+  private final UserLikeRepository userLikeRepository;
   private final EmbeddingService embeddingService;
   private final QdrantService qdrantService;
 
@@ -86,13 +88,13 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional
-  public LikeResponse createUserLike(Long userId) {
+  public UserLikeResponse createUserLike(Long id) {
 
     User currentUser = getCurrentUser();
 
     User targetUser =
         userRepository
-            .findById(userId)
+            .findById(id)
             .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
     if (currentUser.getId().equals(targetUser.getId())) {
@@ -100,12 +102,18 @@ public class UserServiceImpl implements UserService {
     }
 
     try {
-      UserLike userLike = UserLike.builder().liker(currentUser).liked(targetUser).build();
+      UserLike userLike = userMapper.toUserLike(currentUser, targetUser);
 
       currentUser.getLikedUsers().add(userLike);
       targetUser.getLikedByUsers().add(userLike);
 
-      return userMapper.toLikeResponse(currentUser.getNickname(), targetUser.getNickname());
+      userLikeRepository.save(userLike);
+
+      log.info(
+          "새로운 사용자 좋아요 생성 - 좋아요를 보낸 사용자: {}, 좋아요를 받은 사용자: {}",
+          currentUser.getNickname(),
+          targetUser.getNickname());
+      return userMapper.toUserLikeResponse(currentUser.getNickname(), targetUser.getNickname());
     } catch (DataIntegrityViolationException e) {
       throw new CustomException(UserErrorCode.ALREADY_LIKED);
     }
@@ -238,13 +246,13 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional
-  public LikeResponse deleteUserLike(Long userId) {
+  public UserLikeResponse deleteUserLike(Long id) {
 
     User user = getCurrentUser();
 
     User targetUser =
         userRepository
-            .findById(userId)
+            .findById(id)
             .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
     if (user.getId().equals(targetUser.getId())) {
@@ -260,7 +268,7 @@ public class UserServiceImpl implements UserService {
     user.getLikedUsers().remove(userLike);
     targetUser.getLikedByUsers().remove(userLike);
 
-    return userMapper.toLikeResponse(user.getNickname(), targetUser.getNickname());
+    return userMapper.toUserLikeResponse(user.getNickname(), targetUser.getNickname());
   }
 
   @Override

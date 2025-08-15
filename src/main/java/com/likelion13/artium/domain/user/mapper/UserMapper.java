@@ -10,11 +10,12 @@ import org.springframework.stereotype.Component;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
-import com.likelion13.artium.domain.user.dto.response.LikeResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
+import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
 import com.likelion13.artium.domain.user.entity.Role;
 import com.likelion13.artium.domain.user.entity.User;
+import com.likelion13.artium.domain.user.mapping.UserLike;
 
 @Component
 public class UserMapper {
@@ -30,12 +31,16 @@ public class UserMapper {
         .build();
   }
 
+  public UserLike toUserLike(User currentUser, User targetUser) {
+    return UserLike.builder().liker(currentUser).liked(targetUser).build();
+  }
+
   public SignUpResponse toSignUpResponse(User user) {
     return SignUpResponse.builder().userId(user.getId()).username(user.getUsername()).build();
   }
 
-  public LikeResponse toLikeResponse(String currentUser, String targetUser) {
-    return LikeResponse.builder()
+  public UserLikeResponse toUserLikeResponse(String currentUser, String targetUser) {
+    return UserLikeResponse.builder()
         .currentUserNickname(currentUser)
         .targetUserNickname(targetUser)
         .build();
