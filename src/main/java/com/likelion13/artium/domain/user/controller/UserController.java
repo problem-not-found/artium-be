@@ -21,8 +21,16 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
 import com.likelion13.artium.domain.user.dto.response.LikeResponse;
+import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
+import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
+import com.likelion13.artium.domain.user.entity.Age;
+import com.likelion13.artium.domain.user.entity.FormatPreference;
+import com.likelion13.artium.domain.user.entity.Gender;
+import com.likelion13.artium.domain.user.entity.MoodPreference;
+import com.likelion13.artium.domain.user.entity.ThemePreference;
+import com.likelion13.artium.global.page.response.PageResponse;
 import com.likelion13.artium.global.response.BaseResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -70,6 +78,16 @@ public interface UserController {
   ResponseEntity<BaseResponse<Boolean>> checkNicknameDuplicated(
       @Parameter(description = "확인할 닉네임", example = "아르티움") @RequestParam String nickname);
 
+  @GetMapping("/likes")
+  @Operation(summary = "사용자가 좋아요 했던 크리에이터 목록을 조회")
+  ResponseEntity<BaseResponse<PageResponse<UserSummaryResponse>>> getLikes(
+      @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
+      @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
+
+  @GetMapping("/preferences")
+  @Operation(summary = "사용자 맞춤 취향 설정 조회", description = "사용자 맞춤 취향 설정을 조회합니다.")
+  ResponseEntity<BaseResponse<PreferenceResponse>> getPreferences();
+
   @PutMapping("/nickname")
   @Operation(summary = "닉네임 변경", description = "현재 로그인된 사용자의 닉네임을 변경합니다.")
   ResponseEntity<BaseResponse<String>> updateNickname(
@@ -79,6 +97,15 @@ public interface UserController {
   @Operation(summary = "프로필 사진 변경", description = "현재 로그인된 사용자의 프로필 사진을 변경합니다.")
   ResponseEntity<BaseResponse<String>> updateProfileImage(
       @Parameter(description = "새로운 프로필 사진") @RequestPart MultipartFile profileImage);
+
+  @PutMapping("/preferences")
+  @Operation(summary = "사용자 맞춤 취향 설정 변경", description = "사용자 맞춤 취향 설정을 변경합니다.")
+  ResponseEntity<BaseResponse<String>> setPreferences(
+      @Parameter(description = "성별 설정", example = "MALE") @RequestParam Gender gender,
+      @Parameter(description = "연령대 설정", example = "TWENTIES") @RequestParam Age age,
+      @Parameter(description = "주제 취향 설정") @RequestParam List<ThemePreference> themePreferences,
+      @Parameter(description = "분위기 취향 설정") @RequestParam List<MoodPreference> moodPreferences,
+      @Parameter(description = "형식 취향 설정") @RequestParam List<FormatPreference> formatPreferences);
 
   @DeleteMapping
   @Operation(summary = "사용자 탈퇴", description = "현재 로그인된 사용자를 Soft Delete 처리합니다.")

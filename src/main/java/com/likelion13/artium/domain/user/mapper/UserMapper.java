@@ -11,9 +11,14 @@ import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
 import com.likelion13.artium.domain.user.dto.response.LikeResponse;
+import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
+import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
+import com.likelion13.artium.domain.user.entity.FormatPreference;
+import com.likelion13.artium.domain.user.entity.MoodPreference;
 import com.likelion13.artium.domain.user.entity.Role;
+import com.likelion13.artium.domain.user.entity.ThemePreference;
 import com.likelion13.artium.domain.user.entity.User;
 
 @Component
@@ -63,6 +68,26 @@ public class UserMapper {
             user.getExhibitionLikes().stream()
                 .map(ExhibitionLike::getId)
                 .collect(Collectors.toList()))
+        .build();
+  }
+
+  public UserSummaryResponse toUserSummaryResponse(User user) {
+    return UserSummaryResponse.builder()
+        .userId(user.getId())
+        .nickname(user.getNickname())
+        .profileImageUrl(user.getProfileImageUrl())
+        .build();
+  }
+
+  public PreferenceResponse toPreferenceResponse(User user) {
+    return PreferenceResponse.builder()
+        .userId(user.getId())
+        .age(user.getAge().getKo())
+        .gender(user.getGender().getKo())
+        .themePreferences(user.getThemePreferences().stream().map(ThemePreference::getKo).toList())
+        .moodPreferences(user.getMoodPreferences().stream().map(MoodPreference::getKo).toList())
+        .formatPreferences(
+            user.getFormatPreferences().stream().map(FormatPreference::getKo).toList())
         .build();
   }
 }
