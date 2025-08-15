@@ -40,6 +40,7 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
         FROM Exhibition e
         JOIN e.exhibitionLikes el
         WHERE el.user.id = :userId
+        ORDER BY el.createdAt DESC
         """)
   Page<Exhibition> findLikedExhibitionsByUserId(@Param("userId") Long userId, Pageable pageable);
 }

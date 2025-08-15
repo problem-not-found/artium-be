@@ -209,11 +209,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
     User user = userService.getCurrentUser();
 
-    Pageable sortedPageable =
-        PageRequest.of(
-            pageable.getPageNumber(),
-            pageable.getPageSize(),
-            Sort.by(Direction.DESC, "el.createAt"));
+    Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
 
     Page<ExhibitionResponse> page =
         exhibitionRepository
