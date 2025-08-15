@@ -20,7 +20,6 @@ public enum UserErrorCode implements BaseErrorCode {
   CANNOT_LIKE_SELF("USER_4005", "자기 자신은 좋아요 할 수 없습니다.", HttpStatus.BAD_REQUEST),
   ALREADY_LIKED("USER_4006", "이미 좋아요한 사용자입니다.", HttpStatus.BAD_REQUEST),
   LIKE_NOT_FOUND("USER_4007", "좋아요 내역을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
-  SET_PREFERENCES_FAILED("USER_4008", "내 관심사 설정하기에 실패했습니다.", HttpStatus.INTERNAL_SERVER_ERROR),
   ;
 
   private final String code;

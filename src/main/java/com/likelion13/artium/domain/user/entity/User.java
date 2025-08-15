@@ -166,9 +166,18 @@ public class User extends BaseTimeEntity {
       List<FormatPreference> formatPreferences) {
     this.gender = gender;
     this.age = age;
-    this.themePreferences = themePreferences;
-    this.moodPreferences = moodPreferences;
-    this.formatPreferences = formatPreferences;
+    this.themePreferences.clear();
+    if(themePreferences != null) {
+      this.themePreferences.addAll(themePreferences);
+    }
+    this.moodPreferences.clear();
+    if(moodPreferences != null) {
+      this.moodPreferences.addAll(moodPreferences);
+    }
+    this.formatPreferences.clear();
+    if(formatPreferences != null) {
+      this.formatPreferences.addAll(formatPreferences);
+    }
   }
 
   public void softDelete() {

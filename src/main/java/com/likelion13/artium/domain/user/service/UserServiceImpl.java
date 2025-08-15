@@ -350,14 +350,8 @@ public class UserServiceImpl implements UserService {
       List<ThemePreference> themePreferences,
       List<MoodPreference> moodPreferences,
       List<FormatPreference> formatPreferences) {
-    Long userId = getCurrentUser().getId();
+    User user = getCurrentUser();
 
-    User user =
-        userRepository
-            .findById(userId)
-            .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
-
-    try {
       user.updatePreferences(gender, age, themePreferences, moodPreferences, formatPreferences);
       String content =
           makeEmbeddingPreference(
@@ -366,10 +360,6 @@ public class UserServiceImpl implements UserService {
       float[] vector = embeddingService.embed(content);
 
       qdrantService.upsertUserPoint(user.getId(), vector, user, CollectionName.USER);
-
-    } catch (CustomException e) {
-      throw new CustomException(UserErrorCode.SET_PREFERENCES_FAILED);
-    }
 
     return "사용자 관심사 설정에 성공했습니다.";
   }
@@ -409,7 +399,7 @@ public class UserServiceImpl implements UserService {
         + "theme_preferences : "
         + themePreferences.stream().map(ThemePreference::getKo).toList()
         + "\n"
-        + "mood_ preferences : "
+        + "mood_preferences : "
         + moodPreferences.stream().map(MoodPreference::getKo).toList()
         + "\n"
         + "formatPreferences : "

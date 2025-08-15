@@ -82,8 +82,8 @@ public class UserMapper {
   public PreferenceResponse toPreferenceResponse(User user) {
     return PreferenceResponse.builder()
         .userId(user.getId())
-        .age(user.getAge().getKo())
-        .gender(user.getGender().getKo())
+        .age(user.getAge() != null ? user.getAge().getKo() : null)
+        .gender(user.getGender() != null ? user.getGender().getKo() : null)
         .themePreferences(user.getThemePreferences().stream().map(ThemePreference::getKo).toList())
         .moodPreferences(user.getMoodPreferences().stream().map(MoodPreference::getKo).toList())
         .formatPreferences(
