@@ -3,6 +3,8 @@
  */
 package com.likelion13.artium.global.config;
 
+import jakarta.servlet.http.HttpServletResponse;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -39,9 +41,27 @@ public class SecurityConfig {
         .csrf(AbstractHttpConfigurer::disable)
         // CORS 설정 활성화
         .cors(cors -> cors.configurationSource(corsConfig.corsConfigurationSource()))
-        // 세션을 생성하지 않음 (JWT 사용으로 인한 Stateless 설정
+        // 세션을 생성하지 않음 (JWT 사용으로 인한 Stateless 설정)
         .sessionManagement(
             session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        // 예외 처리: 인증 실패 시 401 반환
+        .exceptionHandling(
+            e ->
+                e.authenticationEntryPoint(
+                    (request, response, authException) -> {
+                      response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                      response.setContentType("application/json;charset=UTF-8");
+                      response
+                          .getWriter()
+                          .write(
+                              """
+                                   {
+                                     "success": false,
+                                     "code": 401,
+                                     "message": "JWT 토큰이 없거나 유효하지 않습니다."
+                                   }
+                                 """);
+                    }))
         // HTTP 요청에 대한 권한 설정
         .authorizeHttpRequests(
             request ->
@@ -49,9 +69,12 @@ public class SecurityConfig {
                     // 정적 리소스는 인증 없이 허용
                     .requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
                     .permitAll()
-                    // 인증 없이 허용할 경로
-                    .requestMatchers("/api/**")
+                    // 회원 가입, 로그인 경로는 인증 없이 허용
+                    .requestMatchers("/api/users/sign-up", "/api/auths/login")
                     .permitAll()
+                    // 개발자용 경로는 역할 필요
+                    .requestMatchers("/api/**/devs/**")
+                    .hasRole("DEVELOPER")
                     // 그 외 모든 요청은 모두 인증 필요
                     .anyRequest()
                     .authenticated())
