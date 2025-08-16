@@ -3,8 +3,6 @@
  */
 package com.likelion13.artium.global.jwt;
 
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -13,13 +11,11 @@ import javax.crypto.SecretKey;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
@@ -27,7 +23,6 @@ import com.likelion13.artium.domain.auth.dto.response.TokenResponse;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.global.exception.CustomException;
 
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
@@ -63,6 +58,10 @@ public class JwtProvider {
 
   /** Refresh Token 타입 상수 */
   public static final String TOKEN_TYPE_REFRESH = "refresh";
+
+  private static final String AUTHORIZATION_HEADER = "Authorization";
+
+  private static final String BEARER_PREFIX = "Bearer ";
 
   /**
    * 생성자
@@ -181,27 +180,6 @@ public class JwtProvider {
   }
 
   /**
-   * 토큰에서 인증 정보 추출
-   *
-   * <p>JWT 토큰을 파싱하여 사용자 인증 정보를 추출합니다.
-   *
-   * @param token JWT 토큰
-   * @return 인증 정보
-   */
-  public Authentication getAuthentication(String token) {
-    Claims claims = Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token).getBody();
-
-    Collection<? extends GrantedAuthority> authorities =
-        Arrays.stream(claims.get("auth").toString().split(","))
-            .map(SimpleGrantedAuthority::new)
-            .collect(Collectors.toList());
-
-    Map<String, Object> attributes = Map.of("email", claims.getSubject());
-    OAuth2User principal = new DefaultOAuth2User(authorities, attributes, "email");
-    return new UsernamePasswordAuthenticationToken(principal, token, authorities);
-  }
-
-  /**
    * 토큰에서 사용자 이름 추출
    *
    * @param token JWT 토큰
@@ -222,7 +200,7 @@ public class JwtProvider {
    * @param token JWT 토큰
    * @return 토큰 타입 (access 또는 refresh)
    */
-  public String getTokenType(String token) {
+  private String getTokenType(String token) {
     return Jwts.parserBuilder()
         .setSigningKey(key)
         .build()
@@ -332,6 +310,18 @@ public class JwtProvider {
   }
 
   /**
+   * Redis에 저장된 Refresh Token 삭제
+   *
+   * <p>사용자의 Refresh Token을 Redis에서 삭제합니다.
+   *
+   * @param username 사용자 이름
+   */
+  public void deleteRefreshToken(String username) {
+    String redisKey = "RT:" + username;
+    tokenRepository.deleteRefreshToken(redisKey);
+  }
+
+  /**
    * JWT 토큰을 HTTP 응답의 쿠키에 추가합니다.
    *
    * <p>이 메서드는 주어진 JWT 토큰을 HttpOnly 및 Secure 속성이 설정된 쿠키로 만들어 응답에 추가합니다. 이 쿠키는 클라이언트에서 JavaScript로
@@ -351,5 +341,43 @@ public class JwtProvider {
     response.addCookie(cookie);
 
     log.info("JWT 쿠키가 설정되었습니다 - 이름: {}, 만료: {}초", name, cookie.getMaxAge());
+  }
+
+  /**
+   * JWT 쿠키 삭제
+   *
+   * <p>로그아웃 시 브라우저에 저장된 JWT 쿠키를 삭제합니다.
+   *
+   * @param response 응답 객체 (HttpServletResponse)
+   * @param name 삭제할 쿠키 이름 (예: "accessToken", "refreshToken")
+   */
+  public void removeJwtCookie(HttpServletResponse response, String name) {
+    Cookie cookie = new Cookie(name, null);
+    cookie.setHttpOnly(true);
+    // cookie.setSecure(true);
+    cookie.setPath("/");
+    cookie.setMaxAge(0);
+    response.addCookie(cookie);
+
+    log.info("JWT 쿠키가 삭제되었습니다 - 이름: {}", name);
+  }
+
+  public String extractToken(HttpServletRequest request) {
+    // 1. 헤더에서 토큰 추출
+    String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
+    if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
+      return bearerToken.substring(BEARER_PREFIX.length());
+    }
+
+    // 2. 쿠키에서 토큰 추출
+    else if (request.getCookies() != null) {
+      for (Cookie cookie : request.getCookies()) {
+        if ("ACCESS_TOKEN".equals(cookie.getName())) {
+          return cookie.getValue();
+        }
+      }
+    }
+
+    return null;
   }
 }

@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.likelion13.artium.global.exception.model.BaseErrorCode;
 import com.likelion13.artium.global.response.BaseResponse;
@@ -37,14 +38,20 @@ public class GlobalExceptionHandler {
         ex.getBindingResult().getFieldErrors().stream()
             .map(e -> String.format("[%s] %s", e.getField(), e.getDefaultMessage()))
             .collect(Collectors.joining(" / "));
-    log.warn("Validation 오류 발생: {}", errorMessages);
+    log.error("Validation 오류 발생: {}", errorMessages);
     return ResponseEntity.badRequest().body(BaseResponse.error(400, errorMessages));
+  }
+
+  // 정적 리소스 예외
+  @ExceptionHandler(NoResourceFoundException.class)
+  public void handleNoResourceFound(NoResourceFoundException ex) {
+    log.error("정적 리소스 없음 (무시됨): {}", ex.getMessage());
   }
 
   // 예상치 못한 예외
   @ExceptionHandler(Exception.class)
   public ResponseEntity<BaseResponse<Object>> handleException(Exception ex) {
-    log.error("Server 오류 발생: ", ex);
+    log.error("Server 오류 발생: {}", ex.getMessage());
     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
         .body(BaseResponse.error(500, "예상치 못한 서버 오류가 발생했습니다."));
   }
