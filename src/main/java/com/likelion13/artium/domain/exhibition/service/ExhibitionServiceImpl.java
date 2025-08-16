@@ -1,5 +1,5 @@
-/* 
- * Copyright (c) LikeLion13th Problem not Found 
+/*
+ * Copyright (c) LikeLion13th Problem not Found
  */
 package com.likelion13.artium.domain.exhibition.service;
 
@@ -302,7 +302,9 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
       List<ExhibitionParticipant> participants = buildParticipants(request.getParticipantIdList());
 
+      exhibition.getExhibitionParticipants().clear();
       participants.forEach(p -> p.setExhibition(exhibition));
+      exhibition.getExhibitionParticipants().addAll(participants);
 
       Exhibition updatedExhibition =
           exhibitionMapper.toExhibition(imageUrl, request, status, currentUser, participants);

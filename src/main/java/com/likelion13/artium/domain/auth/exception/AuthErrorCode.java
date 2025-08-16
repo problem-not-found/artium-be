@@ -1,5 +1,5 @@
-/* 
- * Copyright (c) LikeLion13th Problem not Found 
+/*
+ * Copyright (c) LikeLion13th Problem not Found
  */
 package com.likelion13.artium.domain.auth.exception;
 
@@ -18,15 +18,15 @@ public enum AuthErrorCode implements BaseErrorCode {
   TOKEN_FAIL("AUTH_4003", "액세스 토큰 요청에 실패하였습니다.", HttpStatus.UNAUTHORIZED),
   USER_INFO_FAIL("AUTH_4004", "사용자 정보 요청에 실패하였습니다.", HttpStatus.UNAUTHORIZED),
   INVALID_REFRESH_TOKEN("AUTH_4005", "유효하지 않은 리프레시 토큰입니다.", HttpStatus.UNAUTHORIZED),
-  ACCESS_TOKEN_EXPIRED("AUTH_4006", "액세스 토큰이 만료되었습니다.", HttpStatus.UNAUTHORIZED),
-  REFRESH_TOKEN_REQUIRED("AUTH_4007", "리프레시 토큰이 필요합니다.", HttpStatus.FORBIDDEN),
-  REFRESH_TOKEN_NOT_FOUND("AUTH_4008", "리프레시 토큰을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+  REFRESH_TOKEN_REQUIRED("AUTH_4006", "리프레시 토큰이 필요합니다.", HttpStatus.FORBIDDEN),
 
   JWT_TOKEN_EXPIRED("JWT_4001", "JWT 토큰이 만료되었습니다.", HttpStatus.UNAUTHORIZED),
   UNSUPPORTED_TOKEN("JWT_4002", "지원되지 않는 JWT 형식입니다.", HttpStatus.UNAUTHORIZED),
   MALFORMED_JWT_TOKEN("JWT_4003", "JWT 형식이 올바르지 않습니다.", HttpStatus.UNAUTHORIZED),
   INVALID_SIGNATURE("JWT_4004", "JWT 서명이 유효하지 않습니다.", HttpStatus.UNAUTHORIZED),
-  ILLEGAL_ARGUMENT("JWT_4005", "JWT 토큰 값이 잘못되었습니다.", HttpStatus.UNAUTHORIZED);
+  ILLEGAL_ARGUMENT("JWT_4005", "JWT 토큰 값이 잘못되었습니다.", HttpStatus.UNAUTHORIZED),
+  ACCESS_TOKEN_NOT_FOUND("JWT_4006", "액세스 토큰을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+  REFRESH_TOKEN_NOT_FOUND("JWT_4007", "리프레시 토큰을 찾을 수 없습니다.", HttpStatus.NOT_FOUND);
 
   private final String code;
   private final String message;

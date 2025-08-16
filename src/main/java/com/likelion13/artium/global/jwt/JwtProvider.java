@@ -1,5 +1,5 @@
-/* 
- * Copyright (c) LikeLion13th Problem not Found 
+/*
+ * Copyright (c) LikeLion13th Problem not Found
  */
 package com.likelion13.artium.global.jwt;
 
@@ -20,6 +20,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
 import com.likelion13.artium.domain.auth.dto.response.TokenResponse;
+import com.likelion13.artium.domain.auth.exception.AuthErrorCode;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.global.exception.CustomException;
 
@@ -252,11 +253,9 @@ public class JwtProvider {
    */
   public boolean validateTokenType(String token, String expectedType) {
     try {
-      String tokenType = getTokenType(token);
-      return expectedType.equals(tokenType);
+      return expectedType.equals(getTokenType(token));
     } catch (Exception e) {
-      log.info("토큰 타입 검증 실패: {}", e.getMessage());
-      return false;
+      throw new CustomException(AuthErrorCode.JWT_TOKEN_EXPIRED);
     }
   }
 
@@ -319,8 +318,7 @@ public class JwtProvider {
    * @param username 사용자 이름
    */
   public void deleteRefreshToken(String username) {
-    String redisKey = "RT:" + username;
-    tokenRepository.deleteRefreshToken(redisKey);
+    tokenRepository.deleteRefreshToken(username);
   }
 
   /**
@@ -379,7 +377,8 @@ public class JwtProvider {
         }
       }
     }
-    return null;
+
+    throw new CustomException(AuthErrorCode.ACCESS_TOKEN_NOT_FOUND);
   }
 
   public String extractRefreshToken(HttpServletRequest request) {
@@ -390,6 +389,7 @@ public class JwtProvider {
         }
       }
     }
-    return null;
+
+    throw new CustomException(AuthErrorCode.REFRESH_TOKEN_NOT_FOUND);
   }
 }
