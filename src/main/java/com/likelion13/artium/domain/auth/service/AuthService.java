@@ -17,6 +17,7 @@ import com.likelion13.artium.global.exception.CustomException;
  * <ul>
  *   <li>사용자 로그인
  *   <li>사용자 로그아웃
+ *   <li>Access Token 재발급
  * </ul>
  */
 public interface AuthService {
@@ -40,4 +41,15 @@ public interface AuthService {
    * @throws CustomException 로그아웃 처리 실패 시 발생
    */
   String logout(String accessToken);
+
+  /**
+   * Refresh Token을 사용하여 새로운 Access Token을 발급합니다.
+   *
+   * <p>기존 Access Token이 만료되었을 때 Refresh Token을 검증하고, 유효하다면 새로운 Access Token을 발급합니다.
+   *
+   * @param refreshToken 재발급에 사용할 유효한 Refresh Token 문자열
+   * @return 새로 발급된 Access Token 문자열
+   * @throws CustomException Refresh Token이 유효하지 않거나 만료된 경우 발생
+   */
+  String reissueAccessToken(String refreshToken);
 }

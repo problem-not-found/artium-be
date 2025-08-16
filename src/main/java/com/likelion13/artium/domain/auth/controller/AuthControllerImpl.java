@@ -3,12 +3,13 @@
  */
 package com.likelion13.artium.domain.auth.controller;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.likelion13.artium.domain.auth.dto.request.LoginRequest;
@@ -43,17 +44,35 @@ public class AuthControllerImpl implements AuthController {
         "ACCESS_TOKEN",
         jwtProvider.getExpirationTime(tokenResponse.getAccessToken()));
 
-    return ResponseEntity.ok(
-        BaseResponse.success(
-            200, tokenResponse.getUsername(), "Access Token: " + tokenResponse.getAccessToken()));
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(BaseResponse.success(201, "로그인에 성공하였습니다.", tokenResponse.getAccessToken()));
   }
 
   @Override
   public ResponseEntity<BaseResponse<String>> logout(
-      @RequestHeader("Authorization") String header) {
+      HttpServletRequest request, HttpServletResponse response) {
 
-    String accessToken = header.substring(7).trim();
+    String accessToken = jwtProvider.extractToken(request);
+    String result = authService.logout(accessToken);
 
-    return ResponseEntity.ok(BaseResponse.success(authService.logout(accessToken)));
+    jwtProvider.removeJwtCookie(response, "ACCESS_TOKEN");
+    jwtProvider.removeJwtCookie(response, "REFRESH_TOKEN");
+
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(BaseResponse.success(200, "로그아웃에 성공하였습니다.", result));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<String>> reissueToken(
+      HttpServletRequest request, HttpServletResponse response) {
+
+    String refreshToken = jwtProvider.extractToken(request);
+    String newAccessToken = authService.reissueAccessToken(refreshToken);
+
+    jwtProvider.addJwtToCookie(
+        response, newAccessToken, "ACCESS_TOKEN", jwtProvider.getExpirationTime(newAccessToken));
+
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(BaseResponse.success(201, "액세스 토큰 재발급에 성공하였습니다.", newAccessToken));
   }
 }
