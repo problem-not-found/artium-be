@@ -36,7 +36,6 @@ import com.likelion13.artium.global.page.exception.PageErrorStatus;
 import com.likelion13.artium.global.page.response.PageResponse;
 import com.likelion13.artium.global.response.BaseResponse;
 
-import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -88,21 +87,21 @@ public class UserControllerImpl implements UserController {
 
   @Override
   public ResponseEntity<BaseResponse<UserSummaryResponse>> getUserProfile(
-      @Parameter(description = "특정 유저 식별자") @PathVariable(value = "id") Long userId) {
+      @PathVariable(value = "id") Long userId) {
     return ResponseEntity.status(200)
         .body(BaseResponse.success(userService.getUserProfile(userId)));
   }
 
   @Override
   public ResponseEntity<BaseResponse<UserContactResponse>> getUserContact(
-      @Parameter(description = "특정 유저 식별자") @PathVariable(value = "id") Long userId) {
+      @PathVariable(value = "id") Long userId) {
     return ResponseEntity.status(200)
         .body(BaseResponse.success(userService.getUserContact(userId)));
   }
 
   @Override
   public ResponseEntity<BaseResponse<CreatorResponse>> getCreatorInfo(
-      @Parameter(description = "특정 유저 식별자") @PathVariable(value = "id") Long userId) {
+      @PathVariable(value = "id") Long userId) {
     return ResponseEntity.status(200)
         .body(BaseResponse.success(userService.getCreatorInfo(userId)));
   }

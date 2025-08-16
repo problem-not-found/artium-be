@@ -206,17 +206,14 @@ public class UserServiceImpl implements UserService {
   public String updateUserInfo(String newCode, String newNickname) {
     User user = getCurrentUser();
 
-    if (userRepository.existsByCode(newCode)) {
+    if (newCode != null && userRepository.existsByCodeAndIdNot(newCode, user.getId())) {
       log.error("코드 중복 시도 - userId: {}, code: {}", user.getId(), newCode);
       throw new CustomException(UserErrorCode.CODE_ALREADY_EXISTS);
     }
 
     user.updateUserInfo(newCode, newNickname);
     log.info(
-        "사용자 닉네임 변경 - userId: {}, newCode: {}, newNickname: {}",
-        user.getId(),
-        newCode,
-        newNickname);
+        "사용자 정보 변경 - userId: {}, newCode: {}, newNickname: {}", user.getId(), newCode, newNickname);
 
     return "newCode: " + newCode + ", newNickname: " + newNickname;
   }
