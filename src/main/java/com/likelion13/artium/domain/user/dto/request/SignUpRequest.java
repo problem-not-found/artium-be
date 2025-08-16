@@ -33,4 +33,8 @@ public class SignUpRequest {
   @NotBlank(message = "사용자 닉네임 항목은 필수입니다.")
   @Schema(description = "사용자 닉네임", example = "아르티움")
   private String nickname;
+
+  @NotBlank(message = "사용자 코드 항목은 필수입니다. 중복될 수 없습니다.")
+  @Schema(description = "사용자 코드", example = "simonisnextdoor")
+  private String code;
 }
