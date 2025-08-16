@@ -10,7 +10,7 @@ import lombok.Getter;
 @Getter
 @Builder
 @Schema(title = "LikeResponse DTO", description = "사용자 좋아요 요청에 대한 응답 반환")
-public class LikeResponse {
+public class UserLikeResponse {
 
   @Schema(description = "좋아요를 보낸 사용자 코드", example = "heejun0109")
   private String currentUserCode;

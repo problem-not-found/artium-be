@@ -11,17 +11,18 @@ import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
 import com.likelion13.artium.domain.user.dto.response.CreatorResponse;
-import com.likelion13.artium.domain.user.dto.response.LikeResponse;
 import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
+import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
 import com.likelion13.artium.domain.user.entity.FormatPreference;
 import com.likelion13.artium.domain.user.entity.MoodPreference;
 import com.likelion13.artium.domain.user.entity.Role;
 import com.likelion13.artium.domain.user.entity.ThemePreference;
 import com.likelion13.artium.domain.user.entity.User;
+import com.likelion13.artium.domain.user.mapping.UserLike;
 
 @Component
 public class UserMapper {
@@ -36,6 +37,10 @@ public class UserMapper {
         .role(Role.ROLE_USER)
         .isDeleted(false)
         .build();
+  }
+
+  public UserLike toUserLike(User currentUser, User targetUser) {
+    return UserLike.builder().liker(currentUser).liked(targetUser).build();
   }
 
   public SignUpResponse toSignUpResponse(User user) {

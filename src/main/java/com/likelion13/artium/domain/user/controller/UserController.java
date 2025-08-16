@@ -21,11 +21,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
 import com.likelion13.artium.domain.user.dto.response.CreatorResponse;
-import com.likelion13.artium.domain.user.dto.response.LikeResponse;
 import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
+import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
 import com.likelion13.artium.domain.user.entity.Age;
 import com.likelion13.artium.domain.user.entity.FormatPreference;
@@ -59,10 +59,10 @@ public interface UserController {
           @RequestPart(value = "image")
           MultipartFile image);
 
-  @PostMapping("/like")
+  @PostMapping("/{id}/like")
   @Operation(summary = "사용자 좋아요", description = "좋아요 할 사용자의 식별자를 요청 받아 좋아요를 등록합니다.")
-  ResponseEntity<BaseResponse<LikeResponse>> createUserLike(
-      @Parameter(description = "좋아요 할 사용자 식별자", example = "1") @RequestParam Long userId);
+  ResponseEntity<BaseResponse<UserLikeResponse>> createUserLike(
+      @Parameter(description = "좋아요 할 사용자 식별자", example = "1") @PathVariable Long id);
 
   @GetMapping
   @Operation(summary = "사용자 정보 조회", description = "현재 로그인된 사용자의 정보를 조회합니다.")
@@ -129,10 +129,10 @@ public interface UserController {
   @Operation(summary = "사용자 탈퇴", description = "현재 로그인된 사용자를 Soft Delete 처리합니다.")
   ResponseEntity<BaseResponse<String>> deleteUser();
 
-  @DeleteMapping("/like")
+  @DeleteMapping("/{id}/like")
   @Operation(summary = "사용자 좋아요 취소", description = "좋아요 했던 사용자의 식별자를 요청 받아 좋아요를 취소합니다.")
-  ResponseEntity<BaseResponse<LikeResponse>> deleteUserLike(
-      @Parameter(description = "좋아요 했던 사용자 식별자", example = "1") @RequestParam Long userId);
+  ResponseEntity<BaseResponse<UserLikeResponse>> deleteUserLike(
+      @Parameter(description = "좋아요 했던 사용자 식별자", example = "1") @PathVariable Long id);
 
   @GetMapping("/devs")
   @Operation(summary = "[개발자]사용자 전체 조회", description = "스웨거를 사용해 전체 사용자를 조회합니다.")

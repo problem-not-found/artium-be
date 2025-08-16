@@ -8,6 +8,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -34,6 +35,10 @@ import lombok.NoArgsConstructor;
       @UniqueConstraint(
           name = "uq_exhibition_like_exhibition_user",
           columnNames = {"exhibition_id", "user_id"})
+    },
+    indexes = {
+      @Index(name = "idx_exhibition_like_user_id", columnList = "user_id"),
+      @Index(name = "idx_exhibition_like_exhibition_id", columnList = "exhibition_id")
     })
 public class ExhibitionLike extends BaseTimeEntity {
 
