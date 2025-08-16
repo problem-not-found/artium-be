@@ -47,8 +47,8 @@ public class UserMapper {
     return SignUpResponse.builder().userId(user.getId()).username(user.getUsername()).build();
   }
 
-  public LikeResponse toLikeResponse(String currentUserCode, String targetUserCode) {
-    return LikeResponse.builder()
+  public UserLikeResponse toUserLikeResponse(String currentUserCode, String targetUserCode) {
+    return UserLikeResponse.builder()
         .currentUserCode(currentUserCode)
         .targetUserCode(targetUserCode)
         .build();

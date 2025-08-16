@@ -131,7 +131,7 @@ public class UserServiceImpl implements UserService {
           "새로운 사용자 좋아요 생성 - 좋아요를 보낸 사용자: {}, 좋아요를 받은 사용자: {}",
           currentUser.getNickname(),
           targetUser.getNickname());
-    return userMapper.toLikeResponse(currentUser.getCode(), targetUser.getCode());
+    return userMapper.toUserLikeResponse(currentUser.getCode(), targetUser.getCode());
   }
 
   @Override
@@ -287,7 +287,7 @@ public class UserServiceImpl implements UserService {
     user.getLikedUsers().remove(userLike);
     targetUser.getLikedByUsers().remove(userLike);
 
-    return userMapper.toUserLikeResponse(user.getNickname(), targetUser.getNickname());
+    return userMapper.toUserLikeResponse(user.getCode(), targetUser.getCode());
   }
 
   @Override
