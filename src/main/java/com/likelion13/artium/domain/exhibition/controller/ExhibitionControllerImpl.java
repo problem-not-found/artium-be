@@ -103,6 +103,20 @@ public class ExhibitionControllerImpl implements ExhibitionController {
   }
 
   @Override
+  public ResponseEntity<BaseResponse<PageResponse<ExhibitionResponse>>> getExhibitionPageByUserId(
+      @RequestParam Long userId, @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
+
+    Pageable pageable = validatePageable(pageNum, pageSize);
+
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(
+            BaseResponse.success(
+                200,
+                "전시 페이지 조회에 성공하였습니다.",
+                exhibitionService.getExhibitionPageByUserId(userId, pageable)));
+  }
+
+  @Override
   public ResponseEntity<BaseResponse<PageResponse<ExhibitionResponse>>> getExhibitionPageByLike(
       @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
 

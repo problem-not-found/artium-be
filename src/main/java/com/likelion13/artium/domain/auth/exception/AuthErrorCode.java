@@ -17,7 +17,7 @@ public enum AuthErrorCode implements BaseErrorCode {
   LOGOUT_FAIL("AUTH_4002", "로그아웃 처리 중 오류가 발생하였습니다.", HttpStatus.BAD_REQUEST),
   TOKEN_FAIL("AUTH_4003", "액세스 토큰 요청에 실패하였습니다.", HttpStatus.UNAUTHORIZED),
   USER_INFO_FAIL("AUTH_4004", "사용자 정보 요청에 실패하였습니다.", HttpStatus.UNAUTHORIZED),
-  INVALID_ACCESS_TOKEN("AUTH_4005", "유효하지 않은 액세스 토큰입니다.", HttpStatus.UNAUTHORIZED),
+  INVALID_REFRESH_TOKEN("AUTH_4005", "유효하지 않은 리프레시 토큰입니다.", HttpStatus.UNAUTHORIZED),
   ACCESS_TOKEN_EXPIRED("AUTH_4006", "액세스 토큰이 만료되었습니다.", HttpStatus.UNAUTHORIZED),
   REFRESH_TOKEN_REQUIRED("AUTH_4007", "리프레시 토큰이 필요합니다.", HttpStatus.FORBIDDEN),
   REFRESH_TOKEN_NOT_FOUND("AUTH_4008", "리프레시 토큰을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),

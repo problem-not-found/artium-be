@@ -22,7 +22,6 @@ public class ReviewMapper {
     return ReviewResponse.builder()
         .reviewId(review.getId())
         .content(review.getContent())
-        .createdAt(review.getCreatedAt())
         .isAuthor(isAuthor)
         .build();
   }

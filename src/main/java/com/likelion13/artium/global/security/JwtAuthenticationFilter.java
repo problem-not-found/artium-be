@@ -28,9 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-  private static final String AUTHORIZATION_HEADER = "Authorization";
-  private static final String BEARER_PREFIX = "Bearer ";
-
   private final JwtProvider jwtProvider;
   private final UserDetailsService userDetailsService;
 
@@ -38,10 +35,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
   protected void doFilterInternal(
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
-    try {
-      String token = resolveToken(request);
 
-      if (token != null && jwtProvider.validateToken(token)) {
+    try {
+      String token = jwtProvider.extractAccessToken(request);
+
+      if (token != null
+          && jwtProvider.validateToken(token)
+          && jwtProvider.validateTokenType(token, JwtProvider.TOKEN_TYPE_ACCESS)) {
         if (SecurityContextHolder.getContext().getAuthentication() == null) {
           String username = jwtProvider.getUsernameFromToken(token);
           UserDetails userDetails = userDetailsService.loadUserByUsername(username);
@@ -55,18 +55,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     } catch (JwtException | IllegalArgumentException e) {
       log.error("JWT 검증 실패 : {}", e.getMessage());
       SecurityContextHolder.clearContext();
-      response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid JWT token");
+      response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않은 JWT 토큰입니다.");
       return;
     }
     filterChain.doFilter(request, response);
-  }
-
-  private String resolveToken(HttpServletRequest request) {
-    String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
-    log.debug("Authorization Header : {}", bearerToken);
-    if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
-      return bearerToken.substring(BEARER_PREFIX.length());
-    }
-    return null;
   }
 }
