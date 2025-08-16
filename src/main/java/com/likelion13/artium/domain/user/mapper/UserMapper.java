@@ -10,8 +10,10 @@ import org.springframework.stereotype.Component;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
+import com.likelion13.artium.domain.user.dto.response.CreatorResponse;
 import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
+import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
@@ -30,8 +32,9 @@ public class UserMapper {
         .username(request.getUsername())
         .password(encodedPassword)
         .nickname(request.getNickname())
+        .code(request.getCode())
         .profileImageUrl(imageUrl)
-        .role(Role.USER)
+        .role(Role.ROLE_USER)
         .isDeleted(false)
         .build();
   }
@@ -44,10 +47,10 @@ public class UserMapper {
     return SignUpResponse.builder().userId(user.getId()).username(user.getUsername()).build();
   }
 
-  public UserLikeResponse toUserLikeResponse(String currentUser, String targetUser) {
+  public UserLikeResponse toUserLikeResponse(String currentUserCode, String targetUserCode) {
     return UserLikeResponse.builder()
-        .currentUserNickname(currentUser)
-        .targetUserNickname(targetUser)
+        .currentUserCode(currentUserCode)
+        .targetUserCode(targetUserCode)
         .build();
   }
 
@@ -56,6 +59,7 @@ public class UserMapper {
         .userId(user.getId())
         .username(user.getUsername())
         .nickname(user.getNickname())
+        .code(user.getCode())
         .profileImageUrl(user.getProfileImageUrl())
         .exhibitionParticipantIds(
             user.getExhibitionParticipants().stream()
@@ -80,7 +84,27 @@ public class UserMapper {
     return UserSummaryResponse.builder()
         .userId(user.getId())
         .nickname(user.getNickname())
+        .code(user.getCode())
         .profileImageUrl(user.getProfileImageUrl())
+        .build();
+  }
+
+  public UserContactResponse toUserContactResponse(User user) {
+    return UserContactResponse.builder()
+        .userId(user.getId())
+        .email(user.getEmail())
+        .instagram(user.getInstagram())
+        .build();
+  }
+
+  public CreatorResponse toCreatorResponse(User user, Boolean isLike) {
+    return CreatorResponse.builder()
+        .userId(user.getId())
+        .nickname(user.getNickname())
+        .code(user.getCode())
+        .profileImageUrl(user.getProfileImageUrl())
+        .introduction(user.getIntroduction())
+        .isLike(isLike)
         .build();
   }
 

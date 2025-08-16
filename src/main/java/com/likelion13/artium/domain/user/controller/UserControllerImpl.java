@@ -17,8 +17,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
+import com.likelion13.artium.domain.user.dto.response.CreatorResponse;
 import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
+import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
@@ -27,6 +29,7 @@ import com.likelion13.artium.domain.user.entity.FormatPreference;
 import com.likelion13.artium.domain.user.entity.Gender;
 import com.likelion13.artium.domain.user.entity.MoodPreference;
 import com.likelion13.artium.domain.user.entity.ThemePreference;
+import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.service.UserService;
 import com.likelion13.artium.global.exception.CustomException;
 import com.likelion13.artium.global.page.exception.PageErrorStatus;
@@ -65,9 +68,8 @@ public class UserControllerImpl implements UserController {
   }
 
   @Override
-  public ResponseEntity<BaseResponse<Boolean>> checkNicknameDuplicated(
-      @RequestParam String nickname) {
-    return ResponseEntity.ok(BaseResponse.success(userService.checkNicknameDuplicated(nickname)));
+  public ResponseEntity<BaseResponse<Boolean>> checkCodeDuplicated(@RequestParam String code) {
+    return ResponseEntity.ok(BaseResponse.success(userService.checkCodeDuplicated(code)));
   }
 
   @Override
@@ -84,8 +86,31 @@ public class UserControllerImpl implements UserController {
   }
 
   @Override
-  public ResponseEntity<BaseResponse<String>> updateNickname(@RequestParam String newNickname) {
-    return ResponseEntity.ok(BaseResponse.success(userService.updateNickname(newNickname)));
+  public ResponseEntity<BaseResponse<UserSummaryResponse>> getUserProfile(
+      @PathVariable(value = "id") Long userId) {
+    return ResponseEntity.status(200)
+        .body(BaseResponse.success(userService.getUserProfile(userId)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<UserContactResponse>> getUserContact(
+      @PathVariable(value = "id") Long userId) {
+    return ResponseEntity.status(200)
+        .body(BaseResponse.success(userService.getUserContact(userId)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<CreatorResponse>> getCreatorInfo(
+      @PathVariable(value = "id") Long userId) {
+    return ResponseEntity.status(200)
+        .body(BaseResponse.success(userService.getCreatorInfo(userId)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<String>> updateUserInfo(
+      @RequestParam String newCode, @RequestParam String newNickname) {
+    return ResponseEntity.ok(
+        BaseResponse.success(userService.updateUserInfo(newCode, newNickname)));
   }
 
   @Override
@@ -102,6 +127,17 @@ public class UserControllerImpl implements UserController {
       @RequestParam List<ThemePreference> themePreferences,
       @RequestParam List<MoodPreference> moodPreferences,
       @RequestParam List<FormatPreference> formatPreferences) {
+    if (themePreferences == null
+        || themePreferences.isEmpty()
+        || themePreferences.size() > 5
+        || moodPreferences == null
+        || moodPreferences.isEmpty()
+        || moodPreferences.size() > 5
+        || formatPreferences == null
+        || formatPreferences.isEmpty()
+        || formatPreferences.size() > 5) {
+      throw new CustomException(UserErrorCode.INVALID_INPUT_REQUEST);
+    }
 
     return ResponseEntity.status(200)
         .body(

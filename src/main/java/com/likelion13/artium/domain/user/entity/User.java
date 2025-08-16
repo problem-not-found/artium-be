@@ -57,8 +57,11 @@ public class User extends BaseTimeEntity {
   @Column(name = "password")
   private String password;
 
-  @Column(name = "nickname", nullable = false, unique = true)
+  @Column(name = "nickname", nullable = false)
   private String nickname;
+
+  @Column(name = "code", unique = true)
+  private String code;
 
   @Column(name = "gender")
   @Enumerated(EnumType.STRING)
@@ -101,7 +104,7 @@ public class User extends BaseTimeEntity {
   @Column(name = "role", nullable = false)
   @Enumerated(EnumType.STRING)
   @Builder.Default
-  private Role role = Role.USER;
+  private Role role = Role.ROLE_USER;
 
   @Column(name = "is_deleted", nullable = false)
   @Builder.Default
@@ -146,11 +149,12 @@ public class User extends BaseTimeEntity {
         .password(UUID.randomUUID().toString())
         .nickname(nickname)
         .profileImageUrl(profileImageUrl)
-        .role(Role.USER)
+        .role(Role.ROLE_USER)
         .build();
   }
 
-  public void updateNickname(String newNickname) {
+  public void updateUserInfo(String newCode, String newNickname) {
+    this.code = newCode;
     this.nickname = newNickname;
   }
 

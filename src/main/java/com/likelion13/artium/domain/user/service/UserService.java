@@ -9,8 +9,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
+import com.likelion13.artium.domain.user.dto.response.CreatorResponse;
 import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
+import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
@@ -73,21 +75,22 @@ public interface UserService {
   UserDetailResponse getUserDetail();
 
   /**
-   * 닉네임 사용 가능 여부를 확인합니다.
+   * 코드 사용 가능 여부를 확인합니다.
    *
-   * @param nickname 확인할 닉네임 문자열
-   * @return true이면 사용 가능, false면 중복
+   * @param code 확인할 코드 문자열
+   * @return true이면 중복, false면 사용 가능
    */
-  Boolean checkNicknameDuplicated(String nickname);
+  Boolean checkCodeDuplicated(String code);
 
   /**
    * 사용자의 닉네임을 변경합니다.
    *
+   * @param newCode 변경할 새로운 코드
    * @param newNickname 변경할 새로운 닉네임
    * @return 변경 완료 메시지 문자열
    * @throws CustomException 닉네임 중복 등 변경 불가 시 발생
    */
-  String updateNickname(String newNickname);
+  String updateUserInfo(String newCode, String newNickname);
 
   /**
    * 사용자의 프로필 이미지를 변경합니다.
@@ -167,4 +170,28 @@ public interface UserService {
    * @return 좋아요 한 크리에이터 페이지 응답값
    */
   PageResponse<UserSummaryResponse> getLikes(Pageable pageable);
+
+  /**
+   * 사용자의 닉네임, 프로필 사진을 반환
+   *
+   * @param userId 찾을 사용자 식별자
+   * @return 사용자 정보 응답 객체
+   */
+  UserSummaryResponse getUserProfile(Long userId);
+
+  /**
+   * 사용자의 이메일, 인스타를 반환
+   *
+   * @param userId 찾을 사용자 식별자
+   * @return 사용자 정보 응답 객체
+   */
+  UserContactResponse getUserContact(Long userId);
+
+  /**
+   * 크리에이터의 정보를 반환
+   *
+   * @param userId 찾을 사용자 식별자
+   * @return 크리에이터 정보 응답 객체
+   */
+  CreatorResponse getCreatorInfo(Long userId);
 }
