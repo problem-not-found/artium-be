@@ -59,15 +59,25 @@ public class ExhibitionMapper {
         .build();
   }
 
-  public ExhibitionDetailResponse toExhibitionDetailResponse(Exhibition exhibition) {
+  public ExhibitionDetailResponse toExhibitionDetailResponse(
+      Exhibition exhibition,
+      Boolean isAuthor,
+      Boolean isLike,
+      List<Long> pieceIdList,
+      List<Long> participantIdList) {
     return ExhibitionDetailResponse.builder()
         .exhibitionId(exhibition.getId())
+        .isAuthor(isAuthor)
         .thumbnailImageUrl(exhibition.getThumbnailImageUrl())
+        .pieceIdList(pieceIdList)
         .status(exhibition.getExhibitionStatus())
+        .isLike(isLike)
         .title(exhibition.getTitle())
+        .userId(exhibition.getUser().getId())
         .description(exhibition.getDescription())
         .startDate(exhibition.getStartDate())
         .endDate(exhibition.getEndDate())
+        .participantIdList(participantIdList)
         .address(exhibition.getAddress())
         .offlineDescription(exhibition.getOfflineDescription())
         .accountNumber(exhibition.getAccountNumber())

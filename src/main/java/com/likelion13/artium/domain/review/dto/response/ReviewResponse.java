@@ -3,8 +3,6 @@
  */
 package com.likelion13.artium.domain.review.dto.response;
 
-import java.time.LocalDateTime;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Getter;
@@ -19,9 +17,6 @@ public class ReviewResponse {
 
   @Schema(description = "감상평 내용", example = "재미있었습니다.")
   private String content;
-
-  @Schema(description = "작성 시간", example = "")
-  private LocalDateTime createdAt;
 
   @Schema(description = "본인 작성 여부", example = "false")
   private Boolean isAuthor;

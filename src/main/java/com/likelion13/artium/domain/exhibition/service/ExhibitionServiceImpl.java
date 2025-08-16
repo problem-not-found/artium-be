@@ -31,6 +31,7 @@ import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
 import com.likelion13.artium.domain.exhibition.repository.ExhibitionLikeRepository;
 import com.likelion13.artium.domain.exhibition.repository.ExhibitionRepository;
+import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.repository.UserRepository;
@@ -72,7 +73,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       imageUrl = s3Service.uploadFile(PathName.EXHIBITION, image);
     }
 
-    List<ExhibitionParticipant> participants = buildParticipants(request.getUserIdList());
+    List<ExhibitionParticipant> participants = buildParticipants(request.getPieceIdList());
     User currentUser = userService.getCurrentUser();
 
     Exhibition exhibition =
@@ -94,7 +95,8 @@ public class ExhibitionServiceImpl implements ExhibitionService {
         exhibition.getUser().getUsername(),
         status);
 
-    return exhibitionMapper.toExhibitionDetailResponse(exhibition);
+    return exhibitionMapper.toExhibitionDetailResponse(
+        exhibition, true, false, request.getPieceIdList(), request.getParticipantIdList());
   }
 
   @Override
@@ -132,12 +134,27 @@ public class ExhibitionServiceImpl implements ExhibitionService {
   @Transactional(readOnly = true)
   public ExhibitionDetailResponse getExhibition(Long id) {
 
+    User currentUser = userService.getCurrentUser();
+
     Exhibition exhibition =
         exhibitionRepository
             .findById(id)
             .orElseThrow(() -> new CustomException(ExhibitionErrorCode.EXHIBITION_NOT_FOUND));
 
-    return exhibitionMapper.toExhibitionDetailResponse(exhibition);
+    if (!exhibition.getFillAll() && !exhibition.getUser().getId().equals(currentUser.getId())) {
+      throw new CustomException(ExhibitionErrorCode.EXHIBITION_NOT_FILLALL);
+    }
+
+    boolean likedByCurrentUser =
+        exhibitionLikeRepository.findByExhibitionAndUser(exhibition, currentUser).isPresent();
+    boolean createdByCurrentUser = exhibition.getUser().getId().equals(currentUser.getId());
+
+    List<Long> pieceIdList = exhibition.getPieces().stream().map(Piece::getId).toList();
+    List<Long> participantIdList =
+        exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
+
+    return exhibitionMapper.toExhibitionDetailResponse(
+        exhibition, createdByCurrentUser, likedByCurrentUser, pieceIdList, participantIdList);
   }
 
   @Override
@@ -205,6 +222,29 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
   @Override
   @Transactional(readOnly = true)
+  public PageResponse<ExhibitionResponse> getExhibitionPageByUserId(
+      Long userId, Pageable pageable) {
+
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+
+    Pageable sortedPageable =
+        PageRequest.of(
+            pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Direction.DESC, "startDate"));
+
+    Page<ExhibitionResponse> page =
+        exhibitionRepository
+            .findByUserIdAndFillAll(user.getId(), true, sortedPageable)
+            .map(exhibitionMapper::toExhibitionResponse);
+
+    log.info("{} 사용자의 전시 리스트 페이지 조회 - 호출된 페이지: {}", user.getNickname(), pageable.getPageNumber());
+    return pageMapper.toExhibitionPageResponse(page);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
   public PageResponse<ExhibitionResponse> getExhibitionPageByLike(Pageable pageable) {
 
     User user = userService.getCurrentUser();
@@ -256,7 +296,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     try {
       ExhibitionStatus status = determineStatus(request.getStartDate(), request.getEndDate());
 
-      List<ExhibitionParticipant> participants = buildParticipants(request.getUserIdList());
+      List<ExhibitionParticipant> participants = buildParticipants(request.getParticipantIdList());
 
       participants.forEach(p -> p.setExhibition(exhibition));
 
@@ -271,7 +311,8 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
     log.info(
         "전시 정보 수정 성공 - id: {}, status: {}", exhibition.getId(), exhibition.getExhibitionStatus());
-    return exhibitionMapper.toExhibitionDetailResponse(exhibition);
+    return exhibitionMapper.toExhibitionDetailResponse(
+        exhibition, true, false, request.getPieceIdList(), request.getParticipantIdList());
   }
 
   @Override

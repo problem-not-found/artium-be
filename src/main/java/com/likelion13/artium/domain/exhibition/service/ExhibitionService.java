@@ -80,6 +80,15 @@ public interface ExhibitionService {
   PageResponse<ExhibitionResponse> getExhibitionPageByUser(Boolean fillAll, Pageable pageable);
 
   /**
+   * 특정 사용자가 생성한 전시회 목록을 페이지 단위로 조회합니다.
+   *
+   * @param userId 전시회를 조회할 사용자 ID
+   * @param pageable 페이징 및 정렬 정보
+   * @return 해당 사용자가 생성한 전시회 목록의 페이지 응답
+   */
+  PageResponse<ExhibitionResponse> getExhibitionPageByUserId(Long userId, Pageable pageable);
+
+  /**
    * 좋아요 기준으로 전시회 목록을 페이지 단위로 조회합니다.
    *
    * @param pageable 페이징 및 정렬 정보

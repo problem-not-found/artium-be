@@ -76,6 +76,13 @@ public interface ExhibitionController {
       @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
       @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
 
+  @GetMapping("/users")
+  @Operation(summary = "특정 사용자 전시 리스트 조회", description = "특정 사용자의 전시 리스트를 페이지로 반환합니다.")
+  ResponseEntity<BaseResponse<PageResponse<ExhibitionResponse>>> getExhibitionPageByUserId(
+      @Parameter(description = "조회할 사용자 식별자", example = "1") @RequestParam Long userId,
+      @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
+      @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
+
   @GetMapping("/like")
   @Operation(summary = "좋아요 한 전시 리스트 조회", description = "사용자가 좋아요 한 전시 리스트를 페이지로 반환합니다.")
   ResponseEntity<BaseResponse<PageResponse<ExhibitionResponse>>> getExhibitionPageByLike(
