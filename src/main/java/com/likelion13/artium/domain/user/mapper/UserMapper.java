@@ -31,7 +31,7 @@ public class UserMapper {
         .password(encodedPassword)
         .nickname(request.getNickname())
         .profileImageUrl(imageUrl)
-        .role(Role.USER)
+        .role(Role.ROLE_USER)
         .isDeleted(false)
         .build();
   }

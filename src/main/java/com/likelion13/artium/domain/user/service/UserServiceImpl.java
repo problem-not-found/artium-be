@@ -300,7 +300,7 @@ public class UserServiceImpl implements UserService {
   public String approvePiece(Long pieceId) {
     User user = getCurrentUser();
 
-    if (!user.getRole().equals(Role.ADMIN)) {
+    if (!user.getRole().equals(Role.ROLE_ADMIN)) {
       throw new CustomException(UserErrorCode.UNAUTHORIZED);
     }
 
@@ -329,7 +329,7 @@ public class UserServiceImpl implements UserService {
   public String rejectPiece(Long pieceId) {
     User user = getCurrentUser();
 
-    if (!user.getRole().equals(Role.ADMIN)) {
+    if (!user.getRole().equals(Role.ROLE_ADMIN)) {
       throw new CustomException(UserErrorCode.UNAUTHORIZED);
     }
 
