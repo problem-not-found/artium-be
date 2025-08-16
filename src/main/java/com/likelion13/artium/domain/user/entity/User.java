@@ -57,8 +57,11 @@ public class User extends BaseTimeEntity {
   @Column(name = "password")
   private String password;
 
-  @Column(name = "nickname", nullable = false, unique = true)
+  @Column(name = "nickname", nullable = false)
   private String nickname;
+
+  @Column(name = "code", unique = true)
+  private String code;
 
   @Column(name = "gender")
   @Enumerated(EnumType.STRING)
@@ -150,7 +153,8 @@ public class User extends BaseTimeEntity {
         .build();
   }
 
-  public void updateNickname(String newNickname) {
+  public void updateUserInfo(String newCode, String newNickname) {
+    this.code = newCode;
     this.nickname = newNickname;
   }
 
