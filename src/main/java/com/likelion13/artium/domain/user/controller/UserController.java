@@ -20,9 +20,11 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
+import com.likelion13.artium.domain.user.dto.response.CreatorResponse;
 import com.likelion13.artium.domain.user.dto.response.LikeResponse;
 import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
+import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
 import com.likelion13.artium.domain.user.entity.Age;
@@ -66,17 +68,32 @@ public interface UserController {
   @Operation(summary = "사용자 정보 조회", description = "현재 로그인된 사용자의 정보를 조회합니다.")
   ResponseEntity<BaseResponse<UserDetailResponse>> getUserDetail();
 
-  @GetMapping("/check")
+  @GetMapping("/check-code")
   @Operation(
-      summary = "닉네임 중복 여부 확인",
+      summary = "코드 중복 여부 확인",
       description =
           """
-              사용자가 입력한 닉네임이 이미 존재하는지 여부를 반환합니다.
-              true -> 중복되는 닉네임, 변경할 수 없음.
-              false -> 중복되지 않는 닉네임, 변경 가능.
+              사용자가 입력한 코드가 이미 존재하는지 여부를 반환합니다.
+              true -> 중복되는 코드, 변경할 수 없음.
+              false -> 중복되지 않는 코드, 변경 가능.
               """)
-  ResponseEntity<BaseResponse<Boolean>> checkNicknameDuplicated(
-      @Parameter(description = "확인할 닉네임", example = "아르티움") @RequestParam String nickname);
+  ResponseEntity<BaseResponse<Boolean>> checkCodeDuplicated(
+      @Parameter(description = "확인할 코드", example = "simonisnextdoor") @RequestParam String code);
+
+  @GetMapping("/{id}/profile")
+  @Operation(summary = "사용자 프로필 조회", description = "사용자의 프로필 사진, 닉네임을 조회합니다.")
+  ResponseEntity<BaseResponse<UserSummaryResponse>> getUserProfile(
+      @Parameter(description = "특정 유저 식별자") @PathVariable(value = "id") Long userId);
+
+  @GetMapping("/{id}/contact")
+  @Operation(summary = "사용자 연락 수단 조회", description = "사용자의 이메일, 인스타그램을 조회합니다.")
+  ResponseEntity<BaseResponse<UserContactResponse>> getUserContact(
+      @Parameter(description = "특정 유저 식별자") @PathVariable(value = "id") Long userId);
+
+  @GetMapping("/{id}/creator")
+  @Operation(summary = "크리에이터 정보 조회", description = "크리에이터의 정보를 조회합니다.")
+  ResponseEntity<BaseResponse<CreatorResponse>> getCreatorInfo(
+      @Parameter(description = "특정 유저 식별자") @PathVariable(value = "id") Long userId);
 
   @GetMapping("/likes")
   @Operation(summary = "사용자가 좋아요 했던 크리에이터 목록을 조회")
@@ -88,9 +105,10 @@ public interface UserController {
   @Operation(summary = "사용자 맞춤 취향 설정 조회", description = "사용자 맞춤 취향 설정을 조회합니다.")
   ResponseEntity<BaseResponse<PreferenceResponse>> getPreferences();
 
-  @PutMapping("/nickname")
-  @Operation(summary = "닉네임 변경", description = "현재 로그인된 사용자의 닉네임을 변경합니다.")
-  ResponseEntity<BaseResponse<String>> updateNickname(
+  @PutMapping("/user-info")
+  @Operation(summary = "코드와 닉네임 변경", description = "현재 로그인된 사용자의 코드와 닉네임을 변경합니다.")
+  ResponseEntity<BaseResponse<String>> updateUserInfo(
+      @Parameter(description = "변경할 코드", example = "simonisnextdoor") @RequestParam String newCode,
       @Parameter(description = "변경할 닉네임", example = "아르티움") @RequestParam String newNickname);
 
   @PutMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -120,12 +138,12 @@ public interface UserController {
   @Operation(summary = "[개발자]사용자 전체 조회", description = "스웨거를 사용해 전체 사용자를 조회합니다.")
   ResponseEntity<BaseResponse<List<UserDetailResponse>>> getAllUsers();
 
-  @PutMapping("/{piece-id}/approve")
+  @PutMapping("/{piece-id}/approve/admin")
   @Operation(summary = "[관리자]등록 신청한 작품 승인", description = "사용자가 등록 신청한 작품을 승인합니다.")
   ResponseEntity<BaseResponse<String>> approvePiece(
       @Parameter(description = "작품 식별자", example = "1") @PathVariable("piece-id") Long pieceId);
 
-  @PutMapping("/{piece-id}/reject")
+  @PutMapping("/{piece-id}/reject/admin")
   @Operation(summary = "[관리자]등록 신청한 작품 거절", description = "사용자가 등록 신청한 작품을 거절합니다.")
   ResponseEntity<BaseResponse<String>> rejectPiece(
       @Parameter(description = "작품 식별자", example = "1") @PathVariable("piece-id") Long pieceId);
