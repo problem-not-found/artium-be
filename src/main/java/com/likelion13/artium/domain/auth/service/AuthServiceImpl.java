@@ -74,10 +74,14 @@ public class AuthServiceImpl implements AuthService {
   @Override
   public String reissueAccessToken(String refreshToken) {
 
-    User user = userService.getCurrentUser();
+    String username = jwtProvider.getUsernameFromToken(refreshToken);
+    User user =
+        userRepository
+            .findByUsername(username)
+            .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
 
-    if (jwtProvider.validateRefreshToken(user.getUsername(), refreshToken)) {
-      throw new CustomException(AuthErrorCode.INVALID_ACCESS_TOKEN);
+    if (!jwtProvider.validateRefreshToken(user.getUsername(), refreshToken)) {
+      throw new CustomException(AuthErrorCode.INVALID_REFRESH_TOKEN);
     }
 
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

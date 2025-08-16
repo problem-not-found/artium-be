@@ -52,7 +52,7 @@ public class AuthControllerImpl implements AuthController {
   public ResponseEntity<BaseResponse<String>> logout(
       HttpServletRequest request, HttpServletResponse response) {
 
-    String accessToken = jwtProvider.extractToken(request);
+    String accessToken = jwtProvider.extractAccessToken(request);
     String result = authService.logout(accessToken);
 
     jwtProvider.removeJwtCookie(response, "ACCESS_TOKEN");
@@ -66,7 +66,10 @@ public class AuthControllerImpl implements AuthController {
   public ResponseEntity<BaseResponse<String>> reissueToken(
       HttpServletRequest request, HttpServletResponse response) {
 
-    String refreshToken = jwtProvider.extractToken(request);
+    String refreshToken = jwtProvider.extractRefreshToken(request);
+
+    jwtProvider.validateTokenType(refreshToken, "refresh");
+
     String newAccessToken = authService.reissueAccessToken(refreshToken);
 
     jwtProvider.addJwtToCookie(

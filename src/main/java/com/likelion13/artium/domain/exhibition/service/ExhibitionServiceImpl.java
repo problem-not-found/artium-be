@@ -73,7 +73,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       imageUrl = s3Service.uploadFile(PathName.EXHIBITION, image);
     }
 
-    List<ExhibitionParticipant> participants = buildParticipants(request.getPieceIdList());
+    List<ExhibitionParticipant> participants = buildParticipants(request.getParticipantIdList());
     User currentUser = userService.getCurrentUser();
 
     Exhibition exhibition =
@@ -89,14 +89,18 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       }
       throw new CustomException(ExhibitionErrorCode.EXHIBITION_API_ERROR);
     }
+
+    List<Long> pieceIdList = exhibition.getPieces().stream().map(Piece::getId).toList();
+    List<Long> participantIdList =
+        exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
+
     log.info(
         "전시 정보 생성 성공 - id:{}, username:{}, status:{}",
         exhibition.getId(),
         exhibition.getUser().getUsername(),
         status);
-
     return exhibitionMapper.toExhibitionDetailResponse(
-        exhibition, true, false, request.getPieceIdList(), request.getParticipantIdList());
+        exhibition, true, false, pieceIdList, participantIdList);
   }
 
   @Override
@@ -309,10 +313,14 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       throw new CustomException(ExhibitionErrorCode.EXHIBITION_API_ERROR);
     }
 
+    List<Long> pieceIdList = exhibition.getPieces().stream().map(Piece::getId).toList();
+    List<Long> participantIdList =
+        exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
+
     log.info(
         "전시 정보 수정 성공 - id: {}, status: {}", exhibition.getId(), exhibition.getExhibitionStatus());
     return exhibitionMapper.toExhibitionDetailResponse(
-        exhibition, true, false, request.getPieceIdList(), request.getParticipantIdList());
+        exhibition, true, false, pieceIdList, participantIdList);
   }
 
   @Override

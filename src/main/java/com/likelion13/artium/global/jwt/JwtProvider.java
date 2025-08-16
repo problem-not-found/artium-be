@@ -59,8 +59,10 @@ public class JwtProvider {
   /** Refresh Token 타입 상수 */
   public static final String TOKEN_TYPE_REFRESH = "refresh";
 
+  /** JWT 토큰이 담겨 오는 HTTP 헤더 이름 */
   private static final String AUTHORIZATION_HEADER = "Authorization";
 
+  /** JWT 토큰 접두어 */
   private static final String BEARER_PREFIX = "Bearer ";
 
   /**
@@ -362,13 +364,13 @@ public class JwtProvider {
     log.info("JWT 쿠키가 삭제되었습니다 - 이름: {}", name);
   }
 
-  public String extractToken(HttpServletRequest request) {
+  public String extractAccessToken(HttpServletRequest request) {
+
     // 1. 헤더에서 토큰 추출
     String bearerToken = request.getHeader(AUTHORIZATION_HEADER);
     if (bearerToken != null && bearerToken.startsWith(BEARER_PREFIX)) {
       return bearerToken.substring(BEARER_PREFIX.length());
     }
-
     // 2. 쿠키에서 토큰 추출
     else if (request.getCookies() != null) {
       for (Cookie cookie : request.getCookies()) {
@@ -377,7 +379,17 @@ public class JwtProvider {
         }
       }
     }
+    return null;
+  }
 
+  public String extractRefreshToken(HttpServletRequest request) {
+    if (request.getCookies() != null) {
+      for (Cookie cookie : request.getCookies()) {
+        if ("REFRESH_TOKEN".equals(cookie.getName())) {
+          return cookie.getValue();
+        }
+      }
+    }
     return null;
   }
 }

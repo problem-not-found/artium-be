@@ -71,7 +71,7 @@ public class Piece extends BaseTimeEntity {
   private User user;
 
   @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "exhibition_id", nullable = false)
+  @JoinColumn(name = "exhibition_id")
   private Exhibition exhibition;
 
   @OneToMany(mappedBy = "piece", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -39,14 +39,15 @@ public class GlobalExceptionHandler {
             .map(e -> String.format("[%s] %s", e.getField(), e.getDefaultMessage()))
             .collect(Collectors.joining(" / "));
     log.error("Validation 오류 발생: {}", errorMessages);
-    return ResponseEntity.badRequest().body(BaseResponse.error(400, errorMessages));
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(BaseResponse.error(400, errorMessages));
   }
 
   // 정적 리소스 예외
   @ExceptionHandler(NoResourceFoundException.class)
-  public void handleNoResourceFound(NoResourceFoundException ex) {
-    log.error("정적 리소스 없음 (무시됨): {}", ex.getMessage());
-  }
+  public ResponseEntity<Void> handleNoResourceFound(NoResourceFoundException ex) {
+        log.debug("정적 리소스 없음: {}", ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+      }
 
   // 예상치 못한 예외
   @ExceptionHandler(Exception.class)
