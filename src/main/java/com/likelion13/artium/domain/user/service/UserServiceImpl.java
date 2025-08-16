@@ -27,9 +27,11 @@ import com.likelion13.artium.domain.piece.entity.SaveStatus;
 import com.likelion13.artium.domain.piece.exception.PieceErrorCode;
 import com.likelion13.artium.domain.piece.repository.PieceRepository;
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
+import com.likelion13.artium.domain.user.dto.response.CreatorResponse;
 import com.likelion13.artium.domain.user.dto.response.LikeResponse;
 import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
+import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
 import com.likelion13.artium.domain.user.entity.Age;
@@ -79,8 +81,8 @@ public class UserServiceImpl implements UserService {
       throw new CustomException(UserErrorCode.USERNAME_ALREADY_EXISTS);
     }
 
-    if (userRepository.existsByNickname(request.getNickname())) {
-      throw new CustomException(UserErrorCode.NICKNAME_ALREADY_EXISTS);
+    if (userRepository.existsByCode(request.getCode())) {
+      throw new CustomException(UserErrorCode.CODE_ALREADY_EXISTS);
     }
 
     // 비밀번호 인코딩
@@ -104,7 +106,6 @@ public class UserServiceImpl implements UserService {
   @Override
   @Transactional
   public LikeResponse createUserLike(Long userId) {
-
     User currentUser = getCurrentUser();
 
     User targetUser =
@@ -118,14 +119,15 @@ public class UserServiceImpl implements UserService {
 
     try {
       UserLike userLike = UserLike.builder().liker(currentUser).liked(targetUser).build();
-
-      currentUser.getLikedUsers().add(userLike);
-      targetUser.getLikedByUsers().add(userLike);
-
-      return userMapper.toLikeResponse(currentUser.getNickname(), targetUser.getNickname());
+      userLikeRepository.save(userLike);
     } catch (DataIntegrityViolationException e) {
-      throw new CustomException(UserErrorCode.ALREADY_LIKED);
+      if (e.getMessage() != null && e.getMessage().contains("uq_user_like_liked_liker")) {
+        throw new CustomException(UserErrorCode.ALREADY_LIKED);
+      }
+      throw e;
     }
+
+    return userMapper.toLikeResponse(currentUser.getCode(), targetUser.getCode());
   }
 
   @Override
@@ -187,28 +189,32 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public Boolean checkNicknameDuplicated(String nickname) {
+  public Boolean checkCodeDuplicated(String code) {
 
-    boolean exists = userRepository.existsByNickname(nickname);
+    boolean exists = userRepository.existsByCode(code);
 
-    log.info("닉네임 중복 체크 - nickname: {}, exists: {}", nickname, exists);
+    log.info("코드 중복 체크 - userId: {}, code: {}, exists: {}", getCurrentUser().getId(), code, exists);
     return exists;
   }
 
   @Override
   @Transactional
-  public String updateNickname(String newNickname) {
+  public String updateUserInfo(String newCode, String newNickname) {
     User user = getCurrentUser();
 
-    if (userRepository.existsByNickname(newNickname)) {
-      log.error("닉네임 중복 시도 - userId: {}, nickname: {}", user.getId(), newNickname);
-      throw new CustomException(UserErrorCode.NICKNAME_ALREADY_EXISTS);
+    if (userRepository.existsByCode(newCode)) {
+      log.error("코드 중복 시도 - userId: {}, code: {}", user.getId(), newCode);
+      throw new CustomException(UserErrorCode.CODE_ALREADY_EXISTS);
     }
 
-    user.updateNickname(newNickname);
-    log.info("사용자 닉네임 변경 - userId: {}, newNickname: {}", user.getId(), newNickname);
+    user.updateUserInfo(newCode, newNickname);
+    log.info(
+        "사용자 닉네임 변경 - userId: {}, newCode: {}, newNickname: {}",
+        user.getId(),
+        newCode,
+        newNickname);
 
-    return newNickname;
+    return "newCode: " + newCode + ", newNickname: " + newNickname;
   }
 
   @Override
@@ -294,8 +300,9 @@ public class UserServiceImpl implements UserService {
   public String approvePiece(Long pieceId) {
     User user = getCurrentUser();
 
-    if (!user.getRole().equals(Role.ADMIN)) {
-      throw new CustomException(UserErrorCode.UNAUTHORIZED);
+    if (!user.getRole().equals(Role.ROLE_ADMIN)) {
+      log.error("요청 사용자 역할 : userRole: {}", user.getRole());
+      throw new CustomException(UserErrorCode.FORBIDDEN);
     }
 
     Piece piece =
@@ -305,6 +312,7 @@ public class UserServiceImpl implements UserService {
 
     if (!piece.getSaveStatus().equals(SaveStatus.APPLICATION)
         || !piece.getProgressStatus().equals(ProgressStatus.WAITING)) {
+      log.error("작품 신청 상태가 아님 : pieceId: {}", pieceId);
       throw new CustomException(PieceErrorCode.INVALID_APPLICATION);
     }
 
@@ -315,6 +323,7 @@ public class UserServiceImpl implements UserService {
 
     piece.updateProgressStatus(ProgressStatus.REGISTERED);
 
+    log.info("작품 등록 승인 : pieceId: {}", pieceId);
     return pieceId + "번 작품 등록을 승인했습니다.";
   }
 
@@ -323,8 +332,9 @@ public class UserServiceImpl implements UserService {
   public String rejectPiece(Long pieceId) {
     User user = getCurrentUser();
 
-    if (!user.getRole().equals(Role.ADMIN)) {
-      throw new CustomException(UserErrorCode.UNAUTHORIZED);
+    if (!user.getRole().equals(Role.ROLE_ADMIN)) {
+      log.error("요청 사용자 역할 : userRole: {}", user.getRole());
+      throw new CustomException(UserErrorCode.FORBIDDEN);
     }
 
     Piece piece =
@@ -334,11 +344,13 @@ public class UserServiceImpl implements UserService {
 
     if (!piece.getSaveStatus().equals(SaveStatus.APPLICATION)
         || !piece.getProgressStatus().equals(ProgressStatus.WAITING)) {
+      log.error("작품 신청 상태가 아님 : pieceId: {}", pieceId);
       throw new CustomException(PieceErrorCode.INVALID_APPLICATION);
     }
 
     piece.updateProgressStatus(ProgressStatus.UNREGISTERED);
 
+    log.info("작품 등록 거절 : pieceId: {}", pieceId);
     return pieceId + "번 작품 등록을 거절했습니다.";
   }
 
@@ -360,16 +372,20 @@ public class UserServiceImpl implements UserService {
 
     qdrantService.upsertUserPoint(user.getId(), vector, user, CollectionName.USER);
 
+    log.info("사용자 관심사 설정 성공 - userId: {}", user.getId());
     return "사용자 관심사 설정에 성공했습니다.";
   }
 
   @Override
   public PreferenceResponse getPreferences() {
-    return userMapper.toPreferenceResponse(getCurrentUser());
+    User user = getCurrentUser();
+    log.info("사용자 관심사 조회 성공 - userId: {}", user.getId());
+    return userMapper.toPreferenceResponse(user);
   }
 
   @Override
   public PageResponse<UserSummaryResponse> getLikes(Pageable pageable) {
+    Long userId = getCurrentUser().getId();
 
     Pageable sortedPageable =
         PageRequest.of(
@@ -377,10 +393,49 @@ public class UserServiceImpl implements UserService {
 
     Page<UserSummaryResponse> page =
         userLikeRepository
-            .findLikedUserByLikerId(getCurrentUser().getId(), sortedPageable)
+            .findLikedUserByLikerId(userId, sortedPageable)
             .map(userMapper::toUserSummaryResponse);
 
+    log.info("사용자 좋아요 리스트 조회 성공 - userId: {}", userId);
     return pageMapper.toUserSummaryPageResponse(page);
+  }
+
+  @Override
+  public UserSummaryResponse getUserProfile(Long userId) {
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+
+    log.info("사용자 프로필 조회 성공 - userId: {}", userId);
+    return userMapper.toUserSummaryResponse(user);
+  }
+
+  @Override
+  public UserContactResponse getUserContact(Long userId) {
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+
+    log.info("사용자 연락처 조회 성공 - userId: {}", userId);
+    return userMapper.toUserContactResponse(user);
+  }
+
+  @Override
+  public CreatorResponse getCreatorInfo(Long userId) {
+    Long likerId = getCurrentUser().getId();
+    User user =
+        userRepository
+            .findById(userId)
+            .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+
+    log.info("크리에이터 정보 조회 성공 - requestUserId: {}, responseUserId: {}", likerId, userId);
+    if (userLikeRepository.existsByLiker_IdAndLiked_Id(likerId, userId)) {
+      return userMapper.toCreatorResponse(user, true);
+    } else {
+      return userMapper.toCreatorResponse(user, false);
+    }
   }
 
   private String makeEmbeddingPreference(
