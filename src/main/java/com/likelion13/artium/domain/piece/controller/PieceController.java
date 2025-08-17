@@ -3,6 +3,7 @@
  */
 package com.likelion13.artium.domain.piece.controller;
 
+import com.likelion13.artium.domain.pieceLike.dto.response.PieceLikeResponse;
 import java.util.List;
 
 import org.springframework.http.MediaType;
@@ -30,8 +31,25 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 @RequestMapping("/api/pieces")
-@Tag(name = "Piece", description = "Piece(작품) 관리 API")
+@Tag(name = "작품", description = "작품 관련 API")
 public interface PieceController {
+
+    @Operation(summary = "내 작품 정보 등록하기 API (로그인 필요)", description = "내 작품 정보 등록에서 작품을 등록하기 위한 API")
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<BaseResponse<PieceSummaryResponse>> createPiece(
+        @Parameter(description = "작품 저장 상태", example = "APPLICATION") @RequestParam
+        SaveStatus saveStatus,
+        @Parameter(description = "작품 등록 내용") @RequestPart("data")
+        CreatePieceRequest createPieceRequest,
+        @Parameter(description = "작품 메인 이미지") @RequestPart(value = "mainImage", required = false)
+        MultipartFile mainImage,
+        @Parameter(description = "작품 디테일 컷 모음") @RequestPart(value = "detailImages", required = false)
+        List<MultipartFile> detailImages);
+
+    @Operation(summary = "특정 작품 좋아요 등록하기 API (로그인 필요)", description = "특정 작품 정보에서 좋아요를 등록하기 위한 API")
+    @PostMapping("/{piece-id}/likes")
+    ResponseEntity<BaseResponse<PieceLikeResponse>> likePiece(
+        @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId);
 
   @Operation(summary = "특정 유저 작품 리스트 조회 API", description = "특정 유저 작품 리스트를 조회하기 위한 API")
   @GetMapping()
@@ -47,24 +65,16 @@ public interface PieceController {
       @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
       @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
 
-  @Operation(summary = "내 작품 정보 등록하기 API (로그인 필요)", description = "내 작품 정보 등록에서 작품을 등록하기 위한 API")
-  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-  ResponseEntity<BaseResponse<PieceSummaryResponse>> createPiece(
-      @Parameter(description = "작품 저장 상태", example = "APPLICATION") @RequestParam
-          SaveStatus saveStatus,
-      @Parameter(description = "작품 등록 내용") @RequestPart("data")
-          CreatePieceRequest createPieceRequest,
-      @Parameter(description = "작품 메인 이미지") @RequestPart(value = "mainImage", required = false)
-          MultipartFile mainImage,
-      @Parameter(description = "작품 디테일 컷 모음") @RequestPart(value = "detailImages", required = false)
-          List<MultipartFile> detailImages);
-
   @Operation(
       summary = "특정 작품 정보 조회하기 API",
       description = "특정 작품 정보 수정 및 작품 상세 정보에서 작품 정보를 조회하기 위한 API")
   @GetMapping("/{piece-id}")
   ResponseEntity<BaseResponse<PieceResponse>> getPiece(
       @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId);
+
+    @Operation(summary = "임시저장된 작품 개수 조회", description = "사용자가 임시 저장한 작품의 총 개수를 반환하기 위한 API")
+    @GetMapping("/draft-count")
+    ResponseEntity<BaseResponse<Integer>> getPieceDraftCount();
 
   @Operation(summary = "특정 작품 정보 수정하기 API", description = "특정 작품 정보 수정에서 작품 정보를 수정하기 위한 API")
   @PutMapping(value = "/{piece-id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -84,7 +94,8 @@ public interface PieceController {
   ResponseEntity<BaseResponse<String>> deletePiece(
       @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId);
 
-  @Operation(summary = "임시저장된 작품 개수 조회", description = "사용자가 임시 저장한 작품의 총 개수를 반환하기 위한 API")
-  @GetMapping("/draft-count")
-  ResponseEntity<BaseResponse<Integer>> getPieceDraftCount();
+    @Operation(summary = "특정 작품 좋아요 취소하기 API (로그인 필요)", description = "특정 작품 정보에서 좋아요를 취소하기 위한 API")
+    @DeleteMapping("/{piece-id}/likes")
+    ResponseEntity<BaseResponse<PieceLikeResponse>> unlikePiece(
+        @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId);
 }

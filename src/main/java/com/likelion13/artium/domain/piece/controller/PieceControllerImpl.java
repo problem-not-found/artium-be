@@ -3,6 +3,9 @@
  */
 package com.likelion13.artium.domain.piece.controller;
 
+import com.likelion13.artium.domain.pieceLike.dto.response.PieceLikeResponse;
+import com.likelion13.artium.domain.pieceLike.service.PieceLikeService;
+import io.swagger.v3.oas.annotations.Parameter;
 import java.util.List;
 
 import org.springframework.data.domain.PageRequest;
@@ -35,6 +38,31 @@ import lombok.RequiredArgsConstructor;
 public class PieceControllerImpl implements PieceController {
 
   private final PieceService pieceService;
+  private final PieceLikeService pieceLikeService;
+
+  @Override
+  public ResponseEntity<BaseResponse<PieceSummaryResponse>> createPiece(
+      @RequestParam SaveStatus saveStatus,
+      @RequestPart("data") CreatePieceRequest createPieceRequest,
+      @RequestPart(value = "mainImage", required = false) MultipartFile mainImage,
+      @RequestPart(value = "detailImages", required = false) List<MultipartFile> detailImages) {
+
+    if (detailImages != null && detailImages.size() > 5)
+      throw new CustomException(PieceErrorCode.TOO_MANY_DETAIL_IMAGES);
+    PieceSummaryResponse pieceSummaryResponse =
+        pieceService.createPiece(createPieceRequest, saveStatus, mainImage, detailImages);
+
+    return ResponseEntity.ok(BaseResponse.success(201, "작품 등록에 성공했습니다.", pieceSummaryResponse));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<PieceLikeResponse>> likePiece(
+      @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId) {
+
+    PieceLikeResponse pieceLikeResponse = pieceLikeService.likePiece(pieceId);
+
+    return ResponseEntity.ok(BaseResponse.success(201, "작품 좋아요 등록에 성공했습니다.", pieceLikeResponse));
+  }
 
   @Override
   public ResponseEntity<BaseResponse<PageResponse<PieceSummaryResponse>>> getPieces(
@@ -61,27 +89,19 @@ public class PieceControllerImpl implements PieceController {
   }
 
   @Override
-  public ResponseEntity<BaseResponse<PieceSummaryResponse>> createPiece(
-      @RequestParam SaveStatus saveStatus,
-      @RequestPart("data") CreatePieceRequest createPieceRequest,
-      @RequestPart(value = "mainImage", required = false) MultipartFile mainImage,
-      @RequestPart(value = "detailImages", required = false) List<MultipartFile> detailImages) {
-
-    if (detailImages != null && detailImages.size() > 5)
-      throw new CustomException(PieceErrorCode.TOO_MANY_DETAIL_IMAGES);
-    PieceSummaryResponse pieceSummaryResponse =
-        pieceService.createPiece(createPieceRequest, saveStatus, mainImage, detailImages);
-
-    return ResponseEntity.ok(BaseResponse.success(201, "작품 등록에 성공했습니다.", pieceSummaryResponse));
-  }
-
-  @Override
   public ResponseEntity<BaseResponse<PieceResponse>> getPiece(
       @PathVariable(value = "piece-id") Long pieceId) {
 
     PieceResponse pieceResponse = pieceService.getPiece(pieceId);
 
     return ResponseEntity.ok(BaseResponse.success(200, "작품 조회에 성공했습니다.", pieceResponse));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<Integer>> getPieceDraftCount() {
+
+    return ResponseEntity.ok(
+        BaseResponse.success(200, "임시저장 작품 개수 조회에 성공했습니다.", pieceService.getPieceDraftCount()));
   }
 
   @Override
@@ -114,10 +134,12 @@ public class PieceControllerImpl implements PieceController {
   }
 
   @Override
-  public ResponseEntity<BaseResponse<Integer>> getPieceDraftCount() {
+  public ResponseEntity<BaseResponse<PieceLikeResponse>> unlikePiece(
+      @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId) {
 
-    return ResponseEntity.ok(
-        BaseResponse.success(200, "임시저장 작품 개수 조회에 성공했습니다.", pieceService.getPieceDraftCount()));
+    PieceLikeResponse pieceLikeResponse = pieceLikeService.unlikePiece(pieceId);
+
+    return ResponseEntity.ok(BaseResponse.success(200, "작품 좋아요 취소에 성공했습니다.", pieceLikeResponse));
   }
 
   private Pageable validatePageable(Integer pageNum, Integer pageSize) {
