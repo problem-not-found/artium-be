@@ -3,7 +3,6 @@
  */
 package com.likelion13.artium.domain.piece.controller;
 
-import com.likelion13.artium.domain.pieceLike.dto.response.PieceLikeResponse;
 import java.util.List;
 
 import org.springframework.http.MediaType;
@@ -18,11 +17,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.likelion13.artium.domain.exhibition.entity.SortBy;
 import com.likelion13.artium.domain.piece.dto.request.CreatePieceRequest;
 import com.likelion13.artium.domain.piece.dto.request.UpdatePieceRequest;
+import com.likelion13.artium.domain.piece.dto.response.PieceFeedResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceSummaryResponse;
 import com.likelion13.artium.domain.piece.entity.SaveStatus;
+import com.likelion13.artium.domain.pieceLike.dto.response.PieceLikeResponse;
 import com.likelion13.artium.global.page.response.PageResponse;
 import com.likelion13.artium.global.response.BaseResponse;
 
@@ -34,26 +36,35 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "작품", description = "작품 관련 API")
 public interface PieceController {
 
-    @Operation(summary = "내 작품 정보 등록하기 API (로그인 필요)", description = "내 작품 정보 등록에서 작품을 등록하기 위한 API")
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    ResponseEntity<BaseResponse<PieceSummaryResponse>> createPiece(
-        @Parameter(description = "작품 저장 상태", example = "APPLICATION") @RequestParam
-        SaveStatus saveStatus,
-        @Parameter(description = "작품 등록 내용") @RequestPart("data")
-        CreatePieceRequest createPieceRequest,
-        @Parameter(description = "작품 메인 이미지") @RequestPart(value = "mainImage", required = false)
-        MultipartFile mainImage,
-        @Parameter(description = "작품 디테일 컷 모음") @RequestPart(value = "detailImages", required = false)
-        List<MultipartFile> detailImages);
+  @Operation(summary = "내 작품 정보 등록하기 API (로그인 필요)", description = "내 작품 정보 등록에서 작품을 등록하기 위한 API")
+  @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  ResponseEntity<BaseResponse<PieceSummaryResponse>> createPiece(
+      @Parameter(description = "작품 저장 상태", example = "APPLICATION") @RequestParam
+          SaveStatus saveStatus,
+      @Parameter(description = "작품 등록 내용") @RequestPart("data")
+          CreatePieceRequest createPieceRequest,
+      @Parameter(description = "작품 메인 이미지") @RequestPart(value = "mainImage", required = false)
+          MultipartFile mainImage,
+      @Parameter(description = "작품 디테일 컷 모음") @RequestPart(value = "detailImages", required = false)
+          List<MultipartFile> detailImages);
 
-    @Operation(summary = "특정 작품 좋아요 등록하기 API (로그인 필요)", description = "특정 작품 정보에서 좋아요를 등록하기 위한 API")
-    @PostMapping("/{piece-id}/likes")
-    ResponseEntity<BaseResponse<PieceLikeResponse>> likePiece(
-        @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId);
+  @Operation(summary = "특정 작품 좋아요 등록하기 API (로그인 필요)", description = "특정 작품 정보에서 좋아요를 등록하기 위한 API")
+  @PostMapping("/{piece-id}/likes")
+  ResponseEntity<BaseResponse<PieceLikeResponse>> likePiece(
+      @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId);
+
+  @Operation(
+      summary = "피드의 작품 리스트 조회(인기순/최신순) API",
+      description = "피드의 작품 리스트 중 인기순, 최신순에 해당하는 리스트 조회 API")
+  @GetMapping
+  ResponseEntity<BaseResponse<PageResponse<PieceFeedResponse>>> getPiecePageByType(
+      @Parameter(description = "정렬 기준", example = "HOTTEST") @RequestParam SortBy sortBy,
+      @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
+      @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
 
   @Operation(summary = "특정 유저 작품 리스트 조회 API", description = "특정 유저 작품 리스트를 조회하기 위한 API")
-  @GetMapping()
-  ResponseEntity<BaseResponse<PageResponse<PieceSummaryResponse>>> getPieces(
+  @GetMapping("/users")
+  ResponseEntity<BaseResponse<PageResponse<PieceSummaryResponse>>> getUserPiecePage(
       @Parameter(description = "유저 식별자") @RequestParam Long userId,
       @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
       @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
@@ -61,7 +72,21 @@ public interface PieceController {
   @Operation(summary = "내 작품 리스트 조회 API", description = "내 작품 리스트를 조회하기 위한 API")
   @GetMapping("/my-page")
   ResponseEntity<BaseResponse<PageResponse<PieceSummaryResponse>>> getMyPieces(
-      @Parameter(description = "등록 신청 여부", example = "true") @RequestParam Boolean applicated,
+      @Parameter(description = "등록 신청 여부") @RequestParam Boolean applicated,
+      @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
+      @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
+
+  @Operation(summary = "좋아요 한 작품 리스트 조회", description = "사용자가 좋아요 한 작품의 리스트를 반환하는 API")
+  @GetMapping("/likes")
+  ResponseEntity<BaseResponse<PageResponse<PieceSummaryResponse>>> getLikePieces(
+      @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
+      @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
+
+  @Operation(
+      summary = "취향 기반 추천 작품 리스트 조회",
+      description = "사용자가 좋아요 한 작품을 기반으로 추천 작품 리스트를 조회하기 위한 API")
+  @GetMapping("/recommendations")
+  ResponseEntity<BaseResponse<PageResponse<PieceSummaryResponse>>> getRecommendationPieces(
       @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
       @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
 
@@ -72,15 +97,15 @@ public interface PieceController {
   ResponseEntity<BaseResponse<PieceResponse>> getPiece(
       @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId);
 
-    @Operation(summary = "임시저장된 작품 개수 조회", description = "사용자가 임시 저장한 작품의 총 개수를 반환하기 위한 API")
-    @GetMapping("/draft-count")
-    ResponseEntity<BaseResponse<Integer>> getPieceDraftCount();
+  @Operation(summary = "임시저장된 작품 개수 조회", description = "사용자가 임시 저장한 작품의 총 개수를 반환하기 위한 API")
+  @GetMapping("/draft-count")
+  ResponseEntity<BaseResponse<Integer>> getPieceDraftCount();
 
   @Operation(summary = "특정 작품 정보 수정하기 API", description = "특정 작품 정보 수정에서 작품 정보를 수정하기 위한 API")
   @PutMapping(value = "/{piece-id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   ResponseEntity<BaseResponse<PieceResponse>> updatePiece(
       @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId,
-      @Parameter(description = "작품 상태", example = "UNREGISTERED") @RequestParam
+      @Parameter(description = "작품 상태", example = "APPLICATION") @RequestParam
           SaveStatus saveStatus,
       @Parameter(description = "작품 수정 내용") @RequestPart("data")
           UpdatePieceRequest updatePieceRequest,
@@ -89,13 +114,15 @@ public interface PieceController {
       @Parameter(description = "작품 디테일 컷 모음") @RequestPart(value = "detailImages", required = false)
           List<MultipartFile> detailImages);
 
-  @Operation(summary = "특정 작품 삭제하기 API", description = "특정 작품 정보 또는 작품 임시저장에서 작품을 삭제하기 위한 API")
-  @DeleteMapping("/{piece-id}")
-  ResponseEntity<BaseResponse<String>> deletePiece(
-      @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId);
+  @Operation(
+      summary = "특정 작품 리스트 삭제하기 API",
+      description = "특정 작품 정보 또는 작품 임시저장에서 작품 리스트를 삭제하기 위한 API")
+  @DeleteMapping()
+  ResponseEntity<BaseResponse<String>> deletePieces(
+      @Parameter(description = "특정 작품 ID 리스트", required = true) @RequestParam List<Long> pieceIds);
 
-    @Operation(summary = "특정 작품 좋아요 취소하기 API (로그인 필요)", description = "특정 작품 정보에서 좋아요를 취소하기 위한 API")
-    @DeleteMapping("/{piece-id}/likes")
-    ResponseEntity<BaseResponse<PieceLikeResponse>> unlikePiece(
-        @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId);
+  @Operation(summary = "특정 작품 좋아요 취소하기 API (로그인 필요)", description = "특정 작품 정보에서 좋아요를 취소하기 위한 API")
+  @DeleteMapping("/{piece-id}/likes")
+  ResponseEntity<BaseResponse<PieceLikeResponse>> unlikePiece(
+      @Parameter(description = "특정 작품 ID") @PathVariable(value = "piece-id") Long pieceId);
 }
