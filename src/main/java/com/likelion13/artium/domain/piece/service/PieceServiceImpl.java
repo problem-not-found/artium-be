@@ -182,7 +182,8 @@ public class PieceServiceImpl implements PieceService {
             .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
 
     if (!piece.getUser().getId().equals(userId)) {
-      log.error("작품에 접근 권한이 없습니다 - requestUserId: {}, piece.userId: {}", userId, pieceId);
+      log.error(
+          "작품에 접근 권한이 없습니다 - requestUserId: {}, piece.userId: {}", userId, piece.getUser().getId());
       throw new CustomException(PieceErrorCode.FORBIDDEN);
     }
 

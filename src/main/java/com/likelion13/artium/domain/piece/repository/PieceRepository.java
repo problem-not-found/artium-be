@@ -47,7 +47,7 @@ public interface PieceRepository extends JpaRepository<Piece, Long> {
   @Query("SELECT p FROM Piece p ORDER BY SIZE(p.pieceLikes) DESC")
   Page<Piece> findAllOrderByLikesCountDesc(Pageable pageable);
 
-  @Query("SELECT p from Piece p WHERE p.progressStatus NOT IN :status ORDER BY p.createdAt DESC")
+  @Query("SELECT p from Piece p WHERE p.progressStatus != :status ORDER BY p.createdAt DESC")
   Page<Piece> findRecentOngoingPieces(@Param("status") ProgressStatus status, Pageable pageable);
 
   Integer countByUserIdAndSaveStatus(Long userId, SaveStatus saveStatus);

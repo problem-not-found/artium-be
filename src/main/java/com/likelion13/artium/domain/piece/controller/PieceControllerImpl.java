@@ -60,18 +60,17 @@ public class PieceControllerImpl implements PieceController {
       }
     }
 
-    PieceSummaryResponse pieceSummaryResponse =
-        pieceService.createPiece(createPieceRequest, saveStatus, mainImage, detailImages);
-    return ResponseEntity.ok(BaseResponse.success(201, "작품 등록에 성공했습니다.", pieceSummaryResponse));
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(
+            BaseResponse.success(
+                pieceService.createPiece(createPieceRequest, saveStatus, mainImage, detailImages)));
   }
 
   @Override
   public ResponseEntity<BaseResponse<PieceLikeResponse>> likePiece(
       @PathVariable(value = "piece-id") Long pieceId) {
-
-    PieceLikeResponse pieceLikeResponse = pieceLikeService.likePiece(pieceId);
-
-    return ResponseEntity.ok(BaseResponse.success(201, "작품 좋아요 등록에 성공했습니다.", pieceLikeResponse));
+    return ResponseEntity.status(HttpStatus.CREATED)
+        .body(BaseResponse.success(pieceLikeService.likePiece(pieceId)));
   }
 
   @Override
@@ -79,9 +78,7 @@ public class PieceControllerImpl implements PieceController {
       @RequestParam SortBy sortBy, @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
     Pageable pageable = validatePageable(pageNum, pageSize);
     return ResponseEntity.status(HttpStatus.OK)
-        .body(
-            BaseResponse.success(
-                200, "작품 리스트 불러오기에 성공했습니다.", pieceService.getPiecePageByType(sortBy, pageable)));
+        .body(BaseResponse.success(pieceService.getPiecePageByType(sortBy, pageable)));
   }
 
   @Override
@@ -89,7 +86,7 @@ public class PieceControllerImpl implements PieceController {
       @RequestParam Long userId, @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
     Pageable pageable = validatePageable(pageNum, pageSize);
 
-    return ResponseEntity.status(200)
+    return ResponseEntity.status(HttpStatus.OK)
         .body(BaseResponse.success(pieceService.getPiecePage(userId, pageable)));
   }
 
@@ -101,7 +98,7 @@ public class PieceControllerImpl implements PieceController {
 
     Pageable pageable = validatePageable(pageNum, pageSize);
 
-    return ResponseEntity.status(200)
+    return ResponseEntity.status(HttpStatus.OK)
         .body(BaseResponse.success(pieceService.getMyPiecePage(applicated, pageable)));
   }
 
@@ -110,7 +107,7 @@ public class PieceControllerImpl implements PieceController {
       @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
     Pageable pageable = validatePageable(pageNum, pageSize);
 
-    return ResponseEntity.status(200)
+    return ResponseEntity.status(HttpStatus.OK)
         .body(BaseResponse.success(pieceService.getLikePieces(pageable)));
   }
 
@@ -119,7 +116,7 @@ public class PieceControllerImpl implements PieceController {
       @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
     Pageable pageable = validatePageable(pageNum, pageSize);
 
-    return ResponseEntity.status(200)
+    return ResponseEntity.status(HttpStatus.OK)
         .body(BaseResponse.success(pieceService.getRecommendationPiecePage(pageable)));
   }
 
@@ -127,14 +124,15 @@ public class PieceControllerImpl implements PieceController {
   public ResponseEntity<BaseResponse<PieceResponse>> getPiece(
       @PathVariable(value = "piece-id") Long pieceId) {
 
-    return ResponseEntity.status(200).body(BaseResponse.success(pieceService.getPiece(pieceId)));
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(BaseResponse.success(pieceService.getPiece(pieceId)));
   }
 
   @Override
   public ResponseEntity<BaseResponse<Integer>> getPieceDraftCount() {
 
-    return ResponseEntity.ok(
-        BaseResponse.success(200, "임시저장 작품 개수 조회에 성공했습니다.", pieceService.getPieceDraftCount()));
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(BaseResponse.success(pieceService.getPieceDraftCount()));
   }
 
   @Override
@@ -158,7 +156,7 @@ public class PieceControllerImpl implements PieceController {
       }
     }
 
-    return ResponseEntity.status(200)
+    return ResponseEntity.status(HttpStatus.OK)
         .body(
             BaseResponse.success(
                 pieceService.updatePiece(
@@ -167,18 +165,15 @@ public class PieceControllerImpl implements PieceController {
 
   @Override
   public ResponseEntity<BaseResponse<String>> deletePieces(@RequestParam List<Long> pieceIds) {
-
-    return ResponseEntity.status(200)
+    return ResponseEntity.status(HttpStatus.OK)
         .body(BaseResponse.success(pieceService.deletePieces(pieceIds)));
   }
 
   @Override
   public ResponseEntity<BaseResponse<PieceLikeResponse>> unlikePiece(
       @PathVariable(value = "piece-id") Long pieceId) {
-
-    PieceLikeResponse pieceLikeResponse = pieceLikeService.unlikePiece(pieceId);
-
-    return ResponseEntity.ok(BaseResponse.success(200, "작품 좋아요 취소에 성공했습니다.", pieceLikeResponse));
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(BaseResponse.success(pieceLikeService.unlikePiece(pieceId)));
   }
 
   private Pageable validatePageable(Integer pageNum, Integer pageSize) {
