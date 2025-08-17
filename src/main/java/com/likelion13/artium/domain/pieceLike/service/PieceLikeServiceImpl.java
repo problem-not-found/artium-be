@@ -44,6 +44,11 @@ public class PieceLikeServiceImpl implements PieceLikeService {
         pieceRepository
             .findById(pieceId)
             .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
+
+    if (piece.getUser().getId().equals(user.getId())) {
+      throw new CustomException(PieceLikeErrorCode.SELF_LIKE_NOT_ALLOWED);
+    }
+
     try {
       PieceLike pieceLike = PieceLike.builder().piece(piece).user(user).build();
 

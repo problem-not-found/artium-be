@@ -69,9 +69,8 @@ public class PieceControllerImpl implements PieceController {
       @RequestParam Long userId, @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
     Pageable pageable = validatePageable(pageNum, pageSize);
 
-    return ResponseEntity.ok(
-        BaseResponse.success(
-            200, "작품 리스트 조회에 성공했습니다.", pieceService.getPiecePage(userId, pageable)));
+    return ResponseEntity.status(200)
+        .body(BaseResponse.success(pieceService.getPiecePage(userId, pageable)));
   }
 
   @Operation(summary = "내 작품 리스트 조회 API", description = "내 작품 리스트를 조회하기 위한 API")
@@ -83,18 +82,15 @@ public class PieceControllerImpl implements PieceController {
 
     Pageable pageable = validatePageable(pageNum, pageSize);
 
-    return ResponseEntity.ok(
-        BaseResponse.success(
-            200, "내 작품 리스트 조회에 성공했습니다.", pieceService.getMyPiecePage(applicated, pageable)));
+    return ResponseEntity.status(200)
+        .body(BaseResponse.success(pieceService.getMyPiecePage(applicated, pageable)));
   }
 
   @Override
   public ResponseEntity<BaseResponse<PieceResponse>> getPiece(
       @PathVariable(value = "piece-id") Long pieceId) {
 
-    PieceResponse pieceResponse = pieceService.getPiece(pieceId);
-
-    return ResponseEntity.ok(BaseResponse.success(200, "작품 조회에 성공했습니다.", pieceResponse));
+    return ResponseEntity.status(200).body(BaseResponse.success(pieceService.getPiece(pieceId)));
   }
 
   @Override
@@ -118,19 +114,19 @@ public class PieceControllerImpl implements PieceController {
             : updatePieceRequest.getRemainPieceDetailIds().size();
     if (detailImages != null && remainCount + detailImages.size() > 5)
       throw new CustomException(PieceErrorCode.TOO_MANY_DETAIL_IMAGES);
-    PieceResponse pieceResponse =
-        pieceService.updatePiece(pieceId, updatePieceRequest, saveStatus, mainImage, detailImages);
 
-    return ResponseEntity.ok(BaseResponse.success(200, "작품 수정에 성공했습니다.", pieceResponse));
+    return ResponseEntity.status(200)
+        .body(
+            BaseResponse.success(
+                pieceService.updatePiece(
+                    pieceId, updatePieceRequest, saveStatus, mainImage, detailImages)));
   }
 
   @Override
   public ResponseEntity<BaseResponse<String>> deletePiece(
       @PathVariable(value = "piece-id") Long pieceId) {
 
-    pieceService.deletePiece(pieceId);
-
-    return ResponseEntity.ok(BaseResponse.success(pieceId + "번 식별자 작품이 정상적으로 삭제되었습니다."));
+    return ResponseEntity.status(200).body(BaseResponse.success(pieceService.deletePiece(pieceId)));
   }
 
   @Override

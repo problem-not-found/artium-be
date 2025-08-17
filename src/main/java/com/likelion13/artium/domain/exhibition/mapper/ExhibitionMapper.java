@@ -9,9 +9,11 @@ import org.springframework.stereotype.Component;
 
 import com.likelion13.artium.domain.exhibition.dto.request.ExhibitionRequest;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionDetailResponse;
+import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionLikeResponse;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionResponse;
 import com.likelion13.artium.domain.exhibition.entity.Exhibition;
 import com.likelion13.artium.domain.exhibition.entity.ExhibitionStatus;
+import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
 import com.likelion13.artium.domain.user.entity.User;
 
@@ -41,6 +43,10 @@ public class ExhibitionMapper {
         .build();
   }
 
+  public ExhibitionLike toExhibitionLike(Exhibition exhibition, User user) {
+    return ExhibitionLike.builder().exhibition(exhibition).user(user).build();
+  }
+
   public ExhibitionResponse toExhibitionResponse(Exhibition exhibition) {
     return ExhibitionResponse.builder()
         .exhibitionId(exhibition.getId())
@@ -53,20 +59,37 @@ public class ExhibitionMapper {
         .build();
   }
 
-  public ExhibitionDetailResponse toExhibitionDetailResponse(Exhibition exhibition) {
+  public ExhibitionDetailResponse toExhibitionDetailResponse(
+      Exhibition exhibition,
+      Boolean isAuthor,
+      Boolean isLike,
+      List<Long> pieceIdList,
+      List<Long> participantIdList) {
     return ExhibitionDetailResponse.builder()
         .exhibitionId(exhibition.getId())
+        .isAuthor(isAuthor)
         .thumbnailImageUrl(exhibition.getThumbnailImageUrl())
+        .pieceIdList(pieceIdList)
         .status(exhibition.getExhibitionStatus())
+        .isLike(isLike)
         .title(exhibition.getTitle())
+        .userId(exhibition.getUser().getId())
         .description(exhibition.getDescription())
         .startDate(exhibition.getStartDate())
         .endDate(exhibition.getEndDate())
+        .participantIdList(participantIdList)
         .address(exhibition.getAddress())
         .offlineDescription(exhibition.getOfflineDescription())
         .accountNumber(exhibition.getAccountNumber())
         .bankName(exhibition.getBankName())
         .fillAll(exhibition.getFillAll())
+        .build();
+  }
+
+  public ExhibitionLikeResponse toExhibitionLikeResponse(ExhibitionLike exhibitionLike) {
+    return ExhibitionLikeResponse.builder()
+        .exhibitionId(exhibitionLike.getExhibition().getId())
+        .currentUserNickname(exhibitionLike.getUser().getNickname())
         .build();
   }
 

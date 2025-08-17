@@ -28,10 +28,10 @@ public class TokenRepository {
   private final JwtProperties jwtProperties;
 
   /** Refresh Token Redis 키 접두사 */
-  private static final String REFRESH_TOKEN_PREFIX = "refresh:";
+  private static final String REFRESH_TOKEN_PREFIX = "RT:";
 
   /** 블랙리스트 Redis 키 접두사 */
-  private static final String BLACKLIST_PREFIX = "blacklist:";
+  private static final String BLACKLIST_PREFIX = "BL:";
 
   /**
    * Refresh Token을 Redis에 저장합니다.
@@ -85,7 +85,6 @@ public class TokenRepository {
   public void addToBlacklist(String token, long expiration) {
     String key = BLACKLIST_PREFIX + token;
     redisTemplate.opsForValue().set(key, "blacklisted", expiration, TimeUnit.SECONDS);
-    log.debug("Token added to blacklist: {}", token);
   }
 
   /**

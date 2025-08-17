@@ -63,21 +63,23 @@ jobs:
         uses: appleboy/ssh-action@master
         env:
           PROFILE: ${{ needs.build.outputs.profile }}
+          ENV_DEV: ${{ secrets.ENV_DEV }}
+          ENV_PROD: ${{ secrets.ENV_PROD }}
         with:
-          envs: PROFILE
+          envs: PROFILE,ENV_DEV,ENV_PROD
           host: ${{ secrets.SSH_HOST }}
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            if [ "${PROFILE}" = "dev" ]; then
-              printf '%s\n' "${{ secrets.ENV_DEV }}" > /home/ubuntu/actions-runner/_work/artium-be/artium-be/.env
-            elif [ "${PROFILE}" = "prod" ]; then
-              printf '%s\n' "${{ secrets.ENV_PROD }}" > /home/ubuntu/actions-runner/_work/artium-be/artium-be/.env
-            fi
-            echo "PROFILE=${PROFILE}" >> /home/ubuntu/actions-runner/_work/artium-be/artium-be/.env
-            
             cd /home/ubuntu/actions-runner/_work/artium-be/artium-be
+            if [ "${PROFILE}" = "dev" ]; then
+              echo "$ENV_DEV" > .env
+            elif [ "${PROFILE}" = "prod" ]; then
+              echo "$ENV_PROD" > .env
+            fi
+              echo "PROFILE=${PROFILE}" >> .env
+      
             docker compose down
             docker compose pull
             docker compose up -d --build

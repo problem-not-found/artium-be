@@ -21,14 +21,18 @@ public class SwaggerConfig {
   @Value("${server.servlet.context-path:}")
   private String contextPath;
 
+  @Value("${swagger.server.profile}")
+  private String profileUrl;
+
+  @Value("${swagger.server.name}")
+  private String profileName;
+
   @Bean
   public OpenAPI customOpenAPI() {
-    Server localServer = new Server();
-    localServer.url(contextPath);
-    localServer.setDescription("Local Server");
+    Server server = new Server().url(profileUrl + contextPath).description(profileName + " Server");
 
     return new OpenAPI()
-        .addServersItem(localServer)
+        .addServersItem(server)
         .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
         .components(
             new Components()
@@ -38,11 +42,25 @@ public class SwaggerConfig {
                         .type(SecurityScheme.Type.HTTP)
                         .scheme("bearer")
                         .bearerFormat("JWT")))
-        .info(new Info().title("Swagger API 명세서").version("1.0").description("SBS 프로젝트"));
+        .info(
+            new Info()
+                .title("Artium API 명세서")
+                .version("1.0")
+                .description(
+                    """
+                    # 멋쟁이사자처럼 13기 중앙해커톤 프로젝트 - 동네404: Problem not Found
+
+                    ## 주의사항
+                    - 파일 업로드 크기 제한: 5MB (1개 파일 크기)
+
+                    ## 문의
+                    - 기술 문의: unijun0109@gmail.com, keumsiun@skuniv.ac.kr
+                    - 일반 문의: unijun0109@gmail.com, keumsiun@skuniv.ac.kr
+                    """));
   }
 
   @Bean
-  public GroupedOpenApi customGroupedOpenApi() {
+  public GroupedOpenApi apiGroup() {
     return GroupedOpenApi.builder().group("api").pathsToMatch("/**").build();
   }
 }

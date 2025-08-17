@@ -25,7 +25,7 @@ public class ExhibitionRequest {
   private List<Long> pieceIdList;
 
   @Schema(description = "전시에 참여할 사용자 식별자 리스트", example = "[1, 2, 3]")
-  private List<Long> userIdList;
+  private List<Long> participantIdList;
 
   @Schema(description = "전시 제목", example = "성북구 신인 작가 합동 전시: 두 번째 여름")
   private String title;
