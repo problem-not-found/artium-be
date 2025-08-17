@@ -24,4 +24,6 @@ public interface PieceLikeRepository extends JpaRepository<PieceLike, Long> {
 
   @Query("SELECT pl.piece from PieceLike pl where pl.user.id= :userId")
   Page<Piece> findPieceByUser_Id(@Param("userId") Long userId, Pageable pageable);
+
+  Boolean existsByUser_IdAndPiece_Id(Long userId, Long pieceId);
 }
