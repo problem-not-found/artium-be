@@ -8,8 +8,10 @@ import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.likelion13.artium.domain.exhibition.entity.SortBy;
 import com.likelion13.artium.domain.piece.dto.request.CreatePieceRequest;
 import com.likelion13.artium.domain.piece.dto.request.UpdatePieceRequest;
+import com.likelion13.artium.domain.piece.dto.response.PieceFeedResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceSummaryResponse;
 import com.likelion13.artium.domain.piece.entity.SaveStatus;
@@ -66,10 +68,10 @@ public interface PieceService {
       List<MultipartFile> detailImages);
 
   /**
-   * @param pieceId 작품 식별자 (크리에이터가 아닐 시 삭제 실패)
+   * @param pieceIds 작품 식별자 리스트 (크리에이터가 아닐 시 삭제 실패)
    * @return 작품 삭제 성공 메시지
    */
-  String deletePiece(Long pieceId);
+  String deletePieces(List<Long> pieceIds);
 
   /**
    * @return 임시 저장된 작품의 개수 (크리에이터가 아닐 시 조회 실패)
@@ -91,4 +93,13 @@ public interface PieceService {
    * @return 추천 작품 리스트
    */
   PageResponse<PieceSummaryResponse> getRecommendationPiecePage(Pageable pageable);
+
+  /**
+   * 피드의 작품 리스트 조회 메서드
+   *
+   * @param sortBy 인기순, 최신순 정렬 기준
+   * @param pageable 페이징 처리값 객체
+   * @return 작품 리스트
+   */
+  PageResponse<PieceFeedResponse> getPiecePageByType(SortBy sortBy, Pageable pageable);
 }

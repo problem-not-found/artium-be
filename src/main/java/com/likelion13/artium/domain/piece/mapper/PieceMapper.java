@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
+import com.likelion13.artium.domain.piece.dto.response.PieceFeedResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceSummaryResponse;
 import com.likelion13.artium.domain.piece.entity.Piece;
@@ -56,6 +57,15 @@ public class PieceMapper {
         .saveStatus(piece.getSaveStatus())
         .progressStatus(piece.getProgressStatus())
         .userId(piece.getUser().getId())
+        .build();
+  }
+
+  public PieceFeedResponse toPieceFeedResponse(Piece piece, Boolean isLike) {
+    return PieceFeedResponse.builder()
+        .pieceId(piece.getId())
+        .title(piece.getTitle())
+        .imageUrl(piece.getImageUrl())
+        .isLike(isLike)
         .build();
   }
 }

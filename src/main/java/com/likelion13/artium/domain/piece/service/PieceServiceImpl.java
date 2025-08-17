@@ -19,8 +19,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.likelion13.artium.domain.exhibition.entity.SortBy;
 import com.likelion13.artium.domain.piece.dto.request.CreatePieceRequest;
 import com.likelion13.artium.domain.piece.dto.request.UpdatePieceRequest;
+import com.likelion13.artium.domain.piece.dto.response.PieceFeedResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceSummaryResponse;
 import com.likelion13.artium.domain.piece.entity.Piece;
@@ -32,6 +34,7 @@ import com.likelion13.artium.domain.piece.repository.PieceRepository;
 import com.likelion13.artium.domain.pieceDetail.entity.PieceDetail;
 import com.likelion13.artium.domain.pieceDetail.service.PieceDetailService;
 import com.likelion13.artium.domain.pieceLike.repository.PieceLikeRepository;
+import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.repository.UserRepository;
 import com.likelion13.artium.domain.user.service.UserService;
@@ -79,6 +82,10 @@ public class PieceServiceImpl implements PieceService {
             .findByUserIdAndProgressStatusIn(userId, statuses, sortedPageable)
             .map(pieceMapper::toPieceSummaryResponse);
 
+    log.info(
+        "특정 사용자 작품 리스트 조회 성공 - requestUserId: {}, piece.userId: {}",
+        userService.getCurrentUser().getId(),
+        userId);
     return pageMapper.toPiecePageResponse(page);
   }
 
@@ -99,6 +106,7 @@ public class PieceServiceImpl implements PieceService {
                 .findByUserIdAndSaveStatus(userId, SaveStatus.DRAFT, sortedPageable)
                 .map(pieceMapper::toPieceSummaryResponse);
 
+    log.info("내 작품 리스트 조회 성공 - requestUserId: {}", userId);
     return pageMapper.toPiecePageResponse(page);
   }
 
@@ -109,12 +117,7 @@ public class PieceServiceImpl implements PieceService {
       SaveStatus saveStatus,
       MultipartFile mainImage,
       List<MultipartFile> detailImages) {
-
-    boolean isValidatedPiece = validateCreatePieceFields(createPieceRequest, mainImage);
-
-    if (saveStatus == SaveStatus.APPLICATION && !isValidatedPiece) {
-      throw new CustomException(PieceErrorCode.INVALID_APPLICATION);
-    }
+    User user = userService.getCurrentUser();
 
     String mainImageUrl =
         mainImage != null ? s3Service.uploadFile(PathName.PIECE, mainImage) : null;
@@ -126,7 +129,7 @@ public class PieceServiceImpl implements PieceService {
             .isPurchasable(createPieceRequest.getIsPurchasable())
             .saveStatus(saveStatus)
             .imageUrl(mainImageUrl)
-            .user(userService.getCurrentUser())
+            .user(user)
             .build();
 
     pieceRepository.save(piece);
@@ -140,6 +143,7 @@ public class PieceServiceImpl implements PieceService {
           detailImageUrl -> pieceDetailService.createPieceDetail(piece, detailImageUrl));
     }
 
+    log.info("작품 등록 성공 - userId: {}, pieceId: {}", user.getId(), piece.getId());
     return pieceMapper.toPieceSummaryResponse(piece);
   }
 
@@ -153,13 +157,12 @@ public class PieceServiceImpl implements PieceService {
     if (!piece.getUser().getId().equals(userId)
         && (piece.getProgressStatus() != ProgressStatus.REGISTERED
             && piece.getProgressStatus() != ProgressStatus.ON_DISPLAY)) {
-      throw new CustomException(PieceErrorCode.UNAUTHORIZED);
+      throw new CustomException(PieceErrorCode.FORBIDDEN);
     }
-    if (pieceLikeRepository.findByUser_IdAndPiece_Id(userId, pieceId).isPresent()) {
-      return pieceMapper.toPieceResponseWithLike(piece, true);
-    } else {
-      return pieceMapper.toPieceResponseWithLike(piece, false);
-    }
+
+    log.info("특정 작품 조회 성공 - userId: {}, pieceId: {}", userId, pieceId);
+    return pieceMapper.toPieceResponseWithLike(
+        piece, pieceLikeRepository.existsByUser_IdAndPiece_Id(userId, pieceId));
   }
 
   @Override
@@ -179,18 +182,20 @@ public class PieceServiceImpl implements PieceService {
             .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
 
     if (!piece.getUser().getId().equals(userId)) {
-      throw new CustomException(PieceErrorCode.UNAUTHORIZED);
+      log.error(
+          "작품에 접근 권한이 없습니다 - requestUserId: {}, piece.userId: {}", userId, piece.getUser().getId());
+      throw new CustomException(PieceErrorCode.FORBIDDEN);
     }
 
-    boolean isValidatedPiece;
-    if (piece.getImageUrl() == null) {
-      isValidatedPiece = validateUpdatePieceFields(updatePieceRequest, mainImage);
-    } else {
-      isValidatedPiece = validateUpdatePieceFields(updatePieceRequest);
-    }
-
-    if (saveStatus == SaveStatus.APPLICATION && !isValidatedPiece) {
-      throw new CustomException(PieceErrorCode.INVALID_APPLICATION);
+    if (saveStatus == SaveStatus.APPLICATION) {
+      if (piece.getImageUrl() == null
+          && !validateUpdatePieceFields(updatePieceRequest, mainImage)) {
+        log.error("등록 신청을 하려면 제목, 설명, 구매 가능 여부, 메인 이미지를 입력해야 합니다.");
+        throw new CustomException(PieceErrorCode.INVALID_APPLICATION);
+      } else if (piece.getImageUrl() != null && !validateUpdatePieceFields(updatePieceRequest)) {
+        log.error("등록 신청을 하려면 제목, 설명, 구매 가능 여부, 메인 이미지를 입력해야 합니다.");
+        throw new CustomException(PieceErrorCode.INVALID_APPLICATION);
+      }
     }
 
     List<Long> pieceDetailIds = piece.getPieceDetails().stream().map(PieceDetail::getId).toList();
@@ -199,6 +204,10 @@ public class PieceServiceImpl implements PieceService {
         .forEach(
             remainPieceDetailId -> {
               if (!pieceDetailIds.contains(remainPieceDetailId)) {
+                log.error(
+                    "해당 작품의 디테일 컷이 아닙니다. - remainPieceDetailId: {}, pieceDetailIds: {}",
+                    remainPieceDetailId,
+                    piece.getPieceDetails().stream().map(PieceDetail::getId).toList());
                 throw new CustomException(PieceErrorCode.DETAIL_IMAGE_NOT_BELONG_TO_PIECE);
               }
             });
@@ -238,39 +247,39 @@ public class PieceServiceImpl implements PieceService {
         updatePieceRequest.getDescription(),
         updatePieceRequest.getIsPurchasable(),
         saveStatus);
-    if (pieceLikeRepository.findByUser_IdAndPiece_Id(userId, pieceId).isPresent()) {
-      return pieceMapper.toPieceResponseWithLike(piece, true);
-    } else {
-      return pieceMapper.toPieceResponseWithLike(piece, false);
-    }
+    log.info("작품 수정에 성공했습니다. - userId: {}, pieceId: {}", userId, pieceId);
+    return pieceMapper.toPieceResponse(piece);
   }
 
   @Override
   @Transactional
-  public String deletePiece(Long pieceId) {
+  public String deletePieces(List<Long> pieceIds) {
     Long userId = userService.getCurrentUser().getId();
 
-    Piece piece =
-        pieceRepository
-            .findById(pieceId)
-            .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
+    List<Piece> pieces = pieceRepository.findAllById(pieceIds);
 
-    if (!piece.getUser().getId().equals(userId)) {
-      throw new CustomException(PieceErrorCode.UNAUTHORIZED);
-    }
+    pieces.forEach(
+        piece -> {
+          if (!piece.getUser().getId().equals(userId)) {
+            log.error("작품에 접근 권한이 없습니다 - requestUserId: {}, pieceId: {}", userId, piece.getId());
+            throw new CustomException(PieceErrorCode.FORBIDDEN);
+          }
+          if (piece.getImageUrl() != null) {
+            s3Service.deleteFile(s3Service.extractKeyNameFromUrl(piece.getImageUrl()));
+          }
+          piece
+              .getPieceDetails()
+              .forEach(
+                  pieceDetail -> {
+                    s3Service.deleteFile(
+                        s3Service.extractKeyNameFromUrl(pieceDetail.getImageUrl()));
+                  });
 
-    if (piece.getImageUrl() != null) {
-      s3Service.deleteFile(s3Service.extractKeyNameFromUrl(piece.getImageUrl()));
-    }
-    piece
-        .getPieceDetails()
-        .forEach(
-            pieceDetail ->
-                s3Service.deleteFile(s3Service.extractKeyNameFromUrl(pieceDetail.getImageUrl())));
+          pieceRepository.delete(piece);
+        });
 
-    pieceRepository.delete(piece);
-
-    return piece.getId() + "번 작품 삭제에 성공했습니다.";
+    log.info("작품 리스트 삭제에 성공했습니다. userId: {}, pieceIds: {}", userId, pieceIds);
+    return "작품 리스트 삭제에 성공했습니다.";
   }
 
   @Override
@@ -293,6 +302,7 @@ public class PieceServiceImpl implements PieceService {
             .findPieceByUser_Id(userId, sortedPageable)
             .map(pieceMapper::toPieceSummaryResponse);
 
+    log.info("좋아요 한 작품 리스트 조회에 성공했습니다. - userId: {}", userId);
     return pageMapper.toPiecePageResponse(page);
   }
 
@@ -310,6 +320,43 @@ public class PieceServiceImpl implements PieceService {
             .map(pieceMapper::toPieceSummaryResponse);
 
     return pageMapper.toPiecePageResponse(page);
+  }
+
+  @Override
+  public PageResponse<PieceFeedResponse> getPiecePageByType(SortBy sortBy, Pageable pageable) {
+    Long userId = userService.getCurrentUser().getId();
+    Page<PieceFeedResponse> page;
+
+    switch (sortBy) {
+      case HOTTEST:
+        page =
+            pieceRepository
+                .findAllOrderByLikesCountDesc(pageable)
+                .map(
+                    piece ->
+                        pieceMapper.toPieceFeedResponse(
+                            piece,
+                            pieceLikeRepository.existsByUser_IdAndPiece_Id(userId, piece.getId())));
+        log.info("인기순 작품 리스트 페이지 조회 성공");
+        break;
+
+      case LATEST:
+        page =
+            pieceRepository
+                .findRecentOngoingPieces(ProgressStatus.WAITING, pageable)
+                .map(
+                    piece ->
+                        pieceMapper.toPieceFeedResponse(
+                            piece,
+                            pieceLikeRepository.existsByUser_IdAndPiece_Id(userId, piece.getId())));
+        log.info("최신순 작품 리스트 페이지 조회 성공");
+        break;
+
+      default:
+        throw new CustomException(PieceErrorCode.INVALID_SORT_TYPE);
+    }
+
+    return pageMapper.toPieceFeedPageResponse(page);
   }
 
   private List<Long> recommendPieceIds(Long userId, int topN) {
@@ -371,25 +418,19 @@ public class PieceServiceImpl implements PieceService {
     return recommendIds;
   }
 
-  private boolean validateCreatePieceFields(
-      CreatePieceRequest createPieceRequest, MultipartFile mainImage) {
-    return createPieceRequest.getTitle() != null
-        && createPieceRequest.getDescription() != null
-        && createPieceRequest.getIsPurchasable() != null
-        && mainImage != null;
-  }
-
   private boolean validateUpdatePieceFields(
       UpdatePieceRequest updatePieceRequest, MultipartFile mainImage) {
-    return updatePieceRequest.getTitle() != null
-        && updatePieceRequest.getDescription() != null
+    return (updatePieceRequest.getTitle() != null && !updatePieceRequest.getTitle().isEmpty())
+        && (updatePieceRequest.getDescription() != null
+            && !updatePieceRequest.getDescription().isEmpty())
         && updatePieceRequest.getIsPurchasable() != null
-        && mainImage != null;
+        && (mainImage != null && !mainImage.isEmpty());
   }
 
   private boolean validateUpdatePieceFields(UpdatePieceRequest updatePieceRequest) {
-    return updatePieceRequest.getTitle() != null
-        && updatePieceRequest.getDescription() != null
+    return (updatePieceRequest.getTitle() != null && !updatePieceRequest.getTitle().isEmpty())
+        && (updatePieceRequest.getDescription() != null
+            && !updatePieceRequest.getDescription().isEmpty())
         && updatePieceRequest.getIsPurchasable() != null;
   }
 }
