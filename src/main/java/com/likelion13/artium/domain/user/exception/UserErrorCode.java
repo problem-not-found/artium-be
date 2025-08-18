@@ -22,6 +22,7 @@ public enum UserErrorCode implements BaseErrorCode {
   LIKE_NOT_FOUND("USER_4007", "좋아요 내역을 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
   INVALID_INPUT_REQUEST("USER_4008", "유효하지 않은 입력 값을 포함한 요청입니다.", HttpStatus.BAD_REQUEST),
   FORBIDDEN("USER_4009", "허가되지 않은 접근입니다.", HttpStatus.FORBIDDEN),
+  INVALID_SORT_TYPE("USER_4010", "유효하지 않은 정렬 요청입니다.", HttpStatus.BAD_REQUEST),
   ;
 
   private final String code;

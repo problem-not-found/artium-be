@@ -10,6 +10,7 @@ import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceFeedResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceSummaryResponse;
 import com.likelion13.artium.domain.review.dto.response.ReviewResponse;
+import com.likelion13.artium.domain.user.dto.response.CreatorFeedResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
 import com.likelion13.artium.global.page.response.PageResponse;
 
@@ -46,6 +47,11 @@ public class PageMapper {
 
   public PageResponse<UserSummaryResponse> toUserSummaryPageResponse(
       Page<UserSummaryResponse> page) {
+    return toPageResponse(page);
+  }
+
+  public PageResponse<CreatorFeedResponse> toCreatorFeedPageResponse(
+      Page<CreatorFeedResponse> page) {
     return toPageResponse(page);
   }
 }
