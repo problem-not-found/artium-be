@@ -3,19 +3,24 @@
  */
 package com.likelion13.artium.domain.user.mapper;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
 
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
+import com.likelion13.artium.domain.piece.entity.ProgressStatus;
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
+import com.likelion13.artium.domain.user.dto.response.CreatorFeedResponse;
 import com.likelion13.artium.domain.user.dto.response.CreatorResponse;
 import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
+import com.likelion13.artium.domain.user.dto.response.UserResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
 import com.likelion13.artium.domain.user.entity.FormatPreference;
 import com.likelion13.artium.domain.user.entity.MoodPreference;
@@ -80,11 +85,19 @@ public class UserMapper {
         .build();
   }
 
+  public UserResponse toUserResponse(User user) {
+    return UserResponse.builder()
+        .userId(user.getId())
+        .nickname(user.getNickname())
+        .code(user.getCode())
+        .profileImageUrl(user.getProfileImageUrl())
+        .build();
+  }
+
   public UserSummaryResponse toUserSummaryResponse(User user) {
     return UserSummaryResponse.builder()
         .userId(user.getId())
         .nickname(user.getNickname())
-        .code(user.getCode())
         .profileImageUrl(user.getProfileImageUrl())
         .build();
   }
@@ -104,6 +117,24 @@ public class UserMapper {
         .code(user.getCode())
         .profileImageUrl(user.getProfileImageUrl())
         .introduction(user.getIntroduction())
+        .isLike(isLike)
+        .build();
+  }
+
+  public CreatorFeedResponse toCreatorFeedResponse(User user, Boolean isLike) {
+    List<String> pieceImageUrls = new ArrayList<>();
+    user.getPieces()
+        .forEach(
+            piece -> {
+              if (piece.getProgressStatus() != ProgressStatus.WAITING
+                  && piece.getProgressStatus() != ProgressStatus.UNREGISTERED)
+                pieceImageUrls.add(piece.getImageUrl());
+            });
+    return CreatorFeedResponse.builder()
+        .userId(user.getId())
+        .nickname(user.getNickname())
+        .profileImageUrl(user.getProfileImageUrl())
+        .pieceImageUrls(pieceImageUrls.stream().limit(2).toList())
         .isLike(isLike)
         .build();
   }

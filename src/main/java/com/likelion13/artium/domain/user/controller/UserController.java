@@ -14,23 +14,30 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
+import com.likelion13.artium.domain.user.dto.request.UpdateContactRequest;
+import com.likelion13.artium.domain.user.dto.request.UpdateUserInfoRequest;
+import com.likelion13.artium.domain.user.dto.request.UpdateUserRequest;
+import com.likelion13.artium.domain.user.dto.response.CreatorFeedResponse;
 import com.likelion13.artium.domain.user.dto.response.CreatorResponse;
 import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
+import com.likelion13.artium.domain.user.dto.response.UserResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
 import com.likelion13.artium.domain.user.entity.Age;
 import com.likelion13.artium.domain.user.entity.FormatPreference;
 import com.likelion13.artium.domain.user.entity.Gender;
 import com.likelion13.artium.domain.user.entity.MoodPreference;
+import com.likelion13.artium.domain.user.entity.SortBy;
 import com.likelion13.artium.domain.user.entity.ThemePreference;
 import com.likelion13.artium.global.page.response.PageResponse;
 import com.likelion13.artium.global.response.BaseResponse;
@@ -66,7 +73,7 @@ public interface UserController {
 
   @GetMapping
   @Operation(summary = "사용자 정보 조회", description = "현재 로그인된 사용자의 정보를 조회합니다.")
-  ResponseEntity<BaseResponse<UserDetailResponse>> getUserDetail();
+  ResponseEntity<BaseResponse<UserResponse>> getUser();
 
   @GetMapping("/check-code")
   @Operation(
@@ -86,9 +93,13 @@ public interface UserController {
       @Parameter(description = "특정 유저 식별자") @PathVariable(value = "id") Long userId);
 
   @GetMapping("/{id}/contact")
-  @Operation(summary = "사용자 연락 수단 조회", description = "사용자의 이메일, 인스타그램을 조회합니다.")
+  @Operation(summary = "사용자 연락 정보 조회", description = "사용자의 이메일, 인스타그램을 조회합니다.")
   ResponseEntity<BaseResponse<UserContactResponse>> getUserContact(
       @Parameter(description = "특정 유저 식별자") @PathVariable(value = "id") Long userId);
+
+  @GetMapping("/contact/status")
+  @Operation(summary = "사용자 연락 정보 등록 여부 조회", description = "현재 로그인된 사용자의 연락 정보 등록 여부를 조회합니다.")
+  ResponseEntity<BaseResponse<Boolean>> getContactStatus();
 
   @GetMapping("/{id}/creator")
   @Operation(summary = "크리에이터 정보 조회", description = "크리에이터의 정보를 조회합니다.")
@@ -102,14 +113,44 @@ public interface UserController {
       @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
 
   @GetMapping("/preferences")
-  @Operation(summary = "사용자 맞춤 취향 설정 조회", description = "사용자 맞춤 취향 설정을 조회합니다.")
+  @Operation(summary = "사용자 맞춤 취향 설정 조회", description = "현재 로그인된 사용자의 맞춤 취향 설정을 조회합니다.")
   ResponseEntity<BaseResponse<PreferenceResponse>> getPreferences();
 
+  @GetMapping("/recommendations")
+  @Operation(
+      summary = "최근 전시 오픈한/나와 비슷한 연령대 크리에이터 리스트 조회",
+      description = "최근에 전시를 오픈한 또는 비슷한 연령대 크리에이터 리스트를 조회합니다.")
+  ResponseEntity<BaseResponse<PageResponse<CreatorFeedResponse>>> getRecommendations(
+      @Parameter(description = "정렬 기준", example = "LATEST_OPEN") @RequestParam SortBy sortBy,
+      @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
+      @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
+
+  @PutMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+  @Operation(summary = "내 정보 변경", description = "현재 로그인된 사용자의 정보를 변경합니다.")
+  ResponseEntity<BaseResponse<String>> updateUser(
+      @Parameter(
+              description = "현재 로그인된 사용자의 수정 정보",
+              content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
+          @RequestPart(value = "request", required = false)
+          @Valid
+          UpdateUserRequest updateUserRequest,
+      @Parameter(
+              description = "프로필 이미지",
+              content = @Content(mediaType = MediaType.MULTIPART_FORM_DATA_VALUE))
+          @RequestPart(value = "image", required = false)
+          MultipartFile image);
+
   @PutMapping("/user-info")
-  @Operation(summary = "코드와 닉네임 변경", description = "현재 로그인된 사용자의 코드와 닉네임을 변경합니다.")
+  @Operation(summary = "내 코드와 닉네임 변경", description = "현재 로그인된 사용자의 코드와 닉네임을 변경합니다.")
   ResponseEntity<BaseResponse<String>> updateUserInfo(
-      @Parameter(description = "변경할 코드", example = "simonisnextdoor") @RequestParam String newCode,
-      @Parameter(description = "변경할 닉네임", example = "아르티움") @RequestParam String newNickname);
+      @Parameter(description = "사용자 코드와 닉네임 수정 정보") @RequestBody @Valid
+          UpdateUserInfoRequest updateUserInfoRequest);
+
+  @PutMapping("/contact")
+  @Operation(summary = "내 연락 정보 수정", description = "현재 로그인된 사용자의 연락 정보를 변경합니다.")
+  ResponseEntity<BaseResponse<String>> updateContact(
+      @Parameter(description = "사용자 연락 수정 정보") @RequestBody
+          UpdateContactRequest updateContactRequest);
 
   @PutMapping(value = "/profile-image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(summary = "프로필 사진 변경", description = "현재 로그인된 사용자의 프로필 사진을 변경합니다.")

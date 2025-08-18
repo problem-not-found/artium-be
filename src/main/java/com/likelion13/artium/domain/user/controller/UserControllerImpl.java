@@ -11,23 +11,30 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
+import com.likelion13.artium.domain.user.dto.request.UpdateContactRequest;
+import com.likelion13.artium.domain.user.dto.request.UpdateUserInfoRequest;
+import com.likelion13.artium.domain.user.dto.request.UpdateUserRequest;
+import com.likelion13.artium.domain.user.dto.response.CreatorFeedResponse;
 import com.likelion13.artium.domain.user.dto.response.CreatorResponse;
 import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
+import com.likelion13.artium.domain.user.dto.response.UserResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
 import com.likelion13.artium.domain.user.entity.Age;
 import com.likelion13.artium.domain.user.entity.FormatPreference;
 import com.likelion13.artium.domain.user.entity.Gender;
 import com.likelion13.artium.domain.user.entity.MoodPreference;
+import com.likelion13.artium.domain.user.entity.SortBy;
 import com.likelion13.artium.domain.user.entity.ThemePreference;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.service.UserService;
@@ -62,9 +69,9 @@ public class UserControllerImpl implements UserController {
   }
 
   @Override
-  public ResponseEntity<BaseResponse<UserDetailResponse>> getUserDetail() {
+  public ResponseEntity<BaseResponse<UserResponse>> getUser() {
 
-    return ResponseEntity.ok(BaseResponse.success(userService.getUserDetail()));
+    return ResponseEntity.ok(BaseResponse.success(userService.getUser()));
   }
 
   @Override
@@ -86,6 +93,14 @@ public class UserControllerImpl implements UserController {
   }
 
   @Override
+  public ResponseEntity<BaseResponse<PageResponse<CreatorFeedResponse>>> getRecommendations(
+      SortBy sortBy, Integer pageNum, Integer pageSize) {
+    Pageable pageable = validatePageable(pageNum, pageSize);
+    return ResponseEntity.status(200)
+        .body(BaseResponse.success(userService.getRecommendations(sortBy, pageable)));
+  }
+
+  @Override
   public ResponseEntity<BaseResponse<UserSummaryResponse>> getUserProfile(
       @PathVariable(value = "id") Long userId) {
     return ResponseEntity.status(200)
@@ -100,6 +115,11 @@ public class UserControllerImpl implements UserController {
   }
 
   @Override
+  public ResponseEntity<BaseResponse<Boolean>> getContactStatus() {
+    return ResponseEntity.status(200).body(BaseResponse.success(userService.getContactStatus()));
+  }
+
+  @Override
   public ResponseEntity<BaseResponse<CreatorResponse>> getCreatorInfo(
       @PathVariable(value = "id") Long userId) {
     return ResponseEntity.status(200)
@@ -107,10 +127,23 @@ public class UserControllerImpl implements UserController {
   }
 
   @Override
-  public ResponseEntity<BaseResponse<String>> updateUserInfo(
-      @RequestParam String newCode, @RequestParam String newNickname) {
+  public ResponseEntity<BaseResponse<String>> updateUser(
+      UpdateUserRequest updateUserRequest, MultipartFile profileImage) {
     return ResponseEntity.ok(
-        BaseResponse.success(userService.updateUserInfo(newCode, newNickname)));
+        BaseResponse.success(userService.updateUser(updateUserRequest, profileImage)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<String>> updateUserInfo(
+      @RequestBody @Valid UpdateUserInfoRequest updateUserInfoRequest) {
+    return ResponseEntity.ok(
+        BaseResponse.success(userService.updateUserInfo(updateUserInfoRequest)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<String>> updateContact(
+      @RequestBody UpdateContactRequest updateContactRequest) {
+    return ResponseEntity.ok(BaseResponse.success(userService.updateContact(updateContactRequest)));
   }
 
   @Override

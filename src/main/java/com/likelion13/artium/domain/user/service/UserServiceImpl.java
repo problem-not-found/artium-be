@@ -3,6 +3,9 @@
  */
 package com.likelion13.artium.domain.user.service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -21,24 +24,31 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.likelion13.artium.domain.exhibition.entity.ExhibitionStatus;
 import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.domain.piece.entity.ProgressStatus;
 import com.likelion13.artium.domain.piece.entity.SaveStatus;
 import com.likelion13.artium.domain.piece.exception.PieceErrorCode;
 import com.likelion13.artium.domain.piece.repository.PieceRepository;
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
+import com.likelion13.artium.domain.user.dto.request.UpdateContactRequest;
+import com.likelion13.artium.domain.user.dto.request.UpdateUserInfoRequest;
+import com.likelion13.artium.domain.user.dto.request.UpdateUserRequest;
+import com.likelion13.artium.domain.user.dto.response.CreatorFeedResponse;
 import com.likelion13.artium.domain.user.dto.response.CreatorResponse;
 import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
+import com.likelion13.artium.domain.user.dto.response.UserResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
 import com.likelion13.artium.domain.user.entity.Age;
 import com.likelion13.artium.domain.user.entity.FormatPreference;
 import com.likelion13.artium.domain.user.entity.Gender;
 import com.likelion13.artium.domain.user.entity.MoodPreference;
 import com.likelion13.artium.domain.user.entity.Role;
+import com.likelion13.artium.domain.user.entity.SortBy;
 import com.likelion13.artium.domain.user.entity.ThemePreference;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
@@ -185,11 +195,11 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional(readOnly = true)
-  public UserDetailResponse getUserDetail() {
+  public UserResponse getUser() {
 
     User currentUser = getCurrentUser();
 
-    return userMapper.toUserDetailResponse(currentUser);
+    return userMapper.toUserResponse(currentUser);
   }
 
   @Override
@@ -203,8 +213,41 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional
-  public String updateUserInfo(String newCode, String newNickname) {
+  public String updateUser(UpdateUserRequest request, MultipartFile profileImage) {
     User user = getCurrentUser();
+    String newCode = request.getCode();
+
+    if (newCode != null && userRepository.existsByCodeAndIdNot(newCode, user.getId())) {
+      log.error("코드 중복 시도 - userId: {}, code: {}", user.getId(), newCode);
+      throw new CustomException(UserErrorCode.CODE_ALREADY_EXISTS);
+    }
+    if (profileImage != null && !profileImage.isEmpty()) {
+      try {
+        String oldImageUrl = user.getProfileImageUrl();
+        String newImageUrl = s3Service.uploadFile(PathName.PROFILE_IMAGE, profileImage);
+
+        if (oldImageUrl != null && !oldImageUrl.isEmpty()) {
+          s3Service.deleteFile(oldImageUrl);
+        }
+        user.updateProfileImageUrl(newImageUrl);
+      } catch (Exception e) {
+        log.error("S3 파일 업로드 실패(교체) - userId: {}", user.getId(), e);
+        throw new CustomException(S3ErrorCode.FILE_SERVER_ERROR);
+      }
+    }
+
+    user.updateUser(request.getNickname(), newCode, request.getIntroduction());
+
+    log.info("사용자 정보 변경 - userId: {}, code: {}", user.getId(), newCode);
+    return "사용자 정보 변경 성공";
+  }
+
+  @Override
+  @Transactional
+  public String updateUserInfo(UpdateUserInfoRequest request) {
+    User user = getCurrentUser();
+    String newNickname = request.getNickname();
+    String newCode = request.getCode();
 
     if (newCode != null && userRepository.existsByCodeAndIdNot(newCode, user.getId())) {
       log.error("코드 중복 시도 - userId: {}, code: {}", user.getId(), newCode);
@@ -216,6 +259,24 @@ public class UserServiceImpl implements UserService {
         "사용자 정보 변경 - userId: {}, newCode: {}, newNickname: {}", user.getId(), newCode, newNickname);
 
     return "newCode: " + newCode + ", newNickname: " + newNickname;
+  }
+
+  @Override
+  @Transactional
+  public String updateContact(UpdateContactRequest request) {
+    User user = getCurrentUser();
+    if ((request.getEmail() == null || request.getEmail().isBlank())
+        && (request.getInstagram() == null || request.getInstagram().isBlank())) {
+      throw new CustomException(UserErrorCode.INVALID_INPUT_REQUEST);
+    }
+    user.updateContact(request.getEmail(), request.getInstagram());
+
+    log.info(
+        "사용자 연락 정보 변경 - userId: {}, email: {}, instagram: {}",
+        user.getId(),
+        request.getEmail(),
+        request.getInstagram());
+    return "사용자 연락 정보 변경 성공";
   }
 
   @Override
@@ -437,6 +498,55 @@ public class UserServiceImpl implements UserService {
     } else {
       return userMapper.toCreatorResponse(user, false);
     }
+  }
+
+  @Override
+  public Boolean getContactStatus() {
+    User user = getCurrentUser();
+    return user.getEmail() != null || user.getInstagram() != null;
+  }
+
+  @Override
+  public PageResponse<CreatorFeedResponse> getRecommendations(SortBy sortBy, Pageable pageable) {
+    User user = getCurrentUser();
+    Page<CreatorFeedResponse> page;
+
+    switch (sortBy) {
+      case LATEST_OPEN:
+        LocalDate cutoffDate = LocalDate.now().minusDays(7);
+        page =
+            userRepository
+                .findRecentOngoingExhibitionUsers(
+                    user.getId(), cutoffDate, ExhibitionStatus.ONGOING, pageable)
+                .map(
+                    u ->
+                        userMapper.toCreatorFeedResponse(
+                            u,
+                            userLikeRepository.existsByLiker_IdAndLiked_Id(
+                                user.getId(), u.getId())));
+        log.info("최근 전시 오픈한 크리에이터 리스트 페이지 조회 성공");
+        break;
+
+      case PEER_GROUP:
+        List<ProgressStatus> statuses =
+            new ArrayList<>(Arrays.asList(ProgressStatus.WAITING, ProgressStatus.UNREGISTERED));
+        page =
+            userRepository
+                .findSameAgeUsers(user.getId(), user.getAge(), statuses, pageable)
+                .map(
+                    u ->
+                        userMapper.toCreatorFeedResponse(
+                            u,
+                            userLikeRepository.existsByLiker_IdAndLiked_Id(
+                                user.getId(), u.getId())));
+        log.info("나와 비슷한 연령대의 크리에이터 리스트 페이지 조회 성공");
+        break;
+
+      default:
+        throw new CustomException(UserErrorCode.INVALID_SORT_TYPE);
+    }
+
+    return pageMapper.toCreatorFeedPageResponse(page);
   }
 
   private String makeEmbeddingPreference(
