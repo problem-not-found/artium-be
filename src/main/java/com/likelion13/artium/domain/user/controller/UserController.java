@@ -131,7 +131,7 @@ public interface UserController {
       @Parameter(
               description = "현재 로그인된 사용자의 수정 정보",
               content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE))
-          @RequestPart(value = "request", required = false)
+          @RequestPart(value = "request")
           @Valid
           UpdateUserRequest updateUserRequest,
       @Parameter(

@@ -503,7 +503,8 @@ public class UserServiceImpl implements UserService {
   @Override
   public Boolean getContactStatus() {
     User user = getCurrentUser();
-    return user.getEmail() != null || user.getInstagram() != null;
+    return org.springframework.util.StringUtils.hasText(user.getEmail())
+        || org.springframework.util.StringUtils.hasText(user.getInstagram());
   }
 
   @Override

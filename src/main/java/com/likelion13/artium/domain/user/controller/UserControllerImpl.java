@@ -128,7 +128,8 @@ public class UserControllerImpl implements UserController {
 
   @Override
   public ResponseEntity<BaseResponse<String>> updateUser(
-      UpdateUserRequest updateUserRequest, MultipartFile profileImage) {
+      @RequestPart(value = "request") @Valid UpdateUserRequest updateUserRequest,
+      @RequestPart(value = "image", required = false) MultipartFile profileImage) {
     return ResponseEntity.ok(
         BaseResponse.success(userService.updateUser(updateUserRequest, profileImage)));
   }

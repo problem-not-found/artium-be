@@ -75,19 +75,22 @@ public class User extends BaseTimeEntity {
   @CollectionTable(name = "user_theme_preferences", joinColumns = @JoinColumn(name = "user_id"))
   @Column(name = "theme_preference")
   @Enumerated(EnumType.STRING)
-  private List<ThemePreference> themePreferences;
+  @Builder.Default
+  private List<ThemePreference> themePreferences = new ArrayList<>();
 
   @ElementCollection
   @CollectionTable(name = "user_mood_preferences", joinColumns = @JoinColumn(name = "user_id"))
   @Column(name = "mood_preference")
   @Enumerated(EnumType.STRING)
-  private List<MoodPreference> moodPreferences;
+  @Builder.Default
+  private List<MoodPreference> moodPreferences = new ArrayList<>();
 
   @ElementCollection
   @CollectionTable(name = "user_format_preferences", joinColumns = @JoinColumn(name = "user_id"))
   @Column(name = "format_preference")
   @Enumerated(EnumType.STRING)
-  private List<FormatPreference> formatPreferences;
+  @Builder.Default
+  private List<FormatPreference> formatPreferences = new ArrayList<>();
 
   @Column(name = "profile_image_url", nullable = false)
   private String profileImageUrl;
