@@ -29,9 +29,13 @@ import com.likelion13.artium.domain.exhibition.exception.ExhibitionErrorCode;
 import com.likelion13.artium.domain.exhibition.mapper.ExhibitionMapper;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
+import com.likelion13.artium.domain.exhibition.mapping.ExhibitionPiece;
 import com.likelion13.artium.domain.exhibition.repository.ExhibitionLikeRepository;
+import com.likelion13.artium.domain.exhibition.repository.ExhibitionPieceRepository;
 import com.likelion13.artium.domain.exhibition.repository.ExhibitionRepository;
 import com.likelion13.artium.domain.piece.entity.Piece;
+import com.likelion13.artium.domain.piece.exception.PieceErrorCode;
+import com.likelion13.artium.domain.piece.repository.PieceRepository;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.repository.UserRepository;
@@ -57,6 +61,8 @@ public class ExhibitionServiceImpl implements ExhibitionService {
   private final S3Service s3Service;
   private final ExhibitionMapper exhibitionMapper;
   private final PageMapper pageMapper;
+  private final ExhibitionPieceRepository exhibitionPieceRepository;
+  private final PieceRepository pieceRepository;
 
   @Override
   @Transactional
@@ -74,12 +80,15 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     }
 
     List<ExhibitionParticipant> participants = buildParticipants(request.getParticipantIdList());
+    List<ExhibitionPiece> pieces = buildPieces(request.getPieceIdList());
+
     User currentUser = userService.getCurrentUser();
 
     Exhibition exhibition =
-        exhibitionMapper.toExhibition(imageUrl, request, status, currentUser, participants);
+        exhibitionMapper.toExhibition(imageUrl, request, status, currentUser, pieces, participants);
 
     participants.forEach(p -> p.setExhibition(exhibition));
+    pieces.forEach(piece -> piece.setExhibition(exhibition));
 
     try {
       exhibitionRepository.save(exhibition);
@@ -90,7 +99,10 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       throw new CustomException(ExhibitionErrorCode.EXHIBITION_API_ERROR);
     }
 
-    List<Long> pieceIdList = exhibition.getPieces().stream().map(Piece::getId).toList();
+    List<Long> pieceIdList =
+        exhibition.getExhibitionPieces().stream()
+            .map(exhibitionPiece -> exhibitionPiece.getPiece().getId())
+            .toList();
     List<Long> participantIdList =
         exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
 
@@ -153,7 +165,10 @@ public class ExhibitionServiceImpl implements ExhibitionService {
         exhibitionLikeRepository.findByExhibitionAndUser(exhibition, currentUser).isPresent();
     boolean createdByCurrentUser = exhibition.getUser().getId().equals(currentUser.getId());
 
-    List<Long> pieceIdList = exhibition.getPieces().stream().map(Piece::getId).toList();
+    List<Long> pieceIdList =
+        exhibition.getExhibitionPieces().stream()
+            .map(exhibitionPiece -> exhibitionPiece.getPiece().getId())
+            .toList();
     List<Long> participantIdList =
         exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
 
@@ -301,13 +316,19 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       ExhibitionStatus status = determineStatus(request.getStartDate(), request.getEndDate());
 
       List<ExhibitionParticipant> participants = buildParticipants(request.getParticipantIdList());
+      List<ExhibitionPiece> pieces = buildPieces(request.getPieceIdList());
 
       exhibition.getExhibitionParticipants().clear();
       participants.forEach(p -> p.setExhibition(exhibition));
       exhibition.getExhibitionParticipants().addAll(participants);
 
+      exhibition.getExhibitionPieces().clear();
+      pieces.forEach(p -> p.setExhibition(exhibition));
+      exhibition.getExhibitionPieces().addAll(pieces);
+
       Exhibition updatedExhibition =
-          exhibitionMapper.toExhibition(imageUrl, request, status, currentUser, participants);
+          exhibitionMapper.toExhibition(
+              imageUrl, request, status, currentUser, pieces, participants);
 
       exhibition.update(updatedExhibition);
     } catch (Exception e) {
@@ -315,7 +336,10 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       throw new CustomException(ExhibitionErrorCode.EXHIBITION_API_ERROR);
     }
 
-    List<Long> pieceIdList = exhibition.getPieces().stream().map(Piece::getId).toList();
+    List<Long> pieceIdList =
+        exhibition.getExhibitionPieces().stream()
+            .map(exhibitionPiece -> exhibitionPiece.getPiece().getId())
+            .toList();
     List<Long> participantIdList =
         exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
 
@@ -378,6 +402,20 @@ public class ExhibitionServiceImpl implements ExhibitionService {
                       .findById(userId)
                       .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
               return ExhibitionParticipant.builder().exhibition(null).user(participantUser).build();
+            })
+        .collect(Collectors.toList());
+  }
+
+  private List<ExhibitionPiece> buildPieces(List<Long> pieceIds) {
+    return pieceIds.stream()
+        .distinct()
+        .map(
+            pieceId -> {
+              Piece exhbitionPiece =
+                  pieceRepository
+                      .findById(pieceId)
+                      .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
+              return ExhibitionPiece.builder().exhibition(null).piece(exhbitionPiece).build();
             })
         .collect(Collectors.toList());
   }

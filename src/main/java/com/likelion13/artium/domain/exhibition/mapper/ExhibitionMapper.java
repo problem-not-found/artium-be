@@ -11,10 +11,12 @@ import com.likelion13.artium.domain.exhibition.dto.request.ExhibitionRequest;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionDetailResponse;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionLikeResponse;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionResponse;
+import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionSummaryResponse;
 import com.likelion13.artium.domain.exhibition.entity.Exhibition;
 import com.likelion13.artium.domain.exhibition.entity.ExhibitionStatus;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
+import com.likelion13.artium.domain.exhibition.mapping.ExhibitionPiece;
 import com.likelion13.artium.domain.user.entity.User;
 
 @Component
@@ -25,6 +27,7 @@ public class ExhibitionMapper {
       ExhibitionRequest request,
       ExhibitionStatus status,
       User user,
+      List<ExhibitionPiece> exhibitionPieceList,
       List<ExhibitionParticipant> exhibitionParticipantList) {
     return Exhibition.builder()
         .thumbnailImageUrl(imageUrl)
@@ -39,6 +42,7 @@ public class ExhibitionMapper {
         .exhibitionStatus(status)
         .fillAll(validateExhibitionFields(imageUrl, request, status))
         .user(user)
+        .exhibitionPieces(exhibitionPieceList)
         .exhibitionParticipants(exhibitionParticipantList)
         .build();
   }
@@ -56,6 +60,14 @@ public class ExhibitionMapper {
         .startDate(exhibition.getStartDate())
         .endDate(exhibition.getEndDate())
         .address(exhibition.getAddress())
+        .build();
+  }
+
+  public ExhibitionSummaryResponse toExhibitionSummaryResponse(Exhibition exhibition) {
+    return ExhibitionSummaryResponse.builder()
+        .exhibitionId(exhibition.getId())
+        .thumbnailImageUrl(exhibition.getThumbnailImageUrl())
+        .title(exhibition.getTitle())
         .build();
   }
 
