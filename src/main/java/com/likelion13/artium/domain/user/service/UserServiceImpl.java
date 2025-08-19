@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
@@ -57,6 +59,7 @@ import com.likelion13.artium.domain.user.mapping.UserLike;
 import com.likelion13.artium.domain.user.repository.UserLikeRepository;
 import com.likelion13.artium.domain.user.repository.UserRepository;
 import com.likelion13.artium.global.ai.embedding.service.EmbeddingService;
+import com.likelion13.artium.global.ai.vector.VectorUtils;
 import com.likelion13.artium.global.exception.CustomException;
 import com.likelion13.artium.global.page.mapper.PageMapper;
 import com.likelion13.artium.global.page.response.PageResponse;
@@ -427,11 +430,8 @@ public class UserServiceImpl implements UserService {
     User user = getCurrentUser();
 
     user.updatePreferences(gender, age, themePreferences, moodPreferences, formatPreferences);
-    String content =
-        makeEmbeddingPreference(gender, age, themePreferences, moodPreferences, formatPreferences);
 
-    float[] vector = embeddingService.embed(content);
-
+    float[] vector = makeEmbeddingPreference(themePreferences, moodPreferences, formatPreferences);
     qdrantService.upsertUserPoint(user.getId(), vector, user, CollectionName.USER);
 
     log.info("사용자 관심사 설정 성공 - userId: {}", user.getId());
@@ -550,25 +550,43 @@ public class UserServiceImpl implements UserService {
     return pageMapper.toCreatorFeedPageResponse(page);
   }
 
-  private String makeEmbeddingPreference(
-      Gender gender,
-      Age age,
+  private float[] makeEmbeddingPreference(
       List<ThemePreference> themePreferences,
       List<MoodPreference> moodPreferences,
       List<FormatPreference> formatPreferences) {
-    return "gender : "
-        + gender.getKo()
-        + "\n"
-        + "age : "
-        + age.getKo()
-        + "\n"
-        + "theme_preferences : "
-        + themePreferences.stream().map(ThemePreference::getKo).toList()
-        + "\n"
-        + "mood_preferences : "
-        + moodPreferences.stream().map(MoodPreference::getKo).toList()
-        + "\n"
-        + "formatPreferences : "
-        + formatPreferences.stream().map(FormatPreference::getKo).toList();
+    String themes =
+        themePreferences.stream().map(ThemePreference::getKo).collect(Collectors.joining(", "));
+    String moods =
+        moodPreferences.stream().map(MoodPreference::getKo).collect(Collectors.joining(", "));
+    String formats =
+        formatPreferences.stream().map(FormatPreference::getKo).collect(Collectors.joining(", "));
+
+    List<float[]> vecs = new ArrayList<>();
+    List<Double> ws = new ArrayList<>();
+
+    BiConsumer<String, Double> add =
+        (text, w) -> {
+          if (text != null && !text.isBlank()) {
+            float[] v = embeddingService.embed(text);
+            if (v != null) {
+              vecs.add(VectorUtils.normalize(v));
+              ws.add(w);
+            }
+          }
+        };
+
+    add.accept("themes: " + themes, 0.60);
+    add.accept("moods: " + moods, 0.20);
+    add.accept("formats: " + formats, 0.20);
+
+    float[] acc = null;
+    for (int i = 0; i < vecs.size(); i++) {
+      acc =
+          (acc == null)
+              ? VectorUtils.scale(vecs.get(i), ws.get(i))
+              : VectorUtils.addScaled(acc, vecs.get(i), 1.0, ws.get(i));
+    }
+
+    return (acc == null) ? null : VectorUtils.normalize(acc);
   }
 }
