@@ -14,6 +14,7 @@ import com.likelion13.artium.domain.piece.dto.request.UpdatePieceRequest;
 import com.likelion13.artium.domain.piece.dto.response.PieceFeedResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceSummaryResponse;
+import com.likelion13.artium.domain.piece.entity.RecommendSortBy;
 import com.likelion13.artium.domain.piece.entity.SaveStatus;
 import com.likelion13.artium.global.page.response.PageResponse;
 
@@ -89,15 +90,17 @@ public interface PieceService {
   /**
    * 좋아요 기반 추천 작품 리스트 조회 메서드
    *
+   * @param sortBy 분류 기준 (FAVORITE : 취향 저격, NEW_STYLE : 색다른 도전)
    * @param pageable 페이징 처리값 객체
    * @return 추천 작품 리스트
    */
-  PageResponse<PieceSummaryResponse> getRecommendationPiecePage(Pageable pageable);
+  PageResponse<PieceFeedResponse> getRecommendationPiecePage(
+      RecommendSortBy sortBy, Pageable pageable);
 
   /**
    * 피드의 작품 리스트 조회 메서드
    *
-   * @param sortBy 인기순, 최신순 정렬 기준
+   * @param sortBy 인기순, 최신순 분류 기준
    * @param pageable 페이징 처리값 객체
    * @return 작품 리스트
    */
