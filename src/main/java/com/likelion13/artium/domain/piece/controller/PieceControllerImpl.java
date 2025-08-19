@@ -124,6 +124,14 @@ public class PieceControllerImpl implements PieceController {
   }
 
   @Override
+  public ResponseEntity<BaseResponse<List<PieceSummaryResponse>>> getPieceListByKeyword(
+      @RequestParam String keyword, @RequestParam SortBy sortBy) {
+
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(BaseResponse.success(pieceService.getPieceListByKeyword(keyword, sortBy)));
+  }
+
+  @Override
   public ResponseEntity<BaseResponse<PieceResponse>> getPiece(
       @PathVariable(value = "piece-id") Long pieceId) {
 
