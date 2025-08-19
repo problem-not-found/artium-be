@@ -93,11 +93,16 @@ public interface UserController {
       @Parameter(description = "특정 유저 식별자") @PathVariable(value = "id") Long userId);
 
   @GetMapping("/profile")
-  @Operation(summary = "사용자 검색", description = "코드를 통해 사용자 리스트를 조회합니다.")
+  @Operation(summary = "사용자 코드 조회", description = "코드를 통해 사용자 리스트를 조회합니다.")
   ResponseEntity<BaseResponse<PageResponse<UserSummaryResponse>>> getUserProfilesByCode(
       @Parameter(description = "특정 유저 코드", example = "kim") @RequestParam String code,
       @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
       @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
+
+  @GetMapping("/search")
+  @Operation(summary = "키워드로 사용자 검색", description = "코드 또는 닉네임을 통해 사용자 리스트를 조회합니다.")
+  ResponseEntity<BaseResponse<List<UserSummaryResponse>>> getUserListByKeyword(
+      @Parameter(description = "키워드", example = "정땡") @RequestParam String keyword);
 
   @GetMapping("/{id}/contact")
   @Operation(summary = "사용자 연락 정보 조회", description = "사용자의 이메일, 인스타그램을 조회합니다.")
@@ -122,6 +127,10 @@ public interface UserController {
   @GetMapping("/preferences")
   @Operation(summary = "사용자 맞춤 취향 설정 조회", description = "현재 로그인된 사용자의 맞춤 취향 설정을 조회합니다.")
   ResponseEntity<BaseResponse<PreferenceResponse>> getPreferences();
+
+  @GetMapping("/keyword")
+  @Operation(summary = "사용자 맞춤 검색 키워드 조회", description = "현재 로그인된 사용자의 맞춤 검색 키워드 리스트를 조회합니다.")
+  ResponseEntity<BaseResponse<List<String>>> getKeywords();
 
   @GetMapping("/recommendations")
   @Operation(

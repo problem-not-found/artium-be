@@ -167,6 +167,8 @@ public interface UserService {
    */
   PreferenceResponse getPreferences();
 
+  List<String> getKeywords();
+
   /**
    * 사용자가 좋아요 한 크리에이터 페이지를 반환
    *
@@ -199,11 +201,7 @@ public interface UserService {
    */
   CreatorResponse getCreatorInfo(Long userId);
 
-  /**
-   * 내 연락 정보의 등록 여부를 반환
-   *
-   * @return {@link true} - 등록됨, {@link false} - 등록 안 됨
-   */
+  /** 내 연락 정보의 등록 여부를 반환 */
   Boolean getContactStatus();
 
   /**
@@ -240,4 +238,12 @@ public interface UserService {
    * @return 조건에 맞는 사용자 프로필 목록 페이지 응답
    */
   PageResponse<UserSummaryResponse> getUserProfilesByCode(String code, Pageable pageable);
+
+  /**
+   * 키워드를 기반으로 사용자 목록을 조회합니다.
+   *
+   * @param keyword 검색할 키워드 문자열
+   * @return 조건에 맞는 사용자 요약 응답 리스트
+   */
+  List<UserSummaryResponse> getUserListByKeyword(String keyword);
 }

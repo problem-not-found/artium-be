@@ -3,7 +3,6 @@
  */
 package com.likelion13.artium.domain.user.controller;
 
-import io.swagger.v3.oas.annotations.Parameter;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -94,6 +93,11 @@ public class UserControllerImpl implements UserController {
   }
 
   @Override
+  public ResponseEntity<BaseResponse<List<String>>> getKeywords() {
+    return ResponseEntity.status(200).body(BaseResponse.success(userService.getKeywords()));
+  }
+
+  @Override
   public ResponseEntity<BaseResponse<PageResponse<CreatorFeedResponse>>> getRecommendations(
       SortBy sortBy, Integer pageNum, Integer pageSize) {
     Pageable pageable = validatePageable(pageNum, pageSize);
@@ -114,7 +118,16 @@ public class UserControllerImpl implements UserController {
 
     Pageable pageable = validatePageable(pageNum, pageSize);
 
-    return ResponseEntity.status(200).body(BaseResponse.success(userService.getUserProfilesByCode(code, pageable)));
+    return ResponseEntity.status(200)
+        .body(BaseResponse.success(userService.getUserProfilesByCode(code, pageable)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<List<UserSummaryResponse>>> getUserListByKeyword(
+      @RequestParam String keyword) {
+
+    return ResponseEntity.status(200)
+        .body(BaseResponse.success(userService.getUserListByKeyword(keyword)));
   }
 
   @Override

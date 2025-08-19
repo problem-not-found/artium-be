@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -161,23 +162,24 @@ public class UserServiceImpl implements UserService {
     String username = "";
 
     try {
-      if (principal instanceof OAuth2User oauthUser) {
-        Object email = oauthUser.getAttribute("email");
-        if (email != null) {
-          username = (String) email;
-        } else {
-          Map<String, Object> kakaoAccount = oauthUser.getAttribute("kakao_account");
-          if (kakaoAccount != null && kakaoAccount.containsKey("email")) {
-            username = (String) kakaoAccount.get("email");
+      switch (principal) {
+        case OAuth2User oauthUser -> {
+          Object email = oauthUser.getAttribute("email");
+          if (email != null) {
+            username = (String) email;
+          } else {
+            Map<String, Object> kakaoAccount = oauthUser.getAttribute("kakao_account");
+            if (kakaoAccount != null && kakaoAccount.containsKey("email")) {
+              username = (String) kakaoAccount.get("email");
+            }
           }
         }
-      } else if (principal instanceof String str) {
-        username = str;
-      } else if (principal instanceof UserDetails userDetails) {
-        username = userDetails.getUsername();
-      } else {
-        log.error("인증 실패 - Principal 타입 알 수 없음: {}", principal.getClass());
-        throw new CustomException(UserErrorCode.UNAUTHORIZED);
+        case String str -> username = str;
+        case UserDetails userDetails -> username = userDetails.getUsername();
+        default -> {
+          log.error("인증 실패 - Principal 타입 알 수 없음: {}", principal.getClass());
+          throw new CustomException(UserErrorCode.UNAUTHORIZED);
+        }
       }
     } catch (Exception e) {
       log.error("인증 정보 추출 중 오류", e);
@@ -206,6 +208,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Boolean checkCodeDuplicated(String code) {
 
     boolean exists = userRepository.existsByCode(code);
@@ -439,6 +442,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public PreferenceResponse getPreferences() {
     User user = getCurrentUser();
     log.info("사용자 관심사 조회 성공 - userId: {}", user.getId());
@@ -446,6 +450,42 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  @Transactional(readOnly = true)
+  public List<String> getKeywords() {
+    User user = getCurrentUser();
+
+    float[] userVector =
+        makeEmbeddingPreference(
+            user.getThemePreferences(), user.getMoodPreferences(), user.getFormatPreferences());
+
+    List<Map<String, Object>> pieceResults =
+        qdrantService.search(userVector, 50, List.of(), CollectionName.PIECE);
+
+    List<Map<String, Object>> exhibitionResults =
+        qdrantService.search(userVector, 50, List.of(), CollectionName.EXHIBITION);
+
+    List<String> keywords = new ArrayList<>();
+
+    pieceResults.stream()
+        .map(m -> (Map<String, Object>) m.get("payload"))
+        .filter(Objects::nonNull)
+        .flatMap(p -> ((List<String>) p.getOrDefault("keywords", List.of())).stream())
+        .forEach(keywords::add);
+
+    exhibitionResults.stream()
+        .map(m -> (Map<String, Object>) m.get("payload"))
+        .filter(Objects::nonNull)
+        .flatMap(p -> ((List<String>) p.getOrDefault("keywords", List.of())).stream())
+        .forEach(keywords::add);
+
+    List<String> distinctKeywords = keywords.stream().distinct().toList();
+
+    log.info("사용자 관심사 기반 키워드 리스트 조회 - userId: {}, keywords: {}", user.getId(), distinctKeywords);
+    return distinctKeywords;
+  }
+
+  @Override
+  @Transactional(readOnly = true)
   public PageResponse<UserSummaryResponse> getLikes(Pageable pageable) {
     Long userId = getCurrentUser().getId();
 
@@ -474,16 +514,43 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public PageResponse<UserSummaryResponse> getUserProfilesByCode(String code, Pageable pageable) {
 
-      Page<User> page = userRepository.findByCodeContaining(code, pageable);
-      Page<UserSummaryResponse> responsePage = page.map(userMapper::toUserSummaryResponse);
+    Page<User> page = userRepository.findByCodeContaining(code, pageable);
+    Page<UserSummaryResponse> responsePage = page.map(userMapper::toUserSummaryResponse);
 
-      log.info("코드 포함 사용자 검색 성공 - code: {}, totalElements: {}", code, page.getTotalElements());
-      return pageMapper.toUserSummaryPageResponse(responsePage);
+    log.info("코드 포함 사용자 검색 성공 - code: {}, totalElements: {}", code, page.getTotalElements());
+    return pageMapper.toUserSummaryPageResponse(responsePage);
   }
 
   @Override
+  @Transactional(readOnly = true)
+  public List<UserSummaryResponse> getUserListByKeyword(String keyword) {
+    User currentUser = getCurrentUser();
+
+    if (keyword == null || keyword.isBlank()) {
+      return List.of();
+    }
+
+    List<User> users;
+    if (keyword.startsWith("@")) {
+      String codeKeyword = keyword.substring(1);
+      users = userRepository.findByCodeContaining(codeKeyword);
+      log.info("코드로 사용자 조회 성공 - 요청한 사용자: {}, 키워드: {}", currentUser.getNickname(), codeKeyword);
+    } else {
+      users = userRepository.findByNicknameContaining(keyword);
+      log.info("닉네임으로 사용자 조회 성공 - 요청한 사용자: {}, 키워드: {}", currentUser.getNickname(), keyword);
+    }
+
+    return users.stream()
+        .filter(u -> !u.getId().equals(currentUser.getId()))
+        .map(userMapper::toUserSummaryResponse)
+        .toList();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
   public UserContactResponse getUserContact(Long userId) {
     User user =
         userRepository
@@ -495,6 +562,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public CreatorResponse getCreatorInfo(Long userId) {
     Long likerId = getCurrentUser().getId();
     User user =
@@ -511,6 +579,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Boolean getContactStatus() {
     User user = getCurrentUser();
     return org.springframework.util.StringUtils.hasText(user.getEmail())
@@ -518,6 +587,7 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public PageResponse<CreatorFeedResponse> getRecommendations(SortBy sortBy, Pageable pageable) {
     User user = getCurrentUser();
     Page<CreatorFeedResponse> page;

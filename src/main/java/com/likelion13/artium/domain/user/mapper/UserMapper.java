@@ -27,7 +27,6 @@ import com.likelion13.artium.domain.user.entity.MoodPreference;
 import com.likelion13.artium.domain.user.entity.Role;
 import com.likelion13.artium.domain.user.entity.ThemePreference;
 import com.likelion13.artium.domain.user.entity.User;
-import com.likelion13.artium.domain.user.mapping.UserLike;
 
 @Component
 public class UserMapper {
@@ -42,10 +41,6 @@ public class UserMapper {
         .role(Role.ROLE_USER)
         .isDeleted(false)
         .build();
-  }
-
-  public UserLike toUserLike(User currentUser, User targetUser) {
-    return UserLike.builder().liker(currentUser).liked(targetUser).build();
   }
 
   public SignUpResponse toSignUpResponse(User user) {
@@ -98,6 +93,7 @@ public class UserMapper {
     return UserSummaryResponse.builder()
         .userId(user.getId())
         .nickname(user.getNickname())
+        .code(user.getCode())
         .profileImageUrl(user.getProfileImageUrl())
         .build();
   }
