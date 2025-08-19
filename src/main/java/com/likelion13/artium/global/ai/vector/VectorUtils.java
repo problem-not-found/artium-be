@@ -51,44 +51,4 @@ public class VectorUtils {
     for (int i = 0; i < a.length; i++) out[i] = (float) (a[i] * wa + b[i] * wb);
     return out;
   }
-
-
-  public static List<float[]> encodePreferences(List<? extends Enum<?>> preferences) {
-    List<float[]> vectors = new java.util.ArrayList<>();
-    if (preferences == null || preferences.isEmpty()) {
-      return vectors;
-    }
-
-    for (Enum<?> pref : preferences) {
-      vectors.add(encode(pref));
-    }
-    return vectors;
-  }
-
-  private static float[] encode(Enum<?> pref) {
-    if (pref == null) {
-      return new float[0];
-    }
-    String className = pref.getClass().getSimpleName();
-    switch (className) {
-      case "ThemePreference" -> {
-        return encodeEnum(pref, com.likelion13.artium.domain.user.entity.ThemePreference.values().length);
-      }
-      case "MoodPreference" -> {
-        return encodeEnum(pref, com.likelion13.artium.domain.user.entity.MoodPreference.values().length);
-      }
-      case "FormatPreference" -> {
-        return encodeEnum(pref, com.likelion13.artium.domain.user.entity.FormatPreference.values().length);
-      }
-      default -> {
-        return new float[0];
-      }
-    }
-  }
-
-  private static float[] encodeEnum(Enum<?> pref, int size) {
-    float[] vec = new float[size];
-    vec[pref.ordinal()] = 1.0f;
-    return vec;
-  }
 }
