@@ -8,14 +8,16 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 import com.likelion13.artium.domain.exhibition.entity.Exhibition;
 import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.global.common.BaseTimeEntity;
 
-import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -28,7 +30,17 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
-@Tag(name = "exhibition_piece")
+@Table(
+    name = "exhibition_piece",
+    uniqueConstraints = {
+      @UniqueConstraint(
+          name = "uq_exhibition_piece_exhibition_piece",
+          columnNames = {"exhibition_id", "piece_id"})
+    },
+    indexes = {
+      @Index(name = "idx_exhibition_piece_exhibition_id", columnList = "exhibition_id"),
+      @Index(name = "idx_exhibition_piece_piece_id", columnList = "piece_id")
+    })
 public class ExhibitionPiece extends BaseTimeEntity {
 
   @Id

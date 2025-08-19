@@ -38,7 +38,6 @@ import com.likelion13.artium.domain.pieceDetail.service.PieceDetailService;
 import com.likelion13.artium.domain.pieceLike.repository.PieceLikeRepository;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
-import com.likelion13.artium.domain.user.repository.UserLikeRepository;
 import com.likelion13.artium.domain.user.repository.UserRepository;
 import com.likelion13.artium.domain.user.service.UserService;
 import com.likelion13.artium.global.ai.vector.VectorUtils;
@@ -67,7 +66,6 @@ public class PieceServiceImpl implements PieceService {
   private final PageMapper pageMapper;
   private final UserRepository userRepository;
   private final QdrantService qdrantService;
-  private final UserLikeRepository userLikeRepository;
 
   @Override
   public PageResponse<PieceSummaryResponse> getPiecePage(Long userId, Pageable pageable) {
@@ -328,7 +326,7 @@ public class PieceServiceImpl implements PieceService {
                     piece ->
                         pieceMapper.toPieceFeedResponse(
                             piece,
-                            userLikeRepository.existsByLiker_IdAndLiked_Id(
+                            pieceLikeRepository.existsByUser_IdAndPiece_Id(
                                 userId, piece.getUser().getId())));
         log.info("관심사 기반 취향 저격 작품 리스트 조회 성공");
         break;
@@ -349,7 +347,7 @@ public class PieceServiceImpl implements PieceService {
                       piece ->
                           pieceMapper.toPieceFeedResponse(
                               piece,
-                              userLikeRepository.existsByLiker_IdAndLiked_Id(
+                              pieceLikeRepository.existsByUser_IdAndPiece_Id(
                                   userId, piece.getUser().getId())));
         } else {
           page =
@@ -359,7 +357,7 @@ public class PieceServiceImpl implements PieceService {
                       piece ->
                           pieceMapper.toPieceFeedResponse(
                               piece,
-                              userLikeRepository.existsByLiker_IdAndLiked_Id(
+                              pieceLikeRepository.existsByUser_IdAndPiece_Id(
                                   userId, piece.getUser().getId())));
         }
         log.info("색다른 도전 작품 리스트 조회 성공");
@@ -413,7 +411,10 @@ public class PieceServiceImpl implements PieceService {
 
     float[] userVector =
         VectorUtils.normalize(qdrantService.retrieveVectorById(userId, CollectionName.USER));
-
+    if (userVector == null || userVector.length == 0) {
+      log.error("사용자 임베딩 벡터가 없어서 추천을 건너뜁니다. - userId: {}", userId);
+      return List.of();
+    }
     List<Long> excludeIds =
         pieceRepository.findByUser_Id(userId).stream().map(Piece::getId).toList();
 
