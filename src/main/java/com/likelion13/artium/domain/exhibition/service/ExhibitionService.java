@@ -105,7 +105,8 @@ public interface ExhibitionService {
    * @param pageable 페이징 및 정렬 정보
    * @return 추천된 전시회 목록의 페이지 응답
    */
-  PageResponse<ExhibitionResponse> getRecommendationExhibitionPage(Boolean opposite, Pageable pageable);
+  PageResponse<ExhibitionResponse> getRecommendationExhibitionPage(
+      Boolean opposite, Pageable pageable);
 
   /**
    * 키워드를 기반으로 전시회 목록을 조회합니다.
