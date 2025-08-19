@@ -23,6 +23,7 @@ import com.likelion13.artium.domain.piece.dto.request.UpdatePieceRequest;
 import com.likelion13.artium.domain.piece.dto.response.PieceFeedResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceSummaryResponse;
+import com.likelion13.artium.domain.piece.entity.RecommendSortBy;
 import com.likelion13.artium.domain.piece.entity.SaveStatus;
 import com.likelion13.artium.domain.pieceLike.dto.response.PieceLikeResponse;
 import com.likelion13.artium.global.page.response.PageResponse;
@@ -58,7 +59,7 @@ public interface PieceController {
       description = "피드의 작품 리스트 중 인기순, 최신순에 해당하는 리스트 조회 API")
   @GetMapping
   ResponseEntity<BaseResponse<PageResponse<PieceFeedResponse>>> getPiecePageByType(
-      @Parameter(description = "정렬 기준", example = "HOTTEST") @RequestParam SortBy sortBy,
+      @Parameter(description = "분류 기준", example = "HOTTEST") @RequestParam SortBy sortBy,
       @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
       @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
 
@@ -86,7 +87,8 @@ public interface PieceController {
       summary = "취향 기반 추천 작품 리스트 조회",
       description = "사용자가 좋아요 한 작품을 기반으로 추천 작품 리스트를 조회하기 위한 API")
   @GetMapping("/recommendations")
-  ResponseEntity<BaseResponse<PageResponse<PieceSummaryResponse>>> getRecommendationPieces(
+  ResponseEntity<BaseResponse<PageResponse<PieceFeedResponse>>> getRecommendationPieces(
+      @Parameter(description = "분류 기준", example = "FAVORITE") @RequestParam RecommendSortBy sortBy,
       @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
       @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
 

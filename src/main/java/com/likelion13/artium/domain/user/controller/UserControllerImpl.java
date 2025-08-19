@@ -163,7 +163,7 @@ public class UserControllerImpl implements UserController {
       @RequestParam List<FormatPreference> formatPreferences) {
     if (themePreferences == null
         || themePreferences.isEmpty()
-        || themePreferences.size() > 5
+        || themePreferences.size() > 3
         || moodPreferences == null
         || moodPreferences.isEmpty()
         || moodPreferences.size() > 5

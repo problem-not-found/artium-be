@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.springframework.stereotype.Component;
 
+import com.likelion13.artium.domain.exhibition.mapper.ExhibitionMapper;
 import com.likelion13.artium.domain.piece.dto.response.PieceFeedResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceSummaryResponse;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 public class PieceMapper {
 
   private final PieceDetailMapper pieceDetailMapper;
+  private final ExhibitionMapper exhibitionMapper;
 
   public PieceResponse toPieceResponse(Piece piece) {
     return toPieceResponseWithLike(piece, null);
@@ -44,6 +46,15 @@ public class PieceMapper {
                 ? List.of()
                 : piece.getPieceDetails().stream()
                     .map(pieceDetailMapper::toPieceDetailSummaryResponse)
+                    .toList())
+        .exhibitions(
+            piece.getExhibitionPieces() == null
+                ? List.of()
+                : piece.getExhibitionPieces().stream()
+                    .map(
+                        exhibitionPiece ->
+                            exhibitionMapper.toExhibitionSummaryResponse(
+                                exhibitionPiece.getExhibition()))
                     .toList());
   }
 
