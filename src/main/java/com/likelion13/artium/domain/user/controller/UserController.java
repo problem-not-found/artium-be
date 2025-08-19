@@ -85,6 +85,13 @@ public interface UserController {
   ResponseEntity<BaseResponse<UserSummaryResponse>> getUserProfile(
       @Parameter(description = "특정 유저 식별자") @PathVariable(value = "id") Long userId);
 
+  @GetMapping("/profile")
+  @Operation(summary = "사용자 검색", description = "코드를 통해 사용자 리스트를 조회합니다.")
+  ResponseEntity<BaseResponse<PageResponse<UserSummaryResponse>>> getUserProfilesByCode(
+      @Parameter(description = "특정 유저 코드", example = "kim") @RequestParam String code,
+      @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
+      @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
+
   @GetMapping("/{id}/contact")
   @Operation(summary = "사용자 연락 수단 조회", description = "사용자의 이메일, 인스타그램을 조회합니다.")
   ResponseEntity<BaseResponse<UserContactResponse>> getUserContact(

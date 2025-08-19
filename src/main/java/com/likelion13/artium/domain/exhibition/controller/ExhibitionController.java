@@ -3,6 +3,7 @@
  */
 package com.likelion13.artium.domain.exhibition.controller;
 
+import com.likelion13.artium.domain.piece.dto.response.PieceSummaryResponse;
 import jakarta.validation.Valid;
 
 import org.springframework.http.MediaType;
@@ -86,6 +87,12 @@ public interface ExhibitionController {
   @GetMapping("/like")
   @Operation(summary = "좋아요 한 전시 리스트 조회", description = "사용자가 좋아요 한 전시 리스트를 페이지로 반환합니다.")
   ResponseEntity<BaseResponse<PageResponse<ExhibitionResponse>>> getExhibitionPageByLike(
+      @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
+      @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
+
+  @Operation(summary = "취향 기반 추천 전시 리스트 조회", description = "사용자의 관심사를 기반으로 추천 전시 리스트를 조회합니다.")
+  @GetMapping("/recommendations")
+  ResponseEntity<BaseResponse<PageResponse<ExhibitionResponse>>> getRecommendationExhibitionPage(
       @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
       @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
 

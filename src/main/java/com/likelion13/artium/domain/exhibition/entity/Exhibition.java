@@ -65,6 +65,9 @@ public class Exhibition extends BaseTimeEntity {
   @Column(name = "address")
   private String address;
 
+  @Column(name = "address_name")
+  private String addressName;
+
   @Column(name = "offline_description", columnDefinition = "TEXT")
   private String offlineDescription;
 

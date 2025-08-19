@@ -96,6 +96,8 @@ public interface ExhibitionService {
    */
   PageResponse<ExhibitionResponse> getExhibitionPageByLike(Pageable pageable);
 
+  PageResponse<ExhibitionResponse> getRecommendationExhibitionPage(Pageable pageable);
+
   /**
    * 전시회 ID에 해당하는 전시회 정보를 수정합니다.
    *

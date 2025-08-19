@@ -3,9 +3,20 @@
  */
 package com.likelion13.artium.domain.exhibition.service;
 
+import com.likelion13.artium.domain.user.entity.FormatPreference;
+import com.likelion13.artium.domain.user.entity.MoodPreference;
+import com.likelion13.artium.domain.user.entity.ThemePreference;
+import com.likelion13.artium.global.ai.vector.VectorUtils;
+import com.likelion13.artium.global.qdrant.entity.CollectionName;
+import com.likelion13.artium.global.qdrant.service.QdrantService;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -55,6 +66,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
   private final UserRepository userRepository;
   private final UserService userService;
   private final S3Service s3Service;
+  private final QdrantService qdrantService;
   private final ExhibitionMapper exhibitionMapper;
   private final PageMapper pageMapper;
 
@@ -262,6 +274,68 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
     log.info(
         "{} 사용자가 좋아요 한 전시 리스트 페이지 조회 - 호출된 페이지: {}", user.getNickname(), pageable.getPageNumber());
+    return pageMapper.toExhibitionPageResponse(page);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public PageResponse<ExhibitionResponse> getRecommendationExhibitionPage(Pageable pageable) {
+    User user = userService.getCurrentUser();
+
+    List<ThemePreference> themePrefs = user.getThemePreferences();
+    List<MoodPreference> moodPrefs = user.getMoodPreferences();
+    List<FormatPreference> formatPrefs = user.getFormatPreferences();
+
+    // 사용자 관심사를 벡터로 변환
+    List<float[]> prefVecs = new ArrayList<>();
+    prefVecs.addAll(VectorUtils.encodePreferences(themePrefs));
+    prefVecs.addAll(VectorUtils.encodePreferences(moodPrefs));
+    prefVecs.addAll(VectorUtils.encodePreferences(formatPrefs));
+
+    float[] userVector = VectorUtils.normalize(VectorUtils.mean(prefVecs));
+
+    // 현재 사용자의 전시는 검색에서 제외
+    List<Long> excludeIds = new ArrayList<>(exhibitionRepository.findByUserId(user.getId()).stream()
+        .map(Exhibition::getId).toList());
+
+    // Qdrant에서 검색
+    int limit = pageable.getPageSize();
+    List<Map<String, Object>> result =
+        qdrantService.search(userVector, limit, excludeIds, CollectionName.EXHIBITION);
+
+    List<Long> candidateIds =
+        result.stream()
+            .map(m -> (Map<String, Object>) m.get("payload"))
+            .filter(Objects::nonNull)
+            .map(p -> ((Number) p.get("exhibitionId")).longValue())
+            .toList();
+
+    // 예정, 진행중인 전시만 필터링
+    List<Long> filtered =
+        candidateIds.isEmpty()
+            ? List.of()
+            : exhibitionRepository
+                .findIdsByIdsInAndStatusIn(
+                    candidateIds, List.of(ExhibitionStatus.ONGOING, ExhibitionStatus.UPCOMING),
+                    Pageable.unpaged())
+                .getContent();
+
+    Map<Long, Integer> pos = new HashMap<>();
+    for (int i = 0; i < candidateIds.size(); i++) {
+      pos.put(candidateIds.get(i), i);
+    }
+
+    List<Long> recommendIds =
+        filtered.stream()
+            .sorted(Comparator.comparingInt(id -> pos.getOrDefault(id, Integer.MAX_VALUE)))
+            .toList();
+
+    Page<ExhibitionResponse> page =
+        exhibitionRepository.findByIdIn(recommendIds, pageable)
+            .map(exhibitionMapper::toExhibitionResponse);
+
+    log.info(
+        "{} 사용자의 관심사 추천 전시 리스트 페이지 조회 - 호출된 페이지: {}", user.getNickname(), pageable.getPageNumber());
     return pageMapper.toExhibitionPageResponse(page);
   }
 

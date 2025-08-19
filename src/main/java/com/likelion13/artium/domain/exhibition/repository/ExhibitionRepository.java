@@ -19,6 +19,8 @@ import com.likelion13.artium.domain.exhibition.entity.ExhibitionStatus;
 @Repository
 public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
 
+  List<Exhibition> findByUserId(Long userId);
+
   List<Exhibition> findByUserIdAndFillAll(Long userId, boolean fillAll);
 
   Page<Exhibition> findByUserIdAndFillAll(Long userId, Boolean fillAll, Pageable pageable);
@@ -43,4 +45,12 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
         ORDER BY el.createdAt DESC
         """)
   Page<Exhibition> findLikedExhibitionsByUserId(@Param("userId") Long userId, Pageable pageable);
+
+  @Query("SELECT e.id FROM Exhibition e WHERE e.id IN :ids AND e.exhibitionStatus IN :statuses")
+  Page<Long> findIdsByIdsInAndStatusIn(
+      @Param("ids") List<Long> ids,
+      @Param("statuses") List<ExhibitionStatus> statuses,
+      Pageable pageable);
+
+  Page<Exhibition> findByIdIn(List<Long> ids, Pageable pageable);
 }

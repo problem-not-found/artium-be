@@ -3,6 +3,7 @@
  */
 package com.likelion13.artium.domain.user.controller;
 
+import io.swagger.v3.oas.annotations.Parameter;
 import java.util.List;
 
 import jakarta.validation.Valid;
@@ -90,6 +91,15 @@ public class UserControllerImpl implements UserController {
       @PathVariable(value = "id") Long userId) {
     return ResponseEntity.status(200)
         .body(BaseResponse.success(userService.getUserProfile(userId)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<PageResponse<UserSummaryResponse>>> getUserProfilesByCode(
+      @RequestParam String code, @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
+
+    Pageable pageable = validatePageable(pageNum, pageSize);
+
+    return ResponseEntity.status(200).body(BaseResponse.success(userService.getUserProfilesByCode(code, pageable)));
   }
 
   @Override

@@ -194,4 +194,13 @@ public interface UserService {
    * @return 크리에이터 정보 응답 객체
    */
   CreatorResponse getCreatorInfo(Long userId);
+
+  /**
+   * 특정 코드가 포함된 사용자들의 프로필 목록을 페이지 단위로 조회합니다.
+   *
+   * @param code 검색할 코드 문자열 (부분 일치 검색 지원)
+   * @param pageable 페이징 및 정렬 정보
+   * @return 조건에 맞는 사용자 프로필 목록 페이지 응답
+   */
+  PageResponse<UserSummaryResponse> getUserProfilesByCode(String code, Pageable pageable);
 }

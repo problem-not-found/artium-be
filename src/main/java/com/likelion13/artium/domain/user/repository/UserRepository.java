@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import com.likelion13.artium.domain.user.entity.User;
 
@@ -22,4 +24,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
   boolean existsByCode(String code);
 
   boolean existsByCodeAndIdNot(String code, Long id);
+
+  Page<User> findByCodeContaining(String code, Pageable pageable);
 }

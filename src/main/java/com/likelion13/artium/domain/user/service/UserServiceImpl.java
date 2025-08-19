@@ -413,6 +413,16 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
+  public PageResponse<UserSummaryResponse> getUserProfilesByCode(String code, Pageable pageable) {
+
+      Page<User> page = userRepository.findByCodeContaining(code, pageable);
+      Page<UserSummaryResponse> responsePage = page.map(userMapper::toUserSummaryResponse);
+
+      log.info("코드 포함 사용자 검색 성공 - code: {}, totalElements: {}", code, page.getTotalElements());
+      return pageMapper.toUserSummaryPageResponse(responsePage);
+  }
+
+  @Override
   public UserContactResponse getUserContact(Long userId) {
     User user =
         userRepository
