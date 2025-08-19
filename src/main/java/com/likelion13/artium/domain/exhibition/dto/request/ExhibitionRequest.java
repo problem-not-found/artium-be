@@ -6,8 +6,6 @@ package com.likelion13.artium.domain.exhibition.dto.request;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.likelion13.artium.domain.exhibition.entity.BankName;
-
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -39,15 +37,12 @@ public class ExhibitionRequest {
   @Schema(description = "종료일", example = "2025-12-31")
   private LocalDate endDate;
 
-  @Schema(description = "오프라인 전시 주소", example = "남대문로 9길 40")
+  @Schema(description = "오프라인 전시 주소", example = "서울특별시 종로구 창의문로11길 4-1")
   private String address;
+
+  @Schema(description = "오프라인 전시 주소 이름", example = "석파정 서울 미술관 2관")
+  private String addressName;
 
   @Schema(description = "오프라인 전시 설명", example = "이 전시는 남대문로에서 진행됩니다.")
   private String offlineDescription;
-
-  @Schema(description = "거래 계좌번호", example = "93800200854555")
-  private String accountNumber;
-
-  @Schema(description = "거래 은행", example = "KOOKMIN")
-  private BankName bankName;
 }

@@ -36,9 +36,8 @@ public class ExhibitionMapper {
         .startDate(request.getStartDate())
         .endDate(request.getEndDate())
         .address(request.getAddress())
+        .addressName(request.getAddressName())
         .offlineDescription(request.getOfflineDescription())
-        .accountNumber(request.getAccountNumber())
-        .bankName(request.getBankName())
         .exhibitionStatus(status)
         .fillAll(validateExhibitionFields(imageUrl, request, status))
         .user(user)
@@ -91,9 +90,8 @@ public class ExhibitionMapper {
         .endDate(exhibition.getEndDate())
         .participantIdList(participantIdList)
         .address(exhibition.getAddress())
+        .addressName(exhibition.getAddressName())
         .offlineDescription(exhibition.getOfflineDescription())
-        .accountNumber(exhibition.getAccountNumber())
-        .bankName(exhibition.getBankName())
         .fillAll(exhibition.getFillAll())
         .build();
   }
@@ -113,9 +111,8 @@ public class ExhibitionMapper {
         && request.getStartDate() != null
         && request.getEndDate() != null
         && request.getAddress() != null
+        && request.getAddressName() != null
         && request.getOfflineDescription() != null
-        && request.getAccountNumber() != null
-        && request.getBankName() != null
         && status != null;
   }
 }

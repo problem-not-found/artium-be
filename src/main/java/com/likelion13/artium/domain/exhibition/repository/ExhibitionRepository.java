@@ -19,6 +19,8 @@ import com.likelion13.artium.domain.exhibition.entity.ExhibitionStatus;
 @Repository
 public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
 
+  List<Exhibition> findByUserId(Long userId);
+
   List<Exhibition> findByUserIdAndFillAll(Long userId, boolean fillAll);
 
   Page<Exhibition> findByUserIdAndFillAll(Long userId, Boolean fillAll, Pageable pageable);
@@ -43,4 +45,47 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
         ORDER BY el.createdAt DESC
         """)
   Page<Exhibition> findLikedExhibitionsByUserId(@Param("userId") Long userId, Pageable pageable);
+
+  @Query("SELECT e.id FROM Exhibition e WHERE e.id IN :ids AND e.exhibitionStatus IN :statuses")
+  Page<Long> findIdsByIdsInAndStatusIn(
+      @Param("ids") List<Long> ids,
+      @Param("statuses") List<ExhibitionStatus> statuses,
+      Pageable pageable);
+
+  @Query(
+      """
+  SELECT e
+  FROM Exhibition e
+  LEFT JOIN e.exhibitionLikes el
+  WHERE e.fillAll = true AND (
+    LOWER(e.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR LOWER(e.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+  )
+  GROUP BY e.id
+  ORDER BY COUNT(el) DESC, e.startDate DESC
+""")
+  List<Exhibition> searchByKeywordOrderByHottest(@Param("keyword") String keyword);
+
+  @Query(
+      """
+  SELECT e
+  FROM Exhibition e
+  WHERE e.fillAll = true AND (
+    LOWER(e.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR LOWER(e.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+  )
+  ORDER BY e.startDate DESC
+""")
+  List<Exhibition> searchByKeywordOrderByLatest(@Param("keyword") String keyword);
+
+  @Query(
+      """
+  SELECT e
+  FROM Exhibition e
+  WHERE e.fillAll = true AND (
+    LOWER(e.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR LOWER(e.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+  )
+""")
+  List<Exhibition> searchByKeyword(@Param("keyword") String keyword);
 }

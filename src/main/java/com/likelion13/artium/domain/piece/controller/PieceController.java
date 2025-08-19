@@ -92,6 +92,12 @@ public interface PieceController {
       @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
       @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
 
+  @GetMapping("/search")
+  @Operation(summary = "키워드로 작품 리스트 검색", description = "키워드를 기반으로 작품 리스트를 반환합니다.")
+  ResponseEntity<BaseResponse<List<PieceSummaryResponse>>> getPieceListByKeyword(
+      @Parameter(description = "검색 키워드", example = "파도") @RequestParam String keyword,
+      @Parameter(description = "정렬 기준", example = "HOTTEST") @RequestParam SortBy sortBy);
+
   @Operation(
       summary = "특정 작품 정보 조회하기 API",
       description = "특정 작품 정보 수정 및 작품 상세 정보에서 작품 정보를 조회하기 위한 API")

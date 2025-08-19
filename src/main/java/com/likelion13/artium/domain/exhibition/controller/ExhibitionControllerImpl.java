@@ -3,6 +3,8 @@
  */
 package com.likelion13.artium.domain.exhibition.controller;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
 
 import org.springframework.data.domain.PageRequest;
@@ -128,6 +130,35 @@ public class ExhibitionControllerImpl implements ExhibitionController {
                 200,
                 "사용자가 좋아요 한 전시 페이지 조회에 성공하였습니다.",
                 exhibitionService.getExhibitionPageByLike(pageable)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<PageResponse<ExhibitionResponse>>>
+      getRecommendationExhibitionPage(
+          @RequestParam Boolean opposite,
+          @RequestParam Integer pageNum,
+          @RequestParam Integer pageSize) {
+
+    Pageable pageable = validatePageable(pageNum, pageSize);
+
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(
+            BaseResponse.success(
+                200,
+                "전시 추천 페이지 조회에 성공하였습니다.",
+                exhibitionService.getRecommendationExhibitionPage(opposite, pageable)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<List<ExhibitionResponse>>> getExhibitionListByKeyword(
+      @RequestParam String keyword, @RequestParam SortBy sortBy) {
+
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(
+            BaseResponse.success(
+                200,
+                "전시 검색 리스트 조회에 성공하였습니다.",
+                exhibitionService.getExhibitionListByKeyword(keyword, sortBy)));
   }
 
   @Override

@@ -65,15 +65,11 @@ public class Exhibition extends BaseTimeEntity {
   @Column(name = "address")
   private String address;
 
+  @Column(name = "address_name")
+  private String addressName;
+
   @Column(name = "offline_description", columnDefinition = "TEXT")
   private String offlineDescription;
-
-  @Column(name = "account_number")
-  private String accountNumber;
-
-  @Column(name = "bank_name")
-  @Enumerated(EnumType.STRING)
-  private BankName bankName;
 
   @Column(name = "status")
   @Enumerated(EnumType.STRING)
@@ -111,8 +107,6 @@ public class Exhibition extends BaseTimeEntity {
     this.endDate = exhibition.getEndDate();
     this.address = exhibition.getAddress();
     this.offlineDescription = exhibition.getOfflineDescription();
-    this.accountNumber = exhibition.getAccountNumber();
-    this.bankName = exhibition.getBankName();
     this.exhibitionStatus = exhibition.getExhibitionStatus();
     this.fillAll = exhibition.getFillAll();
     this.user = exhibition.getUser();

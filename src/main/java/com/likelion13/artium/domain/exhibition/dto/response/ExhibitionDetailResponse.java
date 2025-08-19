@@ -54,8 +54,11 @@ public class ExhibitionDetailResponse {
   @Schema(description = "참여자 식별자 리스트")
   private List<Long> participantIdList;
 
-  @Schema(description = "오프라인 전시 주소", example = "남대문로 9길 40")
+  @Schema(description = "오프라인 전시 주소", example = "서울특별시 종로구 창의문로11길 4-1")
   private String address;
+
+  @Schema(description = "오프라인 전시 주소 이름", example = "석파정 서울 미술관 2관")
+  private String addressName;
 
   @Schema(description = "오프라인 전시 설명", example = "이 전시는 남대문로에서 진행됩니다.")
   private String offlineDescription;

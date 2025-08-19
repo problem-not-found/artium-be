@@ -18,6 +18,9 @@ public class UserSummaryResponse {
   @Schema(description = "닉네임", example = "김땡땡")
   private String nickname;
 
+  @Schema(description = "사용자 코드", example = "simonisnextdoor")
+  private String code;
+
   @Schema(
       description = "프로필 이미지 URL",
       example = "http://k.kakaocdn.net/dn/oOPCG/btsPjlOHjk6/6jx0PyBKkHHyCfbV8IY741/img_640x640.jpg")

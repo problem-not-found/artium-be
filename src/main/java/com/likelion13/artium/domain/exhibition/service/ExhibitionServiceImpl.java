@@ -5,11 +5,17 @@ package com.likelion13.artium.domain.exhibition.service;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -36,13 +42,20 @@ import com.likelion13.artium.domain.exhibition.repository.ExhibitionRepository;
 import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.domain.piece.exception.PieceErrorCode;
 import com.likelion13.artium.domain.piece.repository.PieceRepository;
+import com.likelion13.artium.domain.user.entity.FormatPreference;
+import com.likelion13.artium.domain.user.entity.MoodPreference;
+import com.likelion13.artium.domain.user.entity.ThemePreference;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.repository.UserRepository;
 import com.likelion13.artium.domain.user.service.UserService;
+import com.likelion13.artium.global.ai.embedding.service.EmbeddingService;
+import com.likelion13.artium.global.ai.vector.VectorUtils;
 import com.likelion13.artium.global.exception.CustomException;
 import com.likelion13.artium.global.page.mapper.PageMapper;
 import com.likelion13.artium.global.page.response.PageResponse;
+import com.likelion13.artium.global.qdrant.entity.CollectionName;
+import com.likelion13.artium.global.qdrant.service.QdrantService;
 import com.likelion13.artium.global.s3.entity.PathName;
 import com.likelion13.artium.global.s3.service.S3Service;
 
@@ -59,6 +72,8 @@ public class ExhibitionServiceImpl implements ExhibitionService {
   private final UserRepository userRepository;
   private final UserService userService;
   private final S3Service s3Service;
+  private final EmbeddingService embeddingService;
+  private final QdrantService qdrantService;
   private final ExhibitionMapper exhibitionMapper;
   private final PageMapper pageMapper;
   private final ExhibitionPieceRepository exhibitionPieceRepository;
@@ -105,6 +120,12 @@ public class ExhibitionServiceImpl implements ExhibitionService {
             .toList();
     List<Long> participantIdList =
         exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
+
+    String content = (exhibition.getTitle() + "\n\n" + exhibition.getDescription()).trim();
+    float[] vector = embeddingService.embed(content);
+
+    qdrantService.upsertExhibitionPoint(
+        exhibition.getId(), vector, exhibition, CollectionName.EXHIBITION);
 
     log.info(
         "전시 정보 생성 성공 - id:{}, username:{}, status:{}",
@@ -278,6 +299,152 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     log.info(
         "{} 사용자가 좋아요 한 전시 리스트 페이지 조회 - 호출된 페이지: {}", user.getNickname(), pageable.getPageNumber());
     return pageMapper.toExhibitionPageResponse(page);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public PageResponse<ExhibitionResponse> getRecommendationExhibitionPage(
+      Boolean opposite, Pageable pageable) {
+    User user = userService.getCurrentUser();
+
+    List<ThemePreference> themePrefs = user.getThemePreferences();
+    List<MoodPreference> moodPrefs = user.getMoodPreferences();
+    List<FormatPreference> formatPrefs = user.getFormatPreferences();
+
+    // 사용자 관심사 벡터 생성
+    List<float[]> prefVecs = new ArrayList<>();
+
+    for (ThemePreference pref : themePrefs) {
+      prefVecs.add(embeddingService.embed(pref.getKo()));
+    }
+    for (MoodPreference pref : moodPrefs) {
+      prefVecs.add(embeddingService.embed(pref.getKo()));
+    }
+    for (FormatPreference pref : formatPrefs) {
+      prefVecs.add(embeddingService.embed(pref.getKo()));
+    }
+
+    float[] userVector = VectorUtils.normalize(VectorUtils.mean(prefVecs));
+
+    if (userVector == null) {
+      log.info("{} 사용자의 관심사 벡터가 비어 추천 결과 없음", user.getNickname());
+      Page<ExhibitionResponse> empty =
+          Page.empty(PageRequest.of(pageable.getPageNumber(), pageable.getPageSize()));
+      return pageMapper.toExhibitionPageResponse(empty);
+    }
+
+    // 내 전시 제외
+    List<Long> excludeIds =
+        exhibitionRepository.findByUserId(user.getId()).stream().map(Exhibition::getId).toList();
+
+    // Qdrant에서 검색
+
+    int pageIndex = pageable.getPageNumber(); // 0-based
+    int fetchLimit = Math.min(200, (pageIndex + 1) * pageable.getPageSize() * 5);
+
+    List<Map<String, Object>> result =
+        qdrantService.search(userVector, fetchLimit, excludeIds, CollectionName.EXHIBITION);
+
+    // 점수 기준 정렬
+    List<Map<String, Object>> sorted = new ArrayList<>(result);
+    if (opposite) {
+      sorted.sort(Comparator.comparingDouble(a -> ((Number) a.get("score")).doubleValue())); // 오름차순
+    } else {
+      sorted.sort(
+          (a, b) ->
+              Double.compare(
+                  ((Number) b.get("score")).doubleValue(),
+                  ((Number) a.get("score")).doubleValue())); // 내림차순
+    }
+
+    // 상위 20개 후보만 선택
+    List<Long> candidateIds =
+        sorted.stream()
+            .map(m -> (Map<String, Object>) m.get("payload"))
+            .filter(Objects::nonNull)
+            .map(p -> ((Number) p.get("exhibitionId")).longValue())
+            .toList();
+
+    // 예정/진행중 전시만 필터링
+    List<Long> filtered =
+        candidateIds.isEmpty()
+            ? List.of()
+            : exhibitionRepository
+                .findIdsByIdsInAndStatusIn(
+                    candidateIds,
+                    List.of(ExhibitionStatus.ONGOING, ExhibitionStatus.UPCOMING),
+                    Pageable.unpaged())
+                .getContent();
+
+    // 추천 순서 보장
+    Map<Long, Integer> pos = new HashMap<>();
+    for (int i = 0; i < candidateIds.size(); i++) {
+      pos.put(candidateIds.get(i), i);
+    }
+    List<Long> recommendIds =
+        filtered.stream()
+            .sorted(Comparator.comparingInt(id -> pos.getOrDefault(id, Integer.MAX_VALUE)))
+            .toList();
+
+    // 페이징 슬라이스 계산
+    int total = recommendIds.size();
+    int pageSize = pageable.getPageSize();
+    int start = Math.min(pageIndex * pageSize, total);
+    int end = Math.min(start + pageSize, total);
+
+    List<ExhibitionResponse> content;
+    if (start >= end) {
+      content = List.of();
+    } else {
+      List<Long> pageIds = recommendIds.subList(start, end);
+
+      // 조회 후 순서 복원
+      Map<Long, Integer> pageOrder = new HashMap<>();
+      for (int i = 0; i < pageIds.size(); i++) {
+        pageOrder.put(pageIds.get(i), i);
+      }
+      List<Exhibition> entities = new ArrayList<>(exhibitionRepository.findAllById(pageIds));
+      content =
+          entities.stream()
+              .sorted(
+                  Comparator.comparingInt(
+                      e -> pageOrder.getOrDefault(e.getId(), Integer.MAX_VALUE)))
+              .map(exhibitionMapper::toExhibitionResponse)
+              .toList();
+    }
+
+    Page<ExhibitionResponse> page = new PageImpl<>(content, pageable, total);
+
+    log.info(
+        "{} 사용자의 {} 추천 전시 리스트 페이지 조회 - 호출된 페이지: {}",
+        user.getNickname(),
+        opposite ? "관심사 반대" : "색다른 도전",
+        pageable.getPageNumber());
+    return pageMapper.toExhibitionPageResponse(page);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<ExhibitionResponse> getExhibitionListByKeyword(String keyword, SortBy sortBy) {
+    if (keyword == null || keyword.isBlank()) {
+      return List.of();
+    }
+
+    String q = keyword.trim();
+    if (q.isEmpty()) {
+      return List.of();
+    }
+    List<Exhibition> results;
+    if (sortBy == SortBy.HOTTEST) {
+      results = exhibitionRepository.searchByKeywordOrderByHottest(q);
+    } else if (sortBy == SortBy.LATEST) {
+      results = exhibitionRepository.searchByKeywordOrderByLatest(q);
+    } else {
+      results = exhibitionRepository.searchByKeyword(q);
+    }
+
+    log.info("키워드를 통한 전시 검색 성공 - 키워드: {}, 정렬: {}", q, sortBy);
+    return results.stream().map(exhibitionMapper::toExhibitionResponse).toList();
   }
 
   @Override

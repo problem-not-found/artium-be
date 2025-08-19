@@ -3,6 +3,8 @@
  */
 package com.likelion13.artium.domain.exhibition.controller;
 
+import java.util.List;
+
 import jakarta.validation.Valid;
 
 import org.springframework.http.MediaType;
@@ -88,6 +90,19 @@ public interface ExhibitionController {
   ResponseEntity<BaseResponse<PageResponse<ExhibitionResponse>>> getExhibitionPageByLike(
       @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
       @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
+
+  @Operation(summary = "취향 기반 추천 전시 리스트 조회", description = "사용자의 관심사를 기반으로 추천 전시 리스트를 조회합니다.")
+  @GetMapping("/recommendations")
+  ResponseEntity<BaseResponse<PageResponse<ExhibitionResponse>>> getRecommendationExhibitionPage(
+      @Parameter(description = "관심", example = "true") @RequestParam Boolean opposite,
+      @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
+      @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
+
+  @GetMapping("/search")
+  @Operation(summary = "키워드로 전시 리스트 검색", description = "키워드를 기반으로 전시 리스트를 반환합니다.")
+  ResponseEntity<BaseResponse<List<ExhibitionResponse>>> getExhibitionListByKeyword(
+      @Parameter(description = "검색 키워드", example = "졸업") @RequestParam String keyword,
+      @Parameter(description = "정렬 기준", example = "HOTTEST") @RequestParam SortBy sortBy);
 
   @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
   @Operation(summary = "전시 수정", description = "작품 식별자 리스트 및 전시 정보를 요청 받아 사용자의 전시를 수정합니다.")

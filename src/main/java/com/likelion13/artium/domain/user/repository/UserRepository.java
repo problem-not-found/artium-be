@@ -26,7 +26,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
   boolean existsByUsername(String username);
 
-  boolean existsByNickname(String nickname);
+  List<User> findByNicknameContaining(String keyword);
+
+  List<User> findByCodeContaining(String code);
 
   boolean existsByCode(String code);
 
@@ -58,4 +60,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
       @Param("age") Age age,
       @Param("statuses") List<ProgressStatus> statuses,
       Pageable pageable);
+
+  Page<User> findByCodeContaining(String code, Pageable pageable);
 }

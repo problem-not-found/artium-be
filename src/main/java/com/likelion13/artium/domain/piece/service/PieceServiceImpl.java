@@ -370,6 +370,44 @@ public class PieceServiceImpl implements PieceService {
   }
 
   @Override
+  @Transactional(readOnly = true)
+  public List<PieceSummaryResponse> getPieceListByKeyword(String keyword, SortBy sortBy) {
+    if (keyword == null || keyword.isBlank()) {
+      return List.of();
+    }
+
+    List<Piece> pieces = pieceRepository.findAll();
+
+    List<Piece> filtered =
+        pieces.stream()
+            .filter(
+                p ->
+                    p.getProgressStatus() == ProgressStatus.REGISTERED
+                        || p.getProgressStatus() == ProgressStatus.ON_DISPLAY)
+            .filter(
+                p ->
+                    (p.getTitle() != null && p.getTitle().contains(keyword))
+                        || (p.getDescription() != null && p.getDescription().contains(keyword)))
+            .toList();
+
+    List<Piece> sorted;
+    if (sortBy == SortBy.HOTTEST) {
+      sorted =
+          filtered.stream()
+              .sorted(Comparator.comparingInt((Piece p) -> p.getPieceLikes().size()).reversed())
+              .toList();
+    } else if (sortBy == SortBy.LATEST) {
+      sorted =
+          filtered.stream().sorted(Comparator.comparing(Piece::getCreatedAt).reversed()).toList();
+    } else {
+      sorted = filtered;
+    }
+
+    log.info("키워드를 통한 작품 검색 성공 - 키워드: {}, 정렬: {}", keyword, sortBy);
+    return sorted.stream().map(pieceMapper::toPieceSummaryResponse).toList();
+  }
+
+  @Override
   public PageResponse<PieceFeedResponse> getPiecePageByType(SortBy sortBy, Pageable pageable) {
     Long userId = userService.getCurrentUser().getId();
     Page<PieceFeedResponse> page;

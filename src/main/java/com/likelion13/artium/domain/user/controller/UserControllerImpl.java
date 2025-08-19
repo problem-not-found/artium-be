@@ -93,6 +93,11 @@ public class UserControllerImpl implements UserController {
   }
 
   @Override
+  public ResponseEntity<BaseResponse<List<String>>> getKeywords() {
+    return ResponseEntity.status(200).body(BaseResponse.success(userService.getKeywords()));
+  }
+
+  @Override
   public ResponseEntity<BaseResponse<PageResponse<CreatorFeedResponse>>> getRecommendations(
       SortBy sortBy, Integer pageNum, Integer pageSize) {
     Pageable pageable = validatePageable(pageNum, pageSize);
@@ -105,6 +110,24 @@ public class UserControllerImpl implements UserController {
       @PathVariable(value = "id") Long userId) {
     return ResponseEntity.status(200)
         .body(BaseResponse.success(userService.getUserProfile(userId)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<PageResponse<UserSummaryResponse>>> getUserProfilesByCode(
+      @RequestParam String code, @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
+
+    Pageable pageable = validatePageable(pageNum, pageSize);
+
+    return ResponseEntity.status(200)
+        .body(BaseResponse.success(userService.getUserProfilesByCode(code, pageable)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<List<UserSummaryResponse>>> getUserListByKeyword(
+      @RequestParam String keyword) {
+
+    return ResponseEntity.status(200)
+        .body(BaseResponse.success(userService.getUserListByKeyword(keyword)));
   }
 
   @Override

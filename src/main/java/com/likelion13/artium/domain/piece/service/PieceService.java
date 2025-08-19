@@ -98,6 +98,15 @@ public interface PieceService {
       RecommendSortBy sortBy, Pageable pageable);
 
   /**
+   * 키워드를 기반으로 작품 리스트를 조회합니다.
+   *
+   * @param keyword 검색할 키워드 문자열
+   * @param sortBy 정렬 기준 (예: 최신순, 인기순 등)
+   * @return 조건에 맞는 작품 요약 응답 리스트
+   */
+  List<PieceSummaryResponse> getPieceListByKeyword(String keyword, SortBy sortBy);
+
+  /**
    * 피드의 작품 리스트 조회 메서드
    *
    * @param sortBy 인기순, 최신순 분류 기준
