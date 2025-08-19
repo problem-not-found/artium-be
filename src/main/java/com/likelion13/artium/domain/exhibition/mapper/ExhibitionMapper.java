@@ -90,6 +90,7 @@ public class ExhibitionMapper {
         .endDate(exhibition.getEndDate())
         .participantIdList(participantIdList)
         .address(exhibition.getAddress())
+        .addressName(exhibition.getAddressName())
         .offlineDescription(exhibition.getOfflineDescription())
         .fillAll(exhibition.getFillAll())
         .build();

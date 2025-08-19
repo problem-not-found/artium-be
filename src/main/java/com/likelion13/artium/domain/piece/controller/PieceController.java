@@ -93,7 +93,7 @@ public interface PieceController {
       @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
 
   @GetMapping("/search")
-  @Operation(summary = "키워드로 작품 리스트 검색", description = "키워드를 기반으로 전시 리스트를 반환합니다.")
+  @Operation(summary = "키워드로 작품 리스트 검색", description = "키워드를 기반으로 작품 리스트를 반환합니다.")
   ResponseEntity<BaseResponse<List<PieceSummaryResponse>>> getPieceListByKeyword(
       @Parameter(description = "검색 키워드", example = "파도") @RequestParam String keyword,
       @Parameter(description = "정렬 기준", example = "HOTTEST") @RequestParam SortBy sortBy);

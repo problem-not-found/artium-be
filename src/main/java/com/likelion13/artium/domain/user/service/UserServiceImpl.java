@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
@@ -454,9 +453,17 @@ public class UserServiceImpl implements UserService {
   public List<String> getKeywords() {
     User user = getCurrentUser();
 
-    float[] userVector =
-        makeEmbeddingPreference(
-            user.getThemePreferences(), user.getMoodPreferences(), user.getFormatPreferences());
+    List<ThemePreference> themePrefs =
+        user.getThemePreferences() != null ? user.getThemePreferences() : List.of();
+    List<MoodPreference> moodPrefs =
+        user.getMoodPreferences() != null ? user.getMoodPreferences() : List.of();
+    List<FormatPreference> formatPrefs =
+        user.getFormatPreferences() != null ? user.getFormatPreferences() : List.of();
+    float[] userVector = makeEmbeddingPreference(themePrefs, moodPrefs, formatPrefs);
+    if (userVector == null) {
+      log.info("사용자 취향 정보가 없어 키워드 추천을 건너뜁니다 - userId: {}", user.getId());
+      return List.of();
+    }
 
     List<Map<String, Object>> pieceResults =
         qdrantService.search(userVector, 50, List.of(), CollectionName.PIECE);
@@ -466,17 +473,26 @@ public class UserServiceImpl implements UserService {
 
     List<String> keywords = new ArrayList<>();
 
-    pieceResults.stream()
-        .map(m -> (Map<String, Object>) m.get("payload"))
-        .filter(Objects::nonNull)
-        .flatMap(p -> ((List<String>) p.getOrDefault("keywords", List.of())).stream())
-        .forEach(keywords::add);
-
-    exhibitionResults.stream()
-        .map(m -> (Map<String, Object>) m.get("payload"))
-        .filter(Objects::nonNull)
-        .flatMap(p -> ((List<String>) p.getOrDefault("keywords", List.of())).stream())
-        .forEach(keywords::add);
+    for (Map<String, Object> m : pieceResults) {
+      Map<String, Object> payload = (Map<String, Object>) m.get("payload");
+      if (payload == null) continue;
+      Object kw = payload.get("keywords");
+      if (kw instanceof List<?> list) {
+        for (Object o : list) {
+          if (o != null) keywords.add(o.toString());
+        }
+      }
+    }
+    for (Map<String, Object> m : exhibitionResults) {
+      Map<String, Object> payload = (Map<String, Object>) m.get("payload");
+      if (payload == null) continue;
+      Object kw = payload.get("keywords");
+      if (kw instanceof List<?> list) {
+        for (Object o : list) {
+          if (o != null) keywords.add(o.toString());
+        }
+      }
+    }
 
     List<String> distinctKeywords = keywords.stream().distinct().toList();
 
@@ -532,10 +548,14 @@ public class UserServiceImpl implements UserService {
     if (keyword == null || keyword.isBlank()) {
       return List.of();
     }
+    keyword = keyword.trim();
 
     List<User> users;
     if (keyword.startsWith("@")) {
-      String codeKeyword = keyword.substring(1);
+      String codeKeyword = keyword.substring(1).trim();
+      if (codeKeyword.isEmpty()) {
+        return List.of();
+      }
       users = userRepository.findByCodeContaining(codeKeyword);
       log.info("코드로 사용자 조회 성공 - 요청한 사용자: {}, 키워드: {}", currentUser.getNickname(), codeKeyword);
     } else {

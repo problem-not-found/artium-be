@@ -52,5 +52,40 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
       @Param("statuses") List<ExhibitionStatus> statuses,
       Pageable pageable);
 
-  Page<Exhibition> findByIdIn(List<Long> ids, Pageable pageable);
+  @Query(
+      """
+  SELECT e
+  FROM Exhibition e
+  LEFT JOIN e.exhibitionLikes el
+  WHERE e.fillAll = true AND (
+    LOWER(e.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR LOWER(e.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+  )
+  GROUP BY e.id
+  ORDER BY COUNT(el) DESC, e.startDate DESC
+""")
+  List<Exhibition> searchByKeywordOrderByHottest(@Param("keyword") String keyword);
+
+  @Query(
+      """
+  SELECT e
+  FROM Exhibition e
+  WHERE e.fillAll = true AND (
+    LOWER(e.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR LOWER(e.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+  )
+  ORDER BY e.startDate DESC
+""")
+  List<Exhibition> searchByKeywordOrderByLatest(@Param("keyword") String keyword);
+
+  @Query(
+      """
+  SELECT e
+  FROM Exhibition e
+  WHERE e.fillAll = true AND (
+    LOWER(e.title) LIKE LOWER(CONCAT('%', :keyword, '%'))
+    OR LOWER(e.description) LIKE LOWER(CONCAT('%', :keyword, '%'))
+  )
+""")
+  List<Exhibition> searchByKeyword(@Param("keyword") String keyword);
 }
