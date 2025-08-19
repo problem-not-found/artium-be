@@ -3,12 +3,6 @@
  */
 package com.likelion13.artium.domain.exhibition.service;
 
-import com.likelion13.artium.domain.user.entity.FormatPreference;
-import com.likelion13.artium.domain.user.entity.MoodPreference;
-import com.likelion13.artium.domain.user.entity.ThemePreference;
-import com.likelion13.artium.global.ai.vector.VectorUtils;
-import com.likelion13.artium.global.qdrant.entity.CollectionName;
-import com.likelion13.artium.global.qdrant.service.QdrantService;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -47,13 +41,20 @@ import com.likelion13.artium.domain.exhibition.repository.ExhibitionRepository;
 import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.domain.piece.exception.PieceErrorCode;
 import com.likelion13.artium.domain.piece.repository.PieceRepository;
+import com.likelion13.artium.domain.user.entity.FormatPreference;
+import com.likelion13.artium.domain.user.entity.MoodPreference;
+import com.likelion13.artium.domain.user.entity.ThemePreference;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.repository.UserRepository;
 import com.likelion13.artium.domain.user.service.UserService;
+import com.likelion13.artium.global.ai.embedding.service.EmbeddingService;
+import com.likelion13.artium.global.ai.vector.VectorUtils;
 import com.likelion13.artium.global.exception.CustomException;
 import com.likelion13.artium.global.page.mapper.PageMapper;
 import com.likelion13.artium.global.page.response.PageResponse;
+import com.likelion13.artium.global.qdrant.entity.CollectionName;
+import com.likelion13.artium.global.qdrant.service.QdrantService;
 import com.likelion13.artium.global.s3.entity.PathName;
 import com.likelion13.artium.global.s3.service.S3Service;
 
@@ -70,6 +71,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
   private final UserRepository userRepository;
   private final UserService userService;
   private final S3Service s3Service;
+  private final EmbeddingService embeddingService;
   private final QdrantService qdrantService;
   private final ExhibitionMapper exhibitionMapper;
   private final PageMapper pageMapper;
@@ -117,6 +119,12 @@ public class ExhibitionServiceImpl implements ExhibitionService {
             .toList();
     List<Long> participantIdList =
         exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
+
+    String content = (exhibition.getTitle() + "\n\n" + exhibition.getDescription()).trim();
+    float[] vector = embeddingService.embed(content);
+
+    qdrantService.upsertExhibitionPoint(
+        exhibition.getId(), vector, exhibition, CollectionName.PIECE);
 
     log.info(
         "전시 정보 생성 성공 - id:{}, username:{}, status:{}",
@@ -294,64 +302,130 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
   @Override
   @Transactional(readOnly = true)
-  public PageResponse<ExhibitionResponse> getRecommendationExhibitionPage(Pageable pageable) {
+  public PageResponse<ExhibitionResponse> getRecommendationExhibitionPage(
+      Boolean opposite, Pageable pageable) {
     User user = userService.getCurrentUser();
 
     List<ThemePreference> themePrefs = user.getThemePreferences();
     List<MoodPreference> moodPrefs = user.getMoodPreferences();
     List<FormatPreference> formatPrefs = user.getFormatPreferences();
 
-    // 사용자 관심사를 벡터로 변환
+    // 사용자 관심사 벡터 생성
     List<float[]> prefVecs = new ArrayList<>();
-    prefVecs.addAll(VectorUtils.encodePreferences(themePrefs));
-    prefVecs.addAll(VectorUtils.encodePreferences(moodPrefs));
-    prefVecs.addAll(VectorUtils.encodePreferences(formatPrefs));
+    for (ThemePreference pref : themePrefs) {
+      prefVecs.add(embeddingService.embed(pref.getKo()));
+    }
+    for (MoodPreference pref : moodPrefs) {
+      prefVecs.add(embeddingService.embed(pref.getKo()));
+    }
+    for (FormatPreference pref : formatPrefs) {
+      prefVecs.add(embeddingService.embed(pref.getKo()));
+    }
 
     float[] userVector = VectorUtils.normalize(VectorUtils.mean(prefVecs));
 
-    // 현재 사용자의 전시는 검색에서 제외
-    List<Long> excludeIds = new ArrayList<>(exhibitionRepository.findByUserId(user.getId()).stream()
-        .map(Exhibition::getId).toList());
+    // 내 전시 제외
+    List<Long> excludeIds =
+        exhibitionRepository.findByUserId(user.getId()).stream().map(Exhibition::getId).toList();
 
     // Qdrant에서 검색
-    int limit = pageable.getPageSize();
+    int limit = pageable.getPageSize() * 3;
     List<Map<String, Object>> result =
         qdrantService.search(userVector, limit, excludeIds, CollectionName.EXHIBITION);
 
+    // 점수 기준 정렬
+    List<Map<String, Object>> sorted = new ArrayList<>(result);
+    if (opposite) {
+      sorted.sort(Comparator.comparingDouble(a -> ((Number) a.get("score")).doubleValue())); // 오름차순
+    } else {
+      sorted.sort(
+          (a, b) ->
+              Double.compare(
+                  ((Number) b.get("score")).doubleValue(),
+                  ((Number) a.get("score")).doubleValue())); // 내림차순
+    }
+
+    // 상위 20개 후보만 선택
     List<Long> candidateIds =
-        result.stream()
+        sorted.stream()
             .map(m -> (Map<String, Object>) m.get("payload"))
             .filter(Objects::nonNull)
             .map(p -> ((Number) p.get("exhibitionId")).longValue())
+            .limit(20)
             .toList();
 
-    // 예정, 진행중인 전시만 필터링
+    // 예정/진행중 전시만 필터링
     List<Long> filtered =
         candidateIds.isEmpty()
             ? List.of()
             : exhibitionRepository
                 .findIdsByIdsInAndStatusIn(
-                    candidateIds, List.of(ExhibitionStatus.ONGOING, ExhibitionStatus.UPCOMING),
+                    candidateIds,
+                    List.of(ExhibitionStatus.ONGOING, ExhibitionStatus.UPCOMING),
                     Pageable.unpaged())
                 .getContent();
 
+    // 추천 순서 보장
     Map<Long, Integer> pos = new HashMap<>();
     for (int i = 0; i < candidateIds.size(); i++) {
       pos.put(candidateIds.get(i), i);
     }
-
     List<Long> recommendIds =
         filtered.stream()
             .sorted(Comparator.comparingInt(id -> pos.getOrDefault(id, Integer.MAX_VALUE)))
             .toList();
 
+    // DB 조회 및 매핑
     Page<ExhibitionResponse> page =
-        exhibitionRepository.findByIdIn(recommendIds, pageable)
+        exhibitionRepository
+            .findByIdIn(recommendIds, pageable)
             .map(exhibitionMapper::toExhibitionResponse);
 
     log.info(
-        "{} 사용자의 관심사 추천 전시 리스트 페이지 조회 - 호출된 페이지: {}", user.getNickname(), pageable.getPageNumber());
+        "{} 사용자의 {} 추천 전시 리스트 페이지 조회 - 호출된 페이지: {}",
+        user.getNickname(),
+        opposite ? "관심사 반대" : "색다른 도전",
+        pageable.getPageNumber());
     return pageMapper.toExhibitionPageResponse(page);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<ExhibitionResponse> getExhibitionListByKeyword(String keyword, SortBy sortBy) {
+    if (keyword == null || keyword.isBlank()) {
+      return List.of();
+    }
+
+    List<Exhibition> exhibitions = exhibitionRepository.findAll();
+
+    List<Exhibition> filtered =
+        exhibitions.stream()
+            .filter(e -> Boolean.TRUE.equals(e.getFillAll()))
+            .filter(
+                e ->
+                    (e.getTitle() != null && e.getTitle().contains(keyword))
+                        || (e.getDescription() != null && e.getDescription().contains(keyword)))
+            .toList();
+
+    List<Exhibition> sorted;
+    if (sortBy == SortBy.HOTTEST) {
+      sorted =
+          filtered.stream()
+              .sorted(
+                  Comparator.comparingInt((Exhibition e) -> e.getExhibitionLikes().size())
+                      .reversed())
+              .toList();
+    } else if (sortBy == SortBy.LATEST) {
+      sorted =
+          filtered.stream()
+              .sorted(Comparator.comparing(Exhibition::getStartDate).reversed())
+              .toList();
+    } else {
+      sorted = filtered;
+    }
+
+    log.info("키워드를 통한 전시 검색 성공 - 키워드: {}, 정렬: {}", keyword, sortBy);
+    return sorted.stream().map(exhibitionMapper::toExhibitionResponse).toList();
   }
 
   @Override

@@ -3,6 +3,8 @@
  */
 package com.likelion13.artium.domain.exhibition.service;
 
+import java.util.List;
+
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -96,7 +98,23 @@ public interface ExhibitionService {
    */
   PageResponse<ExhibitionResponse> getExhibitionPageByLike(Pageable pageable);
 
-  PageResponse<ExhibitionResponse> getRecommendationExhibitionPage(Pageable pageable);
+  /**
+   * 추천 전시회 목록을 페이지 단위로 조회합니다.
+   *
+   * @param opposite true면 반대 성향(관심사) 기반 추천, false면 동일 성향 기반 추천
+   * @param pageable 페이징 및 정렬 정보
+   * @return 추천된 전시회 목록의 페이지 응답
+   */
+  PageResponse<ExhibitionResponse> getRecommendationExhibitionPage(Boolean opposite, Pageable pageable);
+
+  /**
+   * 키워드를 기반으로 전시회 목록을 조회합니다.
+   *
+   * @param keyword 검색할 키워드 문자열
+   * @param sortBy 정렬 기준 (예: 최신순, 인기순 등)
+   * @return 키워드와 정렬 조건에 맞는 전시회 목록
+   */
+  List<ExhibitionResponse> getExhibitionListByKeyword(String keyword, SortBy sortBy);
 
   /**
    * 전시회 ID에 해당하는 전시회 정보를 수정합니다.

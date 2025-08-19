@@ -91,8 +91,6 @@ public class ExhibitionMapper {
         .participantIdList(participantIdList)
         .address(exhibition.getAddress())
         .offlineDescription(exhibition.getOfflineDescription())
-        .accountNumber(exhibition.getAccountNumber())
-        .bankName(exhibition.getBankName())
         .fillAll(exhibition.getFillAll())
         .build();
   }

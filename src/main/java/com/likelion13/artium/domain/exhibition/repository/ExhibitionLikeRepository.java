@@ -14,5 +14,4 @@ import com.likelion13.artium.domain.user.entity.User;
 public interface ExhibitionLikeRepository extends JpaRepository<ExhibitionLike, Long> {
 
   Optional<ExhibitionLike> findByExhibitionAndUser(Exhibition exhibition, User user);
-
 }
