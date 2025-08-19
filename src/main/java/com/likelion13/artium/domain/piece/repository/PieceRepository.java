@@ -19,6 +19,17 @@ public interface PieceRepository extends JpaRepository<Piece, Long> {
 
   Page<Piece> findByIdIn(List<Long> ids, Pageable pageable);
 
+  @Query(
+      "SELECT p from Piece p WHERE p.id NOT IN :pieceIds AND p.progressStatus IN :statuses AND SIZE(p.pieceLikes) = 0 ORDER BY p.createdAt ASC")
+  Page<Piece> findByIdNotInAndProgressStatusInNolikes(
+      @Param("pieceIds") List<Long> pieceIds,
+      @Param("statuses") List<ProgressStatus> statuses,
+      Pageable pageable);
+
+  @Query("SELECT p from Piece p WHERE p.progressStatus IN :statuses ORDER BY p.createdAt DESC")
+  Page<Piece> findByProgressStatusIn(
+      @Param("statuses") List<ProgressStatus> statuses, Pageable pageable);
+
   List<Piece> findByUser_Id(Long userId);
 
   @Query("SELECT p FROM Piece p WHERE p.user.id = :userId")

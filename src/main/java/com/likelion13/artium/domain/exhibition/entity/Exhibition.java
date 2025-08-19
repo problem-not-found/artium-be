@@ -23,7 +23,7 @@ import jakarta.persistence.Table;
 
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
-import com.likelion13.artium.domain.piece.entity.Piece;
+import com.likelion13.artium.domain.exhibition.mapping.ExhibitionPiece;
 import com.likelion13.artium.domain.review.entity.Review;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.global.common.BaseTimeEntity;
@@ -100,7 +100,7 @@ public class Exhibition extends BaseTimeEntity {
 
   @OneToMany(mappedBy = "exhibition", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default
-  private List<Piece> pieces = new ArrayList<>();
+  private List<ExhibitionPiece> exhibitionPieces = new ArrayList<>();
 
   @OneToMany(mappedBy = "exhibition", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default

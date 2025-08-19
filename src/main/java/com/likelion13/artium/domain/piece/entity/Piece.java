@@ -20,7 +20,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 
-import com.likelion13.artium.domain.exhibition.entity.Exhibition;
+import com.likelion13.artium.domain.exhibition.mapping.ExhibitionPiece;
 import com.likelion13.artium.domain.pieceDetail.entity.PieceDetail;
 import com.likelion13.artium.domain.pieceLike.entity.PieceLike;
 import com.likelion13.artium.domain.user.entity.User;
@@ -70,9 +70,9 @@ public class Piece extends BaseTimeEntity {
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
 
-  @ManyToOne(fetch = FetchType.LAZY)
-  @JoinColumn(name = "exhibition_id")
-  private Exhibition exhibition;
+  @OneToMany(mappedBy = "piece", cascade = CascadeType.ALL, orphanRemoval = true)
+  @Builder.Default
+  private List<ExhibitionPiece> exhibitionPieces = new ArrayList<>();
 
   @OneToMany(mappedBy = "piece", cascade = CascadeType.ALL, orphanRemoval = true)
   @Builder.Default

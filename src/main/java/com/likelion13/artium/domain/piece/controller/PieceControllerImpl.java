@@ -21,6 +21,7 @@ import com.likelion13.artium.domain.piece.dto.request.UpdatePieceRequest;
 import com.likelion13.artium.domain.piece.dto.response.PieceFeedResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceSummaryResponse;
+import com.likelion13.artium.domain.piece.entity.RecommendSortBy;
 import com.likelion13.artium.domain.piece.entity.SaveStatus;
 import com.likelion13.artium.domain.piece.exception.PieceErrorCode;
 import com.likelion13.artium.domain.piece.service.PieceService;
@@ -112,12 +113,14 @@ public class PieceControllerImpl implements PieceController {
   }
 
   @Override
-  public ResponseEntity<BaseResponse<PageResponse<PieceSummaryResponse>>> getRecommendationPieces(
-      @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
+  public ResponseEntity<BaseResponse<PageResponse<PieceFeedResponse>>> getRecommendationPieces(
+      @RequestParam RecommendSortBy sortBy,
+      @RequestParam Integer pageNum,
+      @RequestParam Integer pageSize) {
     Pageable pageable = validatePageable(pageNum, pageSize);
 
     return ResponseEntity.status(HttpStatus.OK)
-        .body(BaseResponse.success(pieceService.getRecommendationPiecePage(pageable)));
+        .body(BaseResponse.success(pieceService.getRecommendationPiecePage(sortBy, pageable)));
   }
 
   @Override

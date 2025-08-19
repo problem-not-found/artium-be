@@ -204,7 +204,7 @@ public class QdrantServiceImpl implements QdrantService {
     body.put("limit", limit);
     body.put("with_payload", true);
     body.put("params", params);
-    body.put("score_threshold", 0.30);
+    body.put("score_threshold", 0.20);
     if (!must.isEmpty() || !mustNot.isEmpty()) body.put("filter", filter);
 
     Map resp =

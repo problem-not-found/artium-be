@@ -9,17 +9,23 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
+import com.likelion13.artium.domain.user.dto.request.UpdateContactRequest;
+import com.likelion13.artium.domain.user.dto.request.UpdateUserInfoRequest;
+import com.likelion13.artium.domain.user.dto.request.UpdateUserRequest;
+import com.likelion13.artium.domain.user.dto.response.CreatorFeedResponse;
 import com.likelion13.artium.domain.user.dto.response.CreatorResponse;
 import com.likelion13.artium.domain.user.dto.response.PreferenceResponse;
 import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
+import com.likelion13.artium.domain.user.dto.response.UserResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
 import com.likelion13.artium.domain.user.entity.Age;
 import com.likelion13.artium.domain.user.entity.FormatPreference;
 import com.likelion13.artium.domain.user.entity.Gender;
 import com.likelion13.artium.domain.user.entity.MoodPreference;
+import com.likelion13.artium.domain.user.entity.SortBy;
 import com.likelion13.artium.domain.user.entity.ThemePreference;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.global.exception.CustomException;
@@ -68,11 +74,11 @@ public interface UserService {
   User getCurrentUser();
 
   /**
-   * 현재 인증된 사용자의 상세 정보를 조회합니다.
+   * 현재 인증된 사용자의 정보를 조회합니다.
    *
-   * @return {@link UserDetailResponse} 현재 인증된 사용자의 상세 정보
+   * @return {@link UserResponse} 현재 인증된 사용자의 정보
    */
-  UserDetailResponse getUserDetail();
+  UserResponse getUser();
 
   /**
    * 코드 사용 가능 여부를 확인합니다.
@@ -83,14 +89,12 @@ public interface UserService {
   Boolean checkCodeDuplicated(String code);
 
   /**
-   * 사용자의 닉네임을 변경합니다.
+   * 현재 로그인된 사용자의 닉네임과 코드(아이디)를 변경합니다.
    *
-   * @param newCode 변경할 새로운 코드
-   * @param newNickname 변경할 새로운 닉네임
-   * @return 변경 완료 메시지 문자열
-   * @throws CustomException 닉네임 중복 등 변경 불가 시 발생
+   * @param request 변경할 유저 정보
+   * @return 성공 응답 문자열
    */
-  String updateUserInfo(String newCode, String newNickname);
+  String updateUserInfo(UpdateUserInfoRequest request);
 
   /**
    * 사용자의 프로필 이미지를 변경합니다.
@@ -194,6 +198,39 @@ public interface UserService {
    * @return 크리에이터 정보 응답 객체
    */
   CreatorResponse getCreatorInfo(Long userId);
+
+  /**
+   * 내 연락 정보의 등록 여부를 반환
+   *
+   * @return {@link true} - 등록됨, {@link false} - 등록 안 됨
+   */
+  Boolean getContactStatus();
+
+  /**
+   * 현재 로그인된 사용자의 정보를 변경합니다
+   *
+   * @param request 변경할 사용자 정보
+   * @param profileImage 변경할 사용자 이미지
+   * @return 성공 응답 문자열
+   */
+  String updateUser(UpdateUserRequest request, MultipartFile profileImage);
+
+  /**
+   * 현재 로그인된 사용자의 연락 정보를 변경합니다.
+   *
+   * @param request 변경할 연락 정보
+   * @return 성공 응답 문자열
+   */
+  String updateContact(UpdateContactRequest request);
+
+  /**
+   * 정렬값을 기준으로 피드에 나타나는 추천 크리에이터 페이지 조회
+   *
+   * @param sortBy 정렬값(기준)
+   * @param pageable 페이지값 객체
+   * @return 크리에이터 피드 응답 페이지 반환
+   */
+  PageResponse<CreatorFeedResponse> getRecommendations(SortBy sortBy, Pageable pageable);
 
   /**
    * 특정 코드가 포함된 사용자들의 프로필 목록을 페이지 단위로 조회합니다.

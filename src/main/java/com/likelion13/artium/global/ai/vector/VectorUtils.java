@@ -40,6 +40,18 @@ public class VectorUtils {
     return out;
   }
 
+  public static float[] scale(float[] v, double w) {
+    float[] out = new float[v.length];
+    for (int i = 0; i < v.length; i++) out[i] = (float) (v[i] * w);
+    return out;
+  }
+
+  public static float[] addScaled(float[] a, float[] b, double wa, double wb) {
+    float[] out = new float[a.length];
+    for (int i = 0; i < a.length; i++) out[i] = (float) (a[i] * wa + b[i] * wb);
+    return out;
+  }
+
 
   public static List<float[]> encodePreferences(List<? extends Enum<?>> preferences) {
     List<float[]> vectors = new java.util.ArrayList<>();

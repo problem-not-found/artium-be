@@ -4,6 +4,7 @@
 package com.likelion13.artium.domain.piece.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +28,7 @@ import com.likelion13.artium.domain.piece.dto.response.PieceResponse;
 import com.likelion13.artium.domain.piece.dto.response.PieceSummaryResponse;
 import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.domain.piece.entity.ProgressStatus;
+import com.likelion13.artium.domain.piece.entity.RecommendSortBy;
 import com.likelion13.artium.domain.piece.entity.SaveStatus;
 import com.likelion13.artium.domain.piece.exception.PieceErrorCode;
 import com.likelion13.artium.domain.piece.mapper.PieceMapper;
@@ -307,19 +309,64 @@ public class PieceServiceImpl implements PieceService {
   }
 
   @Override
-  public PageResponse<PieceSummaryResponse> getRecommendationPiecePage(Pageable pageable) {
+  public PageResponse<PieceFeedResponse> getRecommendationPiecePage(
+      RecommendSortBy sortBy, Pageable pageable) {
     Long userId = userService.getCurrentUser().getId();
 
-    Pageable sortedPageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize());
+    List<Long> recommendPieceIds = recommendPieceIds(userId, pageable.getPageSize());
+    Page<PieceFeedResponse> page;
 
-    List<Long> recommendPieceIds = recommendPieceIds(userId, 50);
+    log.info("추천 작품 아이디 리스트 - recommendPieceIds : {} ", recommendPieceIds);
+    switch (sortBy) {
+      case FAVORITE:
+        page =
+            pieceRepository
+                .findByIdIn(recommendPieceIds, pageable)
+                .map(
+                    piece ->
+                        pieceMapper.toPieceFeedResponse(
+                            piece,
+                            pieceLikeRepository.existsByUser_IdAndPiece_Id(
+                                userId, piece.getUser().getId())));
+        log.info("관심사 기반 취향 저격 작품 리스트 조회 성공");
+        break;
+      case NEW_STYLE:
+        recommendPieceIds = new ArrayList<>(recommendPieceIds);
+        List<Long> myPieceIds =
+            pieceRepository.findByUser_Id(userId).stream().map(Piece::getId).toList();
+        if (!myPieceIds.isEmpty()) {
+          recommendPieceIds.addAll(myPieceIds);
+        }
+        List<ProgressStatus> statuses =
+            new ArrayList<>(Arrays.asList(ProgressStatus.REGISTERED, ProgressStatus.ON_DISPLAY));
+        if (recommendPieceIds.isEmpty()) {
+          page =
+              pieceRepository
+                  .findByProgressStatusIn(statuses, pageable)
+                  .map(
+                      piece ->
+                          pieceMapper.toPieceFeedResponse(
+                              piece,
+                              pieceLikeRepository.existsByUser_IdAndPiece_Id(
+                                  userId, piece.getUser().getId())));
+        } else {
+          page =
+              pieceRepository
+                  .findByIdNotInAndProgressStatusInNolikes(recommendPieceIds, statuses, pageable)
+                  .map(
+                      piece ->
+                          pieceMapper.toPieceFeedResponse(
+                              piece,
+                              pieceLikeRepository.existsByUser_IdAndPiece_Id(
+                                  userId, piece.getUser().getId())));
+        }
+        log.info("색다른 도전 작품 리스트 조회 성공");
+        break;
+      default:
+        throw new CustomException(PieceErrorCode.INVALID_SORT_TYPE);
+    }
 
-    Page<PieceSummaryResponse> page =
-        pieceRepository
-            .findByIdIn(recommendPieceIds, sortedPageable)
-            .map(pieceMapper::toPieceSummaryResponse);
-
-    return pageMapper.toPiecePageResponse(page);
+    return pageMapper.toPieceFeedPageResponse(page);
   }
 
   @Override
@@ -362,19 +409,14 @@ public class PieceServiceImpl implements PieceService {
   private List<Long> recommendPieceIds(Long userId, int topN) {
     int limit = (topN < 0) ? 50 : topN;
 
-    List<Long> likeIds = pieceLikeRepository.findIdsByUser_Id(userId);
-
-    if (likeIds == null || likeIds.isEmpty()) {
+    float[] userVector =
+        VectorUtils.normalize(qdrantService.retrieveVectorById(userId, CollectionName.USER));
+    if (userVector == null || userVector.length == 0) {
+      log.error("사용자 임베딩 벡터가 없어서 추천을 건너뜁니다. - userId: {}", userId);
       return List.of();
     }
-
-    List<float[]> likeVecs = qdrantService.retrieveVectorsByIds(likeIds, CollectionName.PIECE);
-    float[] userVector = VectorUtils.normalize(VectorUtils.mean(likeVecs));
-
-    List<Long> excludeIds = new ArrayList<>(likeIds);
-    List<Long> myPieceIds =
+    List<Long> excludeIds =
         pieceRepository.findByUser_Id(userId).stream().map(Piece::getId).toList();
-    excludeIds.addAll(myPieceIds);
 
     List<Map<String, Object>> result =
         qdrantService.search(userVector, limit, excludeIds, CollectionName.PIECE);
@@ -394,7 +436,7 @@ public class PieceServiceImpl implements PieceService {
             .filter(Objects::nonNull)
             .map(p -> ((Number) p.get("pieceId")).longValue())
             .toList();
-
+    log.info("추천 기반 후보 작품 아이디 리스트 - candidateIds : {} ", candidateIds);
     Map<Long, Integer> pos = new HashMap<>();
     for (int i = 0; i < candidateIds.size(); i++) pos.put(candidateIds.get(i), i);
 

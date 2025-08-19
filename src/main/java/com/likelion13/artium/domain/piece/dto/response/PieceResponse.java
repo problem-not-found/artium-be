@@ -5,6 +5,7 @@ package com.likelion13.artium.domain.piece.dto.response;
 
 import java.util.List;
 
+import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionSummaryResponse;
 import com.likelion13.artium.domain.piece.entity.ProgressStatus;
 import com.likelion13.artium.domain.piece.entity.SaveStatus;
 import com.likelion13.artium.domain.pieceDetail.dto.response.PieceDetailSummaryResponse;
@@ -44,6 +45,9 @@ public class PieceResponse {
 
   @Schema(description = "디테일 컷 리스트")
   private List<PieceDetailSummaryResponse> pieceDetails;
+
+  @Schema(description = "전시 중일 때의 전시 정보 리스트")
+  private List<ExhibitionSummaryResponse> exhibitions;
 
   @Schema(description = "요청 사용자의 좋아요 여부", example = "false")
   @Builder.Default

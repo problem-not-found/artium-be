@@ -75,18 +75,21 @@ public class User extends BaseTimeEntity {
   @CollectionTable(name = "user_theme_preferences", joinColumns = @JoinColumn(name = "user_id"))
   @Column(name = "theme_preference")
   @Enumerated(EnumType.STRING)
+  @Builder.Default
   private List<ThemePreference> themePreferences = new ArrayList<>();
 
   @ElementCollection
   @CollectionTable(name = "user_mood_preferences", joinColumns = @JoinColumn(name = "user_id"))
   @Column(name = "mood_preference")
   @Enumerated(EnumType.STRING)
+  @Builder.Default
   private List<MoodPreference> moodPreferences = new ArrayList<>();
 
   @ElementCollection
   @CollectionTable(name = "user_format_preferences", joinColumns = @JoinColumn(name = "user_id"))
   @Column(name = "format_preference")
   @Enumerated(EnumType.STRING)
+  @Builder.Default
   private List<FormatPreference> formatPreferences = new ArrayList<>();
 
   @Column(name = "profile_image_url", nullable = false)
@@ -153,9 +156,20 @@ public class User extends BaseTimeEntity {
         .build();
   }
 
+  public void updateUser(String nickname, String code, String introduction) {
+    this.nickname = nickname;
+    this.code = code;
+    this.introduction = introduction;
+  }
+
   public void updateUserInfo(String newCode, String newNickname) {
     this.code = newCode;
     this.nickname = newNickname;
+  }
+
+  public void updateContact(String email, String instagram) {
+    this.email = email;
+    this.instagram = instagram;
   }
 
   public void updateProfileImageUrl(String profileImageUrl) {

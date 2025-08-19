@@ -9,14 +9,17 @@ import lombok.Getter;
 
 @Getter
 @Builder
-@Schema(title = "UserSummaryResponse DTO", description = "사용자 기본 정보 응답 반환")
-public class UserSummaryResponse {
+@Schema(title = "UserResponse DTO", description = "사용자 정보 조회 응답 반환")
+public class UserResponse {
 
   @Schema(description = "사용자 식별자", example = "1")
   private Long userId;
 
-  @Schema(description = "닉네임", example = "김땡땡")
+  @Schema(description = "닉네임", example = "나나나난")
   private String nickname;
+
+  @Schema(description = "코드", example = "simonisnextdoor")
+  private String code;
 
   @Schema(
       description = "프로필 이미지 URL",
