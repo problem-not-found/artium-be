@@ -64,7 +64,7 @@ public class SecurityConfig {
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
   }
 
-  /** 예외 처리: 인증 실패와 권한 부족 */
+  /** 예외 처리: 인증 실패와 권한 부족 처리 */
   private void configureExceptionHandling(HttpSecurity http) throws Exception {
     http.exceptionHandling(
         e ->
