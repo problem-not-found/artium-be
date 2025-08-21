@@ -72,7 +72,7 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            cd /home/ubuntu/actions-runner/_work/artium-be/artium-be
+            cd /home/ec2-user/actions-runner/_work/artium-be/artium-be
             if [ "${PROFILE}" = "dev" ]; then
               echo "$ENV_DEV" > .env
             elif [ "${PROFILE}" = "prod" ]; then
