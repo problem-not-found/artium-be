@@ -378,7 +378,7 @@ public class JwtProvider {
       }
     }
 
-    throw new CustomException(AuthErrorCode.ACCESS_TOKEN_NOT_FOUND);
+    return null;
   }
 
   public String extractRefreshToken(HttpServletRequest request) {

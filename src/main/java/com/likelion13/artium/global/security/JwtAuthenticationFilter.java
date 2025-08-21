@@ -10,6 +10,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -51,13 +53,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                   userDetails, null, userDetails.getAuthorities());
           SecurityContextHolder.getContext().setAuthentication(authentication);
         }
+      } else if (token == null) {
+        throw new InsufficientAuthenticationException("액세스 토큰 없음");
       }
     } catch (JwtException | IllegalArgumentException e) {
-      log.error("JWT 검증 실패 : {}", e.getMessage());
       SecurityContextHolder.clearContext();
-      response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "유효하지 않은 JWT 토큰입니다.");
-      return;
+      throw new BadCredentialsException("유효하지 않은 JWT 토큰", e);
     }
+
     filterChain.doFilter(request, response);
   }
 }
