@@ -297,7 +297,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
   public PageResponse<ExhibitionResponse> getRecommendationExhibitionPage(
       Boolean opposite, Pageable pageable) {
     User user = userService.getCurrentUser();
-    int limit = (pageable.getPageSize() < 0) ? 50 : pageable.getPageSize() * 5;
+    int limit = (pageable.getPageSize() < 0) ? 50 : pageable.getPageSize();
     List<Long> recommendIds = recommendExhibitionIds(user.getId(), opposite, limit);
 
     int total = recommendIds.size();
