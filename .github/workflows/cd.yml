@@ -67,10 +67,10 @@ jobs:
           ENV_PROD: ${{ secrets.ENV_PROD }}
         with:
           envs: PROFILE,ENV_DEV,ENV_PROD
-          host: ${{ secrets.SSH_HOST }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          host: ${{ github.ref == 'refs/heads/main' && secrets.SSH_HOST_PROD || github.ref == 'refs/heads/develop' && secrets.SSH_HOST_DEV }}
+          port: ${{ github.ref == 'refs/heads/main' && secrets.SSH_PORT_PROD || github.ref == 'refs/heads/develop' && secrets.SSH_PORT_DEV }}
+          username: ${{ github.ref == 'refs/heads/main' && secrets.SSH_USERNAME_PROD || github.ref == 'refs/heads/develop' && secrets.SSH_USERNAME_DEV }}
+          key: ${{ github.ref == 'refs/heads/main' && secrets.SSH_PRIVATE_KEY_PROD || github.ref == 'refs/heads/develop' && secrets.SSH_PRIVATE_KEY_DEV }}
           script: |
             cd /home/ec2-user/actions-runner/_work/artium-be/artium-be
             if [ "${PROFILE}" = "dev" ]; then
