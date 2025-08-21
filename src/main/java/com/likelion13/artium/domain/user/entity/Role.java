@@ -7,9 +7,9 @@ import io.swagger.v3.oas.annotations.media.Schema;
 
 public enum Role {
   @Schema(description = "사용자")
-  USER,
+  ROLE_USER,
   @Schema(description = "관리자")
-  ADMIN,
+  ROLE_ADMIN,
   @Schema(description = "개발자")
-  DEVELOPER;
+  ROLE_DEVELOPER;
 }

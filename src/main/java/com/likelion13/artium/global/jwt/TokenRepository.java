@@ -17,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
  * <p>Redis를 사용하여 Refresh Token 및 블랙리스트 토큰을 관리합니다. Refresh Token은 사용자별로 저장되며, 블랙리스트는 로그아웃된 토큰을
  * 관리합니다.
  *
- * @author YFIVE
  * @since 1.0.0
  */
 @Slf4j
@@ -29,10 +28,10 @@ public class TokenRepository {
   private final JwtProperties jwtProperties;
 
   /** Refresh Token Redis 키 접두사 */
-  private static final String REFRESH_TOKEN_PREFIX = "refresh:";
+  private static final String REFRESH_TOKEN_PREFIX = "RT:";
 
   /** 블랙리스트 Redis 키 접두사 */
-  private static final String BLACKLIST_PREFIX = "blacklist:";
+  private static final String BLACKLIST_PREFIX = "BL:";
 
   /**
    * Refresh Token을 Redis에 저장합니다.
@@ -86,7 +85,6 @@ public class TokenRepository {
   public void addToBlacklist(String token, long expiration) {
     String key = BLACKLIST_PREFIX + token;
     redisTemplate.opsForValue().set(key, "blacklisted", expiration, TimeUnit.SECONDS);
-    log.debug("Token added to blacklist: {}", token);
   }
 
   /**
@@ -99,6 +97,6 @@ public class TokenRepository {
    */
   public boolean isBlacklisted(String token) {
     String key = BLACKLIST_PREFIX + token;
-    return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+    return redisTemplate.hasKey(key);
   }
 }

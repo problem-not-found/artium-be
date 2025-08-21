@@ -1,0 +1,98 @@
+/* 
+ * Copyright (c) LikeLion13th Problem not Found 
+ */
+package com.likelion13.artium.domain.pieceLike.service;
+
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.likelion13.artium.domain.piece.entity.Piece;
+import com.likelion13.artium.domain.piece.entity.ProgressStatus;
+import com.likelion13.artium.domain.piece.exception.PieceErrorCode;
+import com.likelion13.artium.domain.piece.repository.PieceRepository;
+import com.likelion13.artium.domain.pieceLike.dto.response.PieceLikeResponse;
+import com.likelion13.artium.domain.pieceLike.entity.PieceLike;
+import com.likelion13.artium.domain.pieceLike.exception.PieceLikeErrorCode;
+import com.likelion13.artium.domain.pieceLike.mapper.PieceLikeMapper;
+import com.likelion13.artium.domain.pieceLike.repository.PieceLikeRepository;
+import com.likelion13.artium.domain.user.entity.User;
+import com.likelion13.artium.domain.user.service.UserService;
+import com.likelion13.artium.global.exception.CustomException;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Service
+@Slf4j
+@RequiredArgsConstructor
+public class PieceLikeServiceImpl implements PieceLikeService {
+
+  private final PieceRepository pieceRepository;
+  private final PieceLikeMapper pieceLikeMapper;
+  private final PieceLikeRepository pieceLikeRepository;
+  private final UserService userService;
+
+  @Override
+  @Transactional
+  public PieceLikeResponse likePiece(Long pieceId) {
+
+    User user = userService.getCurrentUser();
+
+    Piece piece =
+        pieceRepository
+            .findById(pieceId)
+            .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
+
+    if (piece.getUser().getId().equals(user.getId())) {
+      log.error(
+          "자신의 작품에 좋아요 시도 - requestUserId: {}, piece.userId: {}",
+          user.getId(),
+          piece.getUser().getId());
+      throw new CustomException(PieceLikeErrorCode.SELF_LIKE_NOT_ALLOWED);
+    }
+
+    if (piece.getProgressStatus() == ProgressStatus.WAITING) {
+      log.error(
+          "승인 대기 중인 작품에 좋아요 시도 - requestUserId: {}, piece.progressStatus: {}",
+          user.getId(),
+          piece.getProgressStatus());
+      throw new CustomException(PieceLikeErrorCode.INVALID_LIKE_REQUEST);
+    }
+
+    try {
+      PieceLike pieceLike = PieceLike.builder().piece(piece).user(user).build();
+
+      pieceLikeRepository.save(pieceLike);
+    } catch (DataIntegrityViolationException e) {
+      if (e.getMessage() != null && e.getMessage().contains("uq_piece_like_piece_user")) {
+        log.error("이미 좋아요 한 작품 - pieceId: {}", piece.getId());
+        throw new CustomException(PieceLikeErrorCode.ALREADY_LIKED);
+      }
+      throw e;
+    }
+
+    log.info("작품 좋아요 생성 성공 - requestUserId: {}, pieceId: {}", user.getId(), pieceId);
+    return pieceLikeMapper.toPieceLikeResponse(pieceId, true);
+  }
+
+  @Override
+  @Transactional
+  public PieceLikeResponse unlikePiece(Long pieceId) {
+
+    User user = userService.getCurrentUser();
+
+    pieceRepository
+        .findById(pieceId)
+        .orElseThrow(() -> new CustomException(PieceErrorCode.PIECE_NOT_FOUND));
+
+    PieceLike pieceLike =
+        pieceLikeRepository
+            .findByUser_IdAndPiece_Id(user.getId(), pieceId)
+            .orElseThrow(() -> new CustomException(PieceLikeErrorCode.NOT_LIKED));
+    pieceLikeRepository.delete(pieceLike);
+
+    log.info("작품 좋아요 삭제 성공- requestUserId: {}, pieceId: {}", user.getId(), pieceId);
+    return pieceLikeMapper.toPieceLikeResponse(pieceId, false);
+  }
+}

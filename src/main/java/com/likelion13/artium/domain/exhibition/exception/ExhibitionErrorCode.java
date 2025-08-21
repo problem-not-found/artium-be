@@ -1,0 +1,27 @@
+/* 
+ * Copyright (c) LikeLion13th Problem not Found 
+ */
+package com.likelion13.artium.domain.exhibition.exception;
+
+import org.springframework.http.HttpStatus;
+
+import com.likelion13.artium.global.exception.model.BaseErrorCode;
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+public enum ExhibitionErrorCode implements BaseErrorCode {
+  INVALID_DATE_RANGE("EXHIBIT_4001", "유효하지 않은 날짜 요청입니다.", HttpStatus.BAD_REQUEST),
+  INVALID_SORT_TYPE("EXHIBIT_4002", "유효하지 않은 정렬 요청입니다.", HttpStatus.BAD_REQUEST),
+  EXHIBITION_NOT_FOUND("EXHIBIT_4003", "전시를 찾을 수 없습니다.", HttpStatus.NOT_FOUND),
+  EXHIBITION_ACCESS_DENIED("EXHIBIT_4004", "해당 전시에 대한 권한이 없습니다.", HttpStatus.FORBIDDEN),
+  CANNOT_LIKE_SELF("EXHIBIT_4005", "자기 자신의 전시는 좋아요 할 수 없습니다.", HttpStatus.BAD_REQUEST),
+  EXHIBITION_NOT_FILLALL("EXHIBIT_4006", "전시가 등록되지 않았습니다.", HttpStatus.BAD_REQUEST),
+  EXHIBITION_API_ERROR("EXHIBIT_5001", "전시 API 처리 중 오류가 발생했습니다.", HttpStatus.INTERNAL_SERVER_ERROR);
+
+  private final String code;
+  private final String message;
+  private final HttpStatus status;
+}

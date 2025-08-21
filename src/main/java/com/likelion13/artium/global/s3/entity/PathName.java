@@ -3,7 +3,15 @@
  */
 package com.likelion13.artium.global.s3.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 public enum PathName {
-  FOLDER1,
-  FOLDER2
+  @Schema(description = "프로필사진")
+  PROFILE_IMAGE,
+  @Schema(description = "작품사진")
+  PIECE,
+  @Schema(description = "작품 디테일컷")
+  PIECE_DETAIL,
+  @Schema(description = "전시 썸네일사진")
+  EXHIBITION
 }

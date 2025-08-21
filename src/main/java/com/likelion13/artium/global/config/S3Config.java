@@ -36,11 +36,17 @@ public class S3Config {
   @Value("${cloud.aws.s3.bucket}")
   private String bucket;
 
-  @Value("${cloud.aws.s3.path.folder1}")
-  private String folder1Path;
+  @Value("${cloud.aws.s3.path.profile-image}")
+  private String profileImagePath;
 
-  @Value("${cloud.aws.s3.path.folder2}")
-  private String folder2Path;
+  @Value("${cloud.aws.s3.path.piece}")
+  private String piecePath;
+
+  @Value("${cloud.aws.s3.path.piece-detail}")
+  private String pieceDetailPath;
+
+  @Value("${cloud.aws.s3.path.exhibition}")
+  private String exhibitionPath;
 
   @PostConstruct
   public void init() {

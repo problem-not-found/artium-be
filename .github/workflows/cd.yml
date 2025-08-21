@@ -3,10 +3,13 @@ on:
   push:
     branches:
       - main
+      - develop
 
 jobs:
   build:
     runs-on: self-hosted
+    outputs:
+      profile: ${{ steps.set-profile.outputs.profile }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,9 +29,23 @@ jobs:
       - name: Grant execute permission for Gradlew
         run: chmod +x gradlew
 
-      - name: Build with Gradle
+      - name: Set Spring profile by branch
+        id: set-profile
         run: |
-          ./gradlew clean bootjar -Pprofile=dev
+            if [ "${GITHUB_REF##*/}" = "develop" ]; then
+              echo "PROFILE=dev" >> $GITHUB_ENV
+              echo "profile=dev" >> $GITHUB_OUTPUT
+            elif [ "${GITHUB_REF##*/}" = "main" ]; then
+              echo "PROFILE=prod" >> $GITHUB_ENV
+              echo "profile=prod" >> $GITHUB_OUTPUT
+            else
+              # 안전한 기본값
+              echo "PROFILE=dev" >> $GITHUB_ENV
+              echo "profile=dev" >> $GITHUB_OUTPUT
+            fi
+
+      - name: Build with Gradle
+        run: ./gradlew clean bootjar -Pprofile=${PROFILE}
 
       - name: Docker build & push
         run: |
@@ -44,14 +61,26 @@ jobs:
 
       - name: Deploy on server
         uses: appleboy/ssh-action@master
+        env:
+          PROFILE: ${{ needs.build.outputs.profile }}
+          ENV_DEV: ${{ secrets.ENV_DEV }}
+          ENV_PROD: ${{ secrets.ENV_PROD }}
         with:
-          host: ${{ secrets.SSH_HOST }}
-          port: ${{ secrets.SSH_PORT }}
-          username: ${{ secrets.SSH_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: PROFILE,ENV_DEV,ENV_PROD
+          host: ${{ github.ref == 'refs/heads/main' && secrets.SSH_HOST_PROD || github.ref == 'refs/heads/develop' && secrets.SSH_HOST_DEV }}
+          port: ${{ github.ref == 'refs/heads/main' && secrets.SSH_PORT_PROD || github.ref == 'refs/heads/develop' && secrets.SSH_PORT_DEV }}
+          username: ${{ github.ref == 'refs/heads/main' && secrets.SSH_USERNAME_PROD || github.ref == 'refs/heads/develop' && secrets.SSH_USERNAME_DEV }}
+          key: ${{ github.ref == 'refs/heads/main' && secrets.SSH_PRIVATE_KEY_PROD || github.ref == 'refs/heads/develop' && secrets.SSH_PRIVATE_KEY_DEV }}
           script: |
-            echo "${{ secrets.ENV_FILE }}" > /home/ubuntu/actions-runner/_work/artium-be/artium-be/.env
-            cd /home/ubuntu/actions-runner/_work/artium-be/artium-be
+            if [ "${PROFILE}" = "dev" ]; then
+              cd /home/ubuntu/actions-runner/_work/artium-be/artium-be
+              echo "$ENV_DEV" > .env
+            elif [ "${PROFILE}" = "prod" ]; then
+              cd /home/ec2-user/actions-runner/_work/artium-be/artium-be
+              echo "$ENV_PROD" > .env
+            fi
+              echo "PROFILE=${PROFILE}" >> .env
+      
             docker compose down
             docker compose pull
             docker compose up -d --build
