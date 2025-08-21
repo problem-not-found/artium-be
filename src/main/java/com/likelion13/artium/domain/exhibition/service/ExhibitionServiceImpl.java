@@ -37,14 +37,10 @@ import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionPiece;
 import com.likelion13.artium.domain.exhibition.repository.ExhibitionLikeRepository;
-import com.likelion13.artium.domain.exhibition.repository.ExhibitionPieceRepository;
 import com.likelion13.artium.domain.exhibition.repository.ExhibitionRepository;
 import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.domain.piece.exception.PieceErrorCode;
 import com.likelion13.artium.domain.piece.repository.PieceRepository;
-import com.likelion13.artium.domain.user.entity.FormatPreference;
-import com.likelion13.artium.domain.user.entity.MoodPreference;
-import com.likelion13.artium.domain.user.entity.ThemePreference;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.repository.UserRepository;
@@ -76,7 +72,6 @@ public class ExhibitionServiceImpl implements ExhibitionService {
   private final QdrantService qdrantService;
   private final ExhibitionMapper exhibitionMapper;
   private final PageMapper pageMapper;
-  private final ExhibitionPieceRepository exhibitionPieceRepository;
   private final PieceRepository pieceRepository;
 
   @Override
@@ -252,11 +247,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
             .findByUserIdAndFillAll(user.getId(), fillAll, sortedPageable)
             .map(exhibitionMapper::toExhibitionResponse);
 
-    log.info(
-        "{} 사용자의 전시 리스트 페이지 조회 - 호출된 페이지: {}, 등록 완료 여부: {}",
-        user.getNickname(),
-        pageable.getPageNumber(),
-        fillAll);
+    log.info("전시 리스트 페이지 조회 성공 - 호출된 페이지: {}, 등록 완료 여부: {}", user.getNickname(), fillAll);
     return pageMapper.toExhibitionPageResponse(page);
   }
 
@@ -306,88 +297,11 @@ public class ExhibitionServiceImpl implements ExhibitionService {
   public PageResponse<ExhibitionResponse> getRecommendationExhibitionPage(
       Boolean opposite, Pageable pageable) {
     User user = userService.getCurrentUser();
+    int limit = (pageable.getPageSize() < 0) ? 50 : pageable.getPageSize() * 5;
+    List<Long> recommendIds = recommendExhibitionIds(user.getId(), opposite, limit);
 
-    List<ThemePreference> themePrefs = user.getThemePreferences();
-    List<MoodPreference> moodPrefs = user.getMoodPreferences();
-    List<FormatPreference> formatPrefs = user.getFormatPreferences();
-
-    // 사용자 관심사 벡터 생성
-    List<float[]> prefVecs = new ArrayList<>();
-
-    for (ThemePreference pref : themePrefs) {
-      prefVecs.add(embeddingService.embed(pref.getKo()));
-    }
-    for (MoodPreference pref : moodPrefs) {
-      prefVecs.add(embeddingService.embed(pref.getKo()));
-    }
-    for (FormatPreference pref : formatPrefs) {
-      prefVecs.add(embeddingService.embed(pref.getKo()));
-    }
-
-    float[] userVector = VectorUtils.normalize(VectorUtils.mean(prefVecs));
-
-    if (userVector == null) {
-      log.info("{} 사용자의 관심사 벡터가 비어 추천 결과 없음", user.getNickname());
-      Page<ExhibitionResponse> empty =
-          Page.empty(PageRequest.of(pageable.getPageNumber(), pageable.getPageSize()));
-      return pageMapper.toExhibitionPageResponse(empty);
-    }
-
-    // 내 전시 제외
-    List<Long> excludeIds =
-        exhibitionRepository.findByUserId(user.getId()).stream().map(Exhibition::getId).toList();
-
-    // Qdrant에서 검색
-
-    int pageIndex = pageable.getPageNumber(); // 0-based
-    int fetchLimit = Math.min(200, (pageIndex + 1) * pageable.getPageSize() * 5);
-
-    List<Map<String, Object>> result =
-        qdrantService.search(userVector, fetchLimit, excludeIds, CollectionName.EXHIBITION);
-
-    // 점수 기준 정렬
-    List<Map<String, Object>> sorted = new ArrayList<>(result);
-    if (opposite) {
-      sorted.sort(Comparator.comparingDouble(a -> ((Number) a.get("score")).doubleValue())); // 오름차순
-    } else {
-      sorted.sort(
-          (a, b) ->
-              Double.compare(
-                  ((Number) b.get("score")).doubleValue(),
-                  ((Number) a.get("score")).doubleValue())); // 내림차순
-    }
-
-    // 상위 20개 후보만 선택
-    List<Long> candidateIds =
-        sorted.stream()
-            .map(m -> (Map<String, Object>) m.get("payload"))
-            .filter(Objects::nonNull)
-            .map(p -> ((Number) p.get("exhibitionId")).longValue())
-            .toList();
-
-    // 예정/진행중 전시만 필터링
-    List<Long> filtered =
-        candidateIds.isEmpty()
-            ? List.of()
-            : exhibitionRepository
-                .findIdsByIdsInAndStatusIn(
-                    candidateIds,
-                    List.of(ExhibitionStatus.ONGOING, ExhibitionStatus.UPCOMING),
-                    Pageable.unpaged())
-                .getContent();
-
-    // 추천 순서 보장
-    Map<Long, Integer> pos = new HashMap<>();
-    for (int i = 0; i < candidateIds.size(); i++) {
-      pos.put(candidateIds.get(i), i);
-    }
-    List<Long> recommendIds =
-        filtered.stream()
-            .sorted(Comparator.comparingInt(id -> pos.getOrDefault(id, Integer.MAX_VALUE)))
-            .toList();
-
-    // 페이징 슬라이스 계산
     int total = recommendIds.size();
+    int pageIndex = pageable.getPageNumber();
     int pageSize = pageable.getPageSize();
     int start = Math.min(pageIndex * pageSize, total);
     int end = Math.min(start + pageSize, total);
@@ -397,12 +311,8 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       content = List.of();
     } else {
       List<Long> pageIds = recommendIds.subList(start, end);
-
-      // 조회 후 순서 복원
       Map<Long, Integer> pageOrder = new HashMap<>();
-      for (int i = 0; i < pageIds.size(); i++) {
-        pageOrder.put(pageIds.get(i), i);
-      }
+      for (int i = 0; i < pageIds.size(); i++) pageOrder.put(pageIds.get(i), i);
       List<Exhibition> entities = new ArrayList<>(exhibitionRepository.findAllById(pageIds));
       content =
           entities.stream()
@@ -412,14 +322,12 @@ public class ExhibitionServiceImpl implements ExhibitionService {
               .map(exhibitionMapper::toExhibitionResponse)
               .toList();
     }
-
     Page<ExhibitionResponse> page = new PageImpl<>(content, pageable, total);
-
     log.info(
         "{} 사용자의 {} 추천 전시 리스트 페이지 조회 - 호출된 페이지: {}",
         user.getNickname(),
         opposite ? "관심사 반대" : "색다른 도전",
-        pageable.getPageNumber());
+        pageIndex);
     return pageMapper.toExhibitionPageResponse(page);
   }
 
@@ -585,5 +493,58 @@ public class ExhibitionServiceImpl implements ExhibitionService {
               return ExhibitionPiece.builder().exhibition(null).piece(exhbitionPiece).build();
             })
         .collect(Collectors.toList());
+  }
+
+  private List<Long> recommendExhibitionIds(Long userId, Boolean opposite, int topN) {
+    int limit = (topN < 0) ? 50 : topN;
+    float[] userVector =
+        VectorUtils.normalize(qdrantService.retrieveVectorById(userId, CollectionName.USER));
+    if (userVector == null || userVector.length == 0) {
+      log.info("사용자 임베딩 벡터가 없어서 추천 결과 없음 - userId: {}", userId);
+      return List.of();
+    }
+    // 내 전시 제외
+    List<Long> excludeIds =
+        exhibitionRepository.findByUserId(userId).stream().map(Exhibition::getId).toList();
+    // Qdrant 검색
+    List<Map<String, Object>> result =
+        qdrantService.search(userVector, limit, excludeIds, CollectionName.EXHIBITION);
+    // 점수 기준 정렬
+    List<Map<String, Object>> sorted = new ArrayList<>(result);
+    sorted.sort(
+        (a, b) -> {
+          double sa = ((Number) a.get("score")).doubleValue();
+          double sb = ((Number) b.get("score")).doubleValue();
+          return Boolean.TRUE.equals(opposite) ? Double.compare(sa, sb) : Double.compare(sb, sa);
+        });
+    // 상위 limit만 선택
+    sorted = sorted.subList(0, Math.min(limit, sorted.size()));
+    // 후보 ID 추출
+    List<Long> candidateIds =
+        sorted.stream()
+            .map(m -> (Map<String, Object>) m.get("payload"))
+            .filter(Objects::nonNull)
+            .map(p -> ((Number) p.get("exhibitionId")).longValue())
+            .toList();
+    log.info("추천 기반 후보 전시 아이디 리스트 - candidateIds : {}", candidateIds);
+    // 후보 순서 맵핑
+    Map<Long, Integer> pos = new HashMap<>();
+    for (int i = 0; i < candidateIds.size(); i++) pos.put(candidateIds.get(i), i);
+    // 진행중/예정 전시만 필터링
+    List<Long> filtered =
+        candidateIds.isEmpty()
+            ? List.of()
+            : exhibitionRepository
+                .findIdsByIdsInAndStatusIn(
+                    candidateIds,
+                    List.of(ExhibitionStatus.ONGOING, ExhibitionStatus.UPCOMING),
+                    Pageable.unpaged())
+                .getContent()
+                .stream()
+                .toList();
+
+    return filtered.stream()
+        .sorted(Comparator.comparingInt(id -> pos.getOrDefault(id, Integer.MAX_VALUE)))
+        .toList();
   }
 }

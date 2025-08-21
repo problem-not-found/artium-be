@@ -20,15 +20,15 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 전역 예외 처리 클래스입니다.
  *
- * <p>Spring Controller에서 발생하는 예외를 처리하고, 클라이언트에게
- * 일관된 형태의 {@link BaseResponse}를 반환합니다.
+ * <p>Spring Controller에서 발생하는 예외를 처리하고, 클라이언트에게 일관된 형태의 {@link BaseResponse}를 반환합니다.
  *
  * <p>처리 범위:
+ *
  * <ul>
- *   <li>커스텀 예외 (CustomException)</li>
- *   <li>유효성 검증 실패 (MethodArgumentNotValidException)</li>
- *   <li>정적 리소스 미존재 (NoResourceFoundException)</li>
- *   <li>기타 예상치 못한 예외 (Exception)</li>
+ *   <li>커스텀 예외 (CustomException)
+ *   <li>유효성 검증 실패 (MethodArgumentNotValidException)
+ *   <li>정적 리소스 미존재 (NoResourceFoundException)
+ *   <li>기타 예상치 못한 예외 (Exception)
  * </ul>
  */
 @Slf4j
