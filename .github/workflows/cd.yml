@@ -72,10 +72,11 @@ jobs:
           username: ${{ github.ref == 'refs/heads/main' && secrets.SSH_USERNAME_PROD || github.ref == 'refs/heads/develop' && secrets.SSH_USERNAME_DEV }}
           key: ${{ github.ref == 'refs/heads/main' && secrets.SSH_PRIVATE_KEY_PROD || github.ref == 'refs/heads/develop' && secrets.SSH_PRIVATE_KEY_DEV }}
           script: |
-            cd /home/ec2-user/actions-runner/_work/artium-be/artium-be
             if [ "${PROFILE}" = "dev" ]; then
+              cd /home/ubuntu/actions-runner/_work/artium-be/artium-be
               echo "$ENV_DEV" > .env
             elif [ "${PROFILE}" = "prod" ]; then
+              cd /home/ec2-user/actions-runner/_work/artium-be/artium-be
               echo "$ENV_PROD" > .env
             fi
               echo "PROFILE=${PROFILE}" >> .env
