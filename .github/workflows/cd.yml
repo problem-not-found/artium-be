@@ -73,14 +73,14 @@ jobs:
           key: ${{ github.ref == 'refs/heads/main' && secrets.SSH_PRIVATE_KEY_PROD || github.ref == 'refs/heads/develop' && secrets.SSH_PRIVATE_KEY_DEV }}
           script: |
             if [ "${PROFILE}" = "dev" ]; then
-              cd /home/ubuntu/actions-runner/_work/artium-be/artium-be
+              cd /home/ubuntu/actions-runner/_work/artium-be/artium-be/docker
               echo "$ENV_DEV" > .env
               echo "PROFILE=dev" >> .env
               docker compose -f ./docker/docker-compose.yml -f ./docker/docker-compose-dev.yml down
               docker compose -f ./docker/docker-compose.yml -f ./docker/docker-compose-dev.yml pull
               docker compose -f ./docker/docker-compose.yml -f ./docker/docker-compose-dev.yml up -d --build
             elif [ "${PROFILE}" = "prod" ]; then
-              cd /home/ec2-user/actions-runner/_work/artium-be/artium-be
+              cd /home/ec2-user/actions-runner/_work/artium-be/artium-be/docker
               echo "$ENV_PROD" > .env
               echo "PROFILE=prod" >> .env
             
