@@ -74,11 +74,11 @@ jobs:
           script: |
             if [ "${PROFILE}" = "dev" ]; then
               cd /home/ubuntu/actions-runner/_work/artium-be/artium-be/docker
-              echo "$ENV_DEV" > ./.env
+              echo "$ENV_DEV" | sed 's/^/"/;s/$/"/' > ./.env
               echo "PROFILE=dev" >> ./.env
-              docker compose -f docker-compose.yml -f docker-compose-dev.yml down
-              docker compose -f docker-compose.yml -f docker-compose-dev.yml pull
-              docker compose -f docker-compose.yml -f docker-compose-dev.yml up -d --build
+              docker compose -f docker-compose.yml -f docker-compose-dev.yml --env-file ./.env down
+              docker compose -f docker-compose.yml -f docker-compose-dev.yml --env-file ./.env pull
+              docker compose -f docker-compose.yml -f docker-compose-dev.yml --env-file ./.env up -d --build
             elif [ "${PROFILE}" = "prod" ]; then
               cd /home/ec2-user/actions-runner/_work/artium-be/artium-be/docker
               echo "$ENV_PROD" > ./.env
@@ -94,9 +94,9 @@ jobs:
               fi
             
               echo "Starting $COLOR deployment"
-              docker compose -f docker-compose-${COLOR}.yml pull || true
-              docker compose -f docker-compose-${COLOR}.yml up -d --build
+              docker compose -f docker-compose.yml -f docker-compose-${COLOR}.yml pull || true
+              docker compose -f docker-compose.yml -f docker-compose-${COLOR}.yml up -d --build
             
               echo "Stopping previous $PREV_COLOR deployment"
-              docker compose -f docker-compose-${PREV_COLOR}.yml down || true
+              docker compose -f docker-compose.yml -f docker-compose-${PREV_COLOR}.yml down || true
             fi
