@@ -74,7 +74,7 @@ jobs:
           script: |
             if [ "${PROFILE}" = "dev" ]; then
               cd /home/ubuntu/actions-runner/_work/artium-be/artium-be/docker
-              echo "$ENV_DEV" | sed 's/^/"/;s/$/"/' > ./.env
+              echo "$ENV_DEV" > ./.env
               echo "PROFILE=dev" >> ./.env
               docker compose -f docker-compose.yml -f docker-compose-dev.yml --env-file ./.env down
               docker compose -f docker-compose.yml -f docker-compose-dev.yml --env-file ./.env pull
