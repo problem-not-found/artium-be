@@ -79,6 +79,7 @@ jobs:
               docker compose -f docker-compose.yml -f docker-compose-dev.yml --env-file ./.env down
               docker compose -f docker-compose.yml -f docker-compose-dev.yml --env-file ./.env pull
               docker compose -f docker-compose.yml -f docker-compose-dev.yml --env-file ./.env up -d --build
+
             elif [ "${PROFILE}" = "prod" ]; then
               cd /home/ec2-user/actions-runner/_work/artium-be/artium-be/docker
               echo "$ENV_PROD" > ./.env
