@@ -22,4 +22,4 @@ services:
 
 networks:
   artium-network:
-    external: true
+    external: false
