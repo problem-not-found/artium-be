@@ -1,4 +1,8 @@
+<<<<<<<< HEAD:docker/docker-compose-dev.yml
 # 개발 환경용 Compose 파일
+========
+
+>>>>>>>> develop:docker-compose.yml
 services:
   app:
     image: unijuni/artium:latest
@@ -87,12 +91,3 @@ services:
     networks:
       - artium-network
     restart: unless-stopped
-
-networks:
-  artium-network:
-    driver: bridge
-
-volumes:
-  mysql-data:
-  redis-data:
-  qdrant-data:
