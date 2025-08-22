@@ -74,15 +74,15 @@ jobs:
           script: |
             if [ "${PROFILE}" = "dev" ]; then
               cd /home/ubuntu/actions-runner/_work/artium-be/artium-be/docker
-              echo "$ENV_DEV" > .env
-              echo "PROFILE=dev" >> .env
+              echo "$ENV_DEV" > ./.env
+              echo "PROFILE=dev" >> ./.env
               docker compose -f docker-compose.yml -f docker-compose-dev.yml down
               docker compose -f docker-compose.yml -f docker-compose-dev.yml pull
               docker compose -f docker-compose.yml -f docker-compose-dev.yml up -d --build
             elif [ "${PROFILE}" = "prod" ]; then
               cd /home/ec2-user/actions-runner/_work/artium-be/artium-be/docker
-              echo "$ENV_PROD" > .env
-              echo "PROFILE=prod" >> .env
+              echo "$ENV_PROD" > ./.env
+              echo "PROFILE=prod" >> ./.env
             
               ACTIVE_COLOR=$(echo $ACTIVE_COLOR)
               if [ "$ACTIVE_COLOR" = "blue" ]; then
