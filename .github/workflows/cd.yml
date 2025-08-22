@@ -49,7 +49,7 @@ jobs:
 
       - name: Docker build & push
         run: |
-          docker buildx build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }} --push .
+          docker buildx build -f ./docker/Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }} --push .
 
 
   deploy:
