@@ -1,6 +1,25 @@
-# 공용 Compose 파일 (Blue/Green 앱 컨테이너와 관계없는 공용 서비스)
-# DB, Redis, Qdrant, Dozzle 등 공용으로 사용되는 stateful service 정의
+# 개발 환경용 Compose 파일
 services:
+  app:
+    image: unijuni/artium:latest
+    container_name: artium-app
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: ${PROFILE:-dev}
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USER}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASS}
+    command: ["java", "-jar", "app.jar"]
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - artium-network
+    restart: unless-stopped
+
   mysql:
     image: mysql:8.0
     container_name: artium-mysql
