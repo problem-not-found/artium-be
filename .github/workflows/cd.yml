@@ -49,7 +49,7 @@ jobs:
 
       - name: Docker build & push
         run: |
-          docker buildx build -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }} --push .
+          docker buildx build -f ./docker/Dockerfile -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }} --push .
 
 
   deploy:
@@ -73,14 +73,30 @@ jobs:
           key: ${{ github.ref == 'refs/heads/main' && secrets.SSH_PRIVATE_KEY_PROD || github.ref == 'refs/heads/develop' && secrets.SSH_PRIVATE_KEY_DEV }}
           script: |
             if [ "${PROFILE}" = "dev" ]; then
-              cd /home/ubuntu/actions-runner/_work/artium-be/artium-be
+              cd /home/ubuntu/actions-runner/_work/artium-be/artium-be/docker
               echo "$ENV_DEV" > .env
+              echo "PROFILE=dev" >> .env
+              docker compose -f docker-compose.yml -f docker-compose-dev.yml down
+              docker compose -f docker-compose.yml -f docker-compose-dev.yml pull
+              docker compose -f docker-compose.yml -f docker-compose-dev.yml up -d --build
             elif [ "${PROFILE}" = "prod" ]; then
-              cd /home/ec2-user/actions-runner/_work/artium-be/artium-be
+              cd /home/ec2-user/actions-runner/_work/artium-be/artium-be/docker
               echo "$ENV_PROD" > .env
+              echo "PROFILE=prod" >> .env
+            
+              ACTIVE_COLOR=$(echo $ACTIVE_COLOR)
+              if [ "$ACTIVE_COLOR" = "blue" ]; then
+                COLOR="green"
+                PREV_COLOR="blue"
+              else
+                COLOR="blue"
+                PREV_COLOR="green"
+              fi
+            
+              echo "Starting $COLOR deployment"
+              docker compose -f docker-compose-${COLOR}.yml pull || true
+              docker compose -f docker-compose-${COLOR}.yml up -d --build
+            
+              echo "Stopping previous $PREV_COLOR deployment"
+              docker compose -f docker-compose-${PREV_COLOR}.yml down || true
             fi
-              echo "PROFILE=${PROFILE}" >> .env
-      
-            docker compose down
-            docker compose pull
-            docker compose up -d --build

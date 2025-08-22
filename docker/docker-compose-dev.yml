@@ -1,8 +1,8 @@
-
+# 개발 환경용 Compose 파일
 services:
   app:
     image: unijuni/artium:latest
-    container_name: artium-app
+    container_name: artium-app-dev
     ports:
       - "8080:8080"
     environment:
@@ -87,3 +87,12 @@ services:
     networks:
       - artium-network
     restart: unless-stopped
+
+networks:
+  artium-network:
+    driver: bridge
+
+volumes:
+  mysql-data:
+  redis-data:
+  qdrant-data:
