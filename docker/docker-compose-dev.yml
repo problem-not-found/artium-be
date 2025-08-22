@@ -1,8 +1,4 @@
-<<<<<<<< HEAD:docker/docker-compose-dev.yml
 # 개발 환경용 Compose 파일
-========
-
->>>>>>>> develop:docker-compose.yml
 services:
   app:
     image: unijuni/artium:latest
