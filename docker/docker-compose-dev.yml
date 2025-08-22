@@ -2,7 +2,7 @@
 services:
   app:
     image: unijuni/artium:latest
-    container_name: artium-app
+    container_name: artium-app-dev
     ports:
       - "8080:8080"
     environment:
