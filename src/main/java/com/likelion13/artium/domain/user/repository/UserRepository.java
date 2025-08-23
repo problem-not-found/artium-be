@@ -60,8 +60,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
       @Param("status") ExhibitionStatus status,
       Pageable pageable);
 
-  @Query(
-      "SELECT DISTINCT u from User u LEFT JOIN u.pieces p WHERE u.age= :age AND u.id != :userId AND p.progressStatus NOT IN :statuses ORDER BY p.createdAt DESC")
+  @Query("SELECT u FROM User u LEFT JOIN u.pieces p " +
+      "WHERE u.age = :age AND u.id <> :id AND p.progressStatus NOT IN :statuses " +
+      "GROUP BY u.id " +
+      "ORDER BY MAX(p.createdAt) DESC")
   Page<User> findSameAgeUsers(
       @Param("userId") Long userId,
       @Param("age") Age age,
