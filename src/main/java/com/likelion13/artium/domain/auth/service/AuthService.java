@@ -52,4 +52,6 @@ public interface AuthService {
    * @throws CustomException Refresh Token이 유효하지 않거나 만료된 경우 발생
    */
   String reissueAccessToken(String refreshToken);
+
+  TokenResponse testLogin();
 }

@@ -20,6 +20,7 @@ import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
+import com.likelion13.artium.domain.user.dto.response.UserParticipateResponse;
 import com.likelion13.artium.domain.user.dto.response.UserResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
 import com.likelion13.artium.domain.user.entity.FormatPreference;
@@ -144,6 +145,15 @@ public class UserMapper {
         .moodPreferences(user.getMoodPreferences().stream().map(MoodPreference::getKo).toList())
         .formatPreferences(
             user.getFormatPreferences().stream().map(FormatPreference::getKo).toList())
+        .build();
+  }
+
+  public UserParticipateResponse toUserParticipateResponse(
+      ExhibitionParticipant exhibitionParticipant) {
+    return UserParticipateResponse.builder()
+        .exhibitionId(exhibitionParticipant.getExhibition().getId())
+        .thumbnailImageUrl(exhibitionParticipant.getExhibition().getThumbnailImageUrl())
+        .title(exhibitionParticipant.getExhibition().getTitle())
         .build();
   }
 }

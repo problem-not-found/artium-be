@@ -6,6 +6,7 @@ package com.likelion13.artium.domain.exhibition.mapping;
 import jakarta.persistence.*;
 
 import com.likelion13.artium.domain.exhibition.entity.Exhibition;
+import com.likelion13.artium.domain.exhibition.entity.ParticipateStatus;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.global.common.BaseTimeEntity;
 
@@ -31,4 +32,14 @@ public class ExhibitionParticipant extends BaseTimeEntity {
   @ManyToOne(fetch = FetchType.LAZY)
   @JoinColumn(name = "user_id", nullable = false)
   private User user;
+
+  @Column(name = "participate_status")
+  @Enumerated(EnumType.STRING)
+  @Builder.Default
+  private ParticipateStatus participateStatus = ParticipateStatus.REQUESTED;
+
+  public void updateStatus(ParticipateStatus status) {
+
+    this.participateStatus = status;
+  }
 }

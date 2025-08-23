@@ -27,6 +27,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.likelion13.artium.domain.exhibition.entity.ExhibitionStatus;
+import com.likelion13.artium.domain.exhibition.entity.ParticipateStatus;
+import com.likelion13.artium.domain.exhibition.exception.ExhibitionErrorCode;
+import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
 import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.domain.piece.entity.ProgressStatus;
 import com.likelion13.artium.domain.piece.entity.SaveStatus;
@@ -43,6 +46,7 @@ import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
+import com.likelion13.artium.domain.user.dto.response.UserParticipateResponse;
 import com.likelion13.artium.domain.user.dto.response.UserResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
 import com.likelion13.artium.domain.user.entity.Age;
@@ -317,6 +321,28 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional
+  public String updateUserParticipation(Long exhibitionId) {
+
+    User user = getCurrentUser();
+
+    ExhibitionParticipant participant =
+        user.getExhibitionParticipants().stream()
+            .filter(ep -> ep.getExhibition().getId().equals(exhibitionId))
+            .findFirst()
+            .orElseThrow(() -> new CustomException(ExhibitionErrorCode.EXHIBITION_ACCESS_DENIED));
+
+    participant.updateStatus(ParticipateStatus.APPROVED);
+
+    log.info(
+        "사용자 전시 참여 상태 변경 - userId: {}, exhibitionId: {}, newStatus: {}",
+        user.getId(),
+        exhibitionId,
+        ParticipateStatus.APPROVED);
+    return "전시 참여 상태가 APPROVED로 변경되었습니다.";
+  }
+
+  @Override
+  @Transactional
   public String deleteUser() {
 
     User user = getCurrentUser();
@@ -538,6 +564,42 @@ public class UserServiceImpl implements UserService {
 
     log.info("코드 포함 사용자 검색 성공 - code: {}, totalElements: {}", code, page.getTotalElements());
     return pageMapper.toUserSummaryPageResponse(responsePage);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public Integer getUserParticipationCount(ParticipateStatus status) {
+    User user = getCurrentUser();
+
+    int count =
+        (int)
+            user.getExhibitionParticipants().stream()
+                .filter(ep -> ep.getParticipateStatus() == status)
+                .count();
+
+    log.info("사용자 전시 참여 개수 조회 - userId: {}, status: {}, count: {}", user.getId(), status, count);
+    return count;
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public List<UserParticipateResponse> getUserParticipation(ParticipateStatus status) {
+
+    User user = getCurrentUser();
+
+    List<UserParticipateResponse> responses =
+        user.getExhibitionParticipants().stream()
+            .filter(ep -> ep.getParticipateStatus() == status)
+            .map(userMapper::toUserParticipateResponse)
+            .toList();
+
+    log.info(
+        "사용자 전시 참여 정보 조회 성공 - userId: {}, status: {}, count: {}",
+        user.getId(),
+        status,
+        responses.size());
+
+    return responses;
   }
 
   @Override

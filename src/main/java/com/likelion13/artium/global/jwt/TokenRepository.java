@@ -45,7 +45,7 @@ public class TokenRepository {
     String key = REFRESH_TOKEN_PREFIX + username;
     redisTemplate
         .opsForValue()
-        .set(key, refreshToken, jwtProperties.getRefreshTokenTtlInDays(), TimeUnit.DAYS);
+        .set(key, refreshToken, jwtProperties.getRefreshTokenValidityInSeconds(), TimeUnit.DAYS);
     log.debug("Refresh Token saved for user: {}", username);
   }
 
