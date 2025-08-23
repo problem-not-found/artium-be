@@ -3,6 +3,7 @@
  */
 package com.likelion13.artium.domain.exhibition.service;
 
+import com.likelion13.artium.domain.exhibition.entity.ParticipateStatus;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -438,14 +439,17 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
     User currentUser = userService.getCurrentUser();
 
-    // 현재 사용자가 참여자 목록에 있는지 확인
-    boolean isParticipant =
-        exhibition.getExhibitionParticipants().stream()
-            .anyMatch(p -> p.getUser().getId().equals(currentUser.getId()));
+    // 주최자(owner) 또는 승인된(APPROVED) 참여자인지 확인
+        boolean isOwner = exhibition.getUser().getId().equals(currentUser.getId());
+        boolean isApprovedParticipant = exhibition.getExhibitionParticipants().stream()
+                .anyMatch(p ->
+                    p.getUser().getId().equals(currentUser.getId())
+                        && p.getParticipateStatus() == ParticipateStatus.APPROVED
+                    );
 
-    if (!isParticipant) {
-      throw new CustomException(ExhibitionErrorCode.EXHIBITION_ACCESS_DENIED);
-    }
+            if (!(isOwner || isApprovedParticipant)) {
+            throw new CustomException(ExhibitionErrorCode.EXHIBITION_ACCESS_DENIED);
+          }
 
     List<ExhibitionPiece> newPieces =
         request.getPieceIdList().stream()

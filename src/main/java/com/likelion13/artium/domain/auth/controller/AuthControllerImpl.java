@@ -85,9 +85,9 @@ public class AuthControllerImpl implements AuthController {
     TokenResponse tokenResponse = authService.testLogin();
 
     jwtProvider.addJwtToCookie(
-        response, tokenResponse.getRefreshToken(), "REFRESH_TOKEN", 2 * 24 * 60 * 60);
+        response, tokenResponse.getRefreshToken(), "REFRESH_TOKEN", 7 * 24 * 60 * 60);
     jwtProvider.addJwtToCookie(
-        response, tokenResponse.getAccessToken(), "ACCESS_TOKEN", 7 * 24 * 60 * 60);
+        response, tokenResponse.getAccessToken(), "ACCESS_TOKEN", 2 * 24 * 60 * 60);
 
     return ResponseEntity.status(HttpStatus.CREATED)
         .body(BaseResponse.success(201, "로그인에 성공하였습니다.", tokenResponse.getAccessToken()));
