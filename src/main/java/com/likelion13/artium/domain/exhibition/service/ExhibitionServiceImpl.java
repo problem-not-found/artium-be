@@ -378,10 +378,8 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     }
 
     String imageUrl;
-
     if (image != null) {
       String newImageUrl = s3Service.uploadFile(PathName.EXHIBITION, image);
-
       if (exhibition.getThumbnailImageUrl() != null) {
         s3Service.deleteFile(s3Service.extractKeyNameFromUrl(exhibition.getThumbnailImageUrl()));
       }
@@ -394,7 +392,14 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       ExhibitionStatus status = determineStatus(request.getStartDate(), request.getEndDate());
 
       List<ExhibitionParticipant> participants = buildParticipants(request.getParticipantIdList());
-      List<ExhibitionPiece> pieces = buildPieces(request.getPieceIdList());
+
+      List<Long> pieceIds = request.getPieceIdList();
+      List<Long> distinctPieceIds = pieceIds.stream().distinct().toList();
+      if (distinctPieceIds.size() != pieceIds.size()) {
+        throw new CustomException(PieceErrorCode.ALREADY_REGISTERED_PIECE);
+      }
+
+      List<ExhibitionPiece> pieces = buildPieces(distinctPieceIds);
 
       exhibition.getExhibitionParticipants().clear();
       participants.forEach(p -> p.setExhibition(exhibition));

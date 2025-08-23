@@ -19,7 +19,7 @@ public enum PieceErrorCode implements BaseErrorCode {
   DETAIL_IMAGE_NOT_BELONG_TO_PIECE("PIECE_4002", "해당 작품의 디테일 이미지가 아닙니다.", HttpStatus.BAD_REQUEST),
   INVALID_APPLICATION("PIECE_4003", "유효하지 않은 작품 신청입니다.", HttpStatus.BAD_REQUEST),
   INVALID_SORT_TYPE("PIECE_4004", "유효하지 않은 정렬 요청입니다.", HttpStatus.BAD_REQUEST),
-  ;
+  ALREADY_REGISTERED_PIECE("PIECE_4005", "이미 등록된 작품입니다.", HttpStatus.BAD_REQUEST);
 
   private final String code;
   private final String message;
