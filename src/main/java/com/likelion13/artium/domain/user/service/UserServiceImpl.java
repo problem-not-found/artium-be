@@ -696,6 +696,18 @@ public class UserServiceImpl implements UserService {
     Page<CreatorFeedResponse> page;
 
     switch (sortBy) {
+      case HOTTEST:
+        page =
+            userRepository
+                .findHottestCreators(user.getId(), pageable)
+                .map(
+                    u ->
+                        userMapper.toCreatorFeedResponse(
+                            u,
+                            userLikeRepository.existsByLiker_IdAndLiked_Id(
+                                user.getId(), u.getId())));
+        log.info("가장 인기 있는 크리에이터 리스트 페이지 조회 성공");
+        break;
       case LATEST_OPEN:
         LocalDate cutoffDate = LocalDate.now().minusDays(7);
         page =

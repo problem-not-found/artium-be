@@ -66,7 +66,6 @@ public interface QdrantService {
    */
   float[] retrieveVectorById(Long id, CollectionName collectionName);
 
-
   /**
    * @param query
    * @param limit

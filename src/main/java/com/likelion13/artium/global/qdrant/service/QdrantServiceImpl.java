@@ -118,10 +118,14 @@ public class QdrantServiceImpl implements QdrantService {
                         .queryParam("with_payload", false)
                         .build(getPrefix(collectionName), id))
             .retrieve()
-            .onStatus(s -> s.is4xxClientError() || s.is5xxServerError(),
-                r -> r.bodyToMono(String.class)
-                    .flatMap(msg -> Mono.error(
-                        new CustomException(QdrantErrorCode.QDRANT_REQUEST_FAILED))))
+            .onStatus(
+                s -> s.is4xxClientError() || s.is5xxServerError(),
+                r ->
+                    r.bodyToMono(String.class)
+                        .flatMap(
+                            msg ->
+                                Mono.error(
+                                    new CustomException(QdrantErrorCode.QDRANT_REQUEST_FAILED))))
             .bodyToMono(Map.class)
             .block();
 

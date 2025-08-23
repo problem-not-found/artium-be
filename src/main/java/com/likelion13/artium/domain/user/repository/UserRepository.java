@@ -35,6 +35,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
   boolean existsByCodeAndIdNot(String code, Long id);
 
   @Query(
+      "SELECT u FROM User u LEFT JOIN u.likedByUsers l "
+          + "WHERE u.id != :userId "
+          + "GROUP BY u "
+          + "ORDER BY COUNT(l) DESC")
+  Page<User> findHottestCreators(@Param("userId") Long userId, Pageable pageable);
+
+  @Query(
       """
   SELECT u
   FROM User u
