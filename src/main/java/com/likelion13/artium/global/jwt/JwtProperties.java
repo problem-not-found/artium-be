@@ -3,34 +3,29 @@
  */
 package com.likelion13.artium.global.jwt;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * JWT 관련 설정 속성
  *
- * <p>application 또는 application.yml에서 jwt 접두사를 가진 속성들을 관리합니다.
- *
- * @since 1.0.0
+ * <p>환경변수로부터 값을 읽어와서 안전하게 관리
  */
 @Component
-@ConfigurationProperties(prefix = "jwt")
 @Getter
-@Setter
 public class JwtProperties {
 
   /** JWT 시크릿 키 */
-  private String secret = "your-256-bit-secret-key-for-development-environment-only";
+  @Value("${jwt.secret}")
+  private String secret;
 
   /** Access Token 유효 기간 (초) */
-  private long accessTokenValidityInSeconds = 3600;
+  @Value("${jwt.access-token-validity-in-seconds:10800}")
+  private long accessTokenValidityInSeconds;
 
   /** Refresh Token 유효 기간 (초) */
-  private long refreshTokenValidityInSeconds = 604800;
-
-  /** Refresh Token 유효 기간 (일) */
-  private int refreshTokenTtlInDays = 7;
+  @Value("${jwt.refresh-token-validity-in-seconds:604800}")
+  private long refreshTokenValidityInSeconds;
 }

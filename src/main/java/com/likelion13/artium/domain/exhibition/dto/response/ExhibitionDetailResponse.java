@@ -6,7 +6,6 @@ package com.likelion13.artium.domain.exhibition.dto.response;
 import java.time.LocalDate;
 import java.util.List;
 
-import com.likelion13.artium.domain.exhibition.entity.BankName;
 import com.likelion13.artium.domain.exhibition.entity.ExhibitionStatus;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -62,12 +61,6 @@ public class ExhibitionDetailResponse {
 
   @Schema(description = "오프라인 전시 설명", example = "이 전시는 남대문로에서 진행됩니다.")
   private String offlineDescription;
-
-  @Schema(description = "거래 계좌번호", example = "93800200854555")
-  private String accountNumber;
-
-  @Schema(description = "거래 은행", example = "KOOKMIN")
-  private BankName bankName;
 
   @Schema(description = "등록 완료 여부", example = "true")
   private Boolean fillAll;

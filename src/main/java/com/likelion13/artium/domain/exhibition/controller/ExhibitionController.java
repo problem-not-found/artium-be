@@ -14,14 +14,17 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.likelion13.artium.domain.exhibition.dto.request.ExhibitionPiecesUpdateRequest;
 import com.likelion13.artium.domain.exhibition.dto.request.ExhibitionRequest;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionDetailResponse;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionLikeResponse;
+import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionPiecesUpdateResponse;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionResponse;
 import com.likelion13.artium.domain.exhibition.entity.SortBy;
 import com.likelion13.artium.global.page.response.PageResponse;
@@ -119,6 +122,13 @@ public interface ExhibitionController {
           @Valid
           @RequestPart(value = "request", required = false)
           ExhibitionRequest request);
+
+  @PutMapping("/{id}/pieces")
+  @Operation(summary = "전시 작품 수정", description = "작품 식별자 리스트를 요청 받아 전시를 수정합니다.")
+  ResponseEntity<BaseResponse<ExhibitionPiecesUpdateResponse>> updateExhibitionPieces(
+      @Parameter(description = "전시 식별자", example = "1") @PathVariable Long id,
+      @Parameter(description = "전시 식별자", example = "1") @RequestBody
+          ExhibitionPiecesUpdateRequest request);
 
   @DeleteMapping("/{id}/like")
   @Operation(summary = "전시 좋아요 취소", description = "좋아요를 취소할 전시의 식별자를 요청 받아 좋아요를 삭제합니다.")

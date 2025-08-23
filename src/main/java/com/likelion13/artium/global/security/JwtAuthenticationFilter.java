@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.InsufficientAuthenticationException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -38,6 +37,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
       HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
       throws ServletException, IOException {
 
+    // error 요청은 JWT 검증 건너뛰기
+    if ("/error".equals(request.getRequestURI())) {
+      filterChain.doFilter(request, response);
+      return;
+    }
+
     try {
       String token = jwtProvider.extractAccessToken(request);
 
@@ -53,9 +58,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                   userDetails, null, userDetails.getAuthorities());
           SecurityContextHolder.getContext().setAuthentication(authentication);
         }
-      } else if (token == null) {
-        throw new InsufficientAuthenticationException("액세스 토큰 없음");
       }
+      // 토큰이 없는 경우, 로그 쌓지 않고 다음 필터로 진행
     } catch (JwtException | IllegalArgumentException e) {
       SecurityContextHolder.clearContext();
       throw new BadCredentialsException("유효하지 않은 JWT 토큰", e);

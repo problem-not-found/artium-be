@@ -8,6 +8,7 @@ import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.likelion13.artium.domain.exhibition.entity.ParticipateStatus;
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
 import com.likelion13.artium.domain.user.dto.request.UpdateContactRequest;
 import com.likelion13.artium.domain.user.dto.request.UpdateUserInfoRequest;
@@ -19,6 +20,7 @@ import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
+import com.likelion13.artium.domain.user.dto.response.UserParticipateResponse;
 import com.likelion13.artium.domain.user.dto.response.UserResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
 import com.likelion13.artium.domain.user.entity.Age;
@@ -103,6 +105,8 @@ public interface UserService {
    * @return 변경 완료 메시지 문자열
    */
   String updateProfileImage(MultipartFile profileImage);
+
+  String updateUserParticipation(Long exhibitionId);
 
   /**
    * 사용자를 탈퇴 처리합니다.
@@ -238,6 +242,10 @@ public interface UserService {
    * @return 조건에 맞는 사용자 프로필 목록 페이지 응답
    */
   PageResponse<UserSummaryResponse> getUserProfilesByCode(String code, Pageable pageable);
+
+  Integer getUserParticipationCount(ParticipateStatus status);
+
+  List<UserParticipateResponse> getUserParticipation(ParticipateStatus status);
 
   /**
    * 키워드를 기반으로 사용자 목록을 조회합니다.
