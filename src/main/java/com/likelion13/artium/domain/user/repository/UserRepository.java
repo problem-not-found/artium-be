@@ -60,7 +60,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
       @Param("status") ExhibitionStatus status,
       Pageable pageable);
 
-  @Query("""
+  @Query(
+      """
   SELECT u
   FROM User u
   JOIN u.pieces p

@@ -5,7 +5,6 @@ package com.likelion13.artium.domain.user.service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -726,7 +725,12 @@ public class UserServiceImpl implements UserService {
       case PEER_GROUP:
         page =
             userRepository
-                .findSameAgeUsers(user.getId(), user.getAge(), ProgressStatus.WAITING, ProgressStatus.UNREGISTERED, pageable)
+                .findSameAgeUsers(
+                    user.getId(),
+                    user.getAge(),
+                    ProgressStatus.WAITING,
+                    ProgressStatus.UNREGISTERED,
+                    pageable)
                 .map(
                     u ->
                         userMapper.toCreatorFeedResponse(
