@@ -336,7 +336,6 @@ public class JwtProvider {
     Cookie cookie = new Cookie(name, token);
     // cookie.setHttpOnly(true);
     // cookie.setSecure(true);
-    cookie.setDomain("localhost");
     cookie.setPath("/");
     cookie.setMaxAge((int) maxAge);
     response.addCookie(cookie);
