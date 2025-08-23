@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.likelion13.artium.domain.exhibition.entity.ParticipateStatus;
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
 import com.likelion13.artium.domain.user.dto.request.UpdateContactRequest;
 import com.likelion13.artium.domain.user.dto.request.UpdateUserInfoRequest;
@@ -31,6 +32,7 @@ import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
+import com.likelion13.artium.domain.user.dto.response.UserParticipateResponse;
 import com.likelion13.artium.domain.user.dto.response.UserResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
 import com.likelion13.artium.domain.user.entity.Age;
@@ -75,6 +77,10 @@ public interface UserController {
   @Operation(summary = "사용자 정보 조회", description = "현재 로그인된 사용자의 정보를 조회합니다.")
   ResponseEntity<BaseResponse<UserResponse>> getUser();
 
+  @GetMapping("/check-first")
+  @Operation(summary = "사용자 첫 로그인 여부 조회", description = "현재 로그인된 사용자의 첫 로그인 여부를 조회합니다.")
+  ResponseEntity<BaseResponse<Boolean>> isFirstLogin();
+
   @GetMapping("/check-code")
   @Operation(
       summary = "코드 중복 여부 확인",
@@ -98,6 +104,18 @@ public interface UserController {
       @Parameter(description = "특정 유저 코드", example = "kim") @RequestParam String code,
       @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
       @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
+
+  @GetMapping("/join/count")
+  @Operation(summary = "사용자 전시 참여 개수 조회", description = "현재 로그인된 사용자가 요청 받은 전시의 개수를 조회합니다.")
+  ResponseEntity<BaseResponse<Integer>> getUserParticipationCount(
+      @Parameter(description = "요청 상태", example = "REQUESTED") @RequestParam
+          ParticipateStatus status);
+
+  @GetMapping("/join")
+  @Operation(summary = "사용자 전시 참여리스트 조회", description = "현재 로그인된 사용자가 요청 받은 전시리스트를 상태에 따라 조회합니다.")
+  ResponseEntity<BaseResponse<List<UserParticipateResponse>>> getUserParticipation(
+      @Parameter(description = "요청 상태", example = "REQUESTED") @RequestParam
+          ParticipateStatus status);
 
   @GetMapping("/search")
   @Operation(summary = "키워드로 사용자 검색", description = "코드 또는 닉네임을 통해 사용자 리스트를 조회합니다.")
@@ -172,6 +190,11 @@ public interface UserController {
   @Operation(summary = "프로필 사진 변경", description = "현재 로그인된 사용자의 프로필 사진을 변경합니다.")
   ResponseEntity<BaseResponse<String>> updateProfileImage(
       @Parameter(description = "새로운 프로필 사진") @RequestPart MultipartFile profileImage);
+
+  @PutMapping("/join/approve")
+  @Operation(summary = "전시 참여 승인", description = "현재 로그인된 사용자가 요청 받은 전시를 승인합니다.")
+  ResponseEntity<BaseResponse<String>> updateUserParticipation(
+      @Parameter(description = "승인할 전시 식별자") @RequestParam Long exhibitionId);
 
   @PutMapping("/preferences")
   @Operation(summary = "사용자 맞춤 취향 설정 변경", description = "사용자 맞춤 취향 설정을 변경합니다.")

@@ -3,11 +3,12 @@
  */
 package com.likelion13.artium.domain.auth.service;
 
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,7 +18,6 @@ import com.likelion13.artium.domain.auth.exception.AuthErrorCode;
 import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.repository.UserRepository;
-import com.likelion13.artium.domain.user.service.UserService;
 import com.likelion13.artium.global.exception.CustomException;
 import com.likelion13.artium.global.jwt.JwtProvider;
 
@@ -29,11 +29,16 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
+  @Value("${artium.test.username}")
+  private String testUsername;
+
+  @Value("${artium.test.password}")
+  private String testPassword;
+
   private final AuthenticationManager authenticationManager;
   private final JwtProvider jwtProvider;
   private final UserRepository userRepository;
-  private final UserService userService;
-  private final RedisTemplate<String, String> redisTemplate;
+  private final PasswordEncoder passwordEncoder;
 
   @Override
   @Transactional
@@ -88,5 +93,24 @@ public class AuthServiceImpl implements AuthService {
 
     log.info("AT 재발급 성공: {}", user.getUsername());
     return jwtProvider.createToken(authentication);
+  }
+
+  @Override
+  @Transactional
+  public TokenResponse testLogin() {
+
+    UsernamePasswordAuthenticationToken authenticationToken =
+        new UsernamePasswordAuthenticationToken(testUsername, testPassword);
+
+    authenticationManager.authenticate(authenticationToken);
+
+    try {
+      TokenResponse tokenResponse = jwtProvider.createTokens(authenticationToken);
+
+      log.info("테스트 로그인 성공: {}", testUsername);
+      return tokenResponse;
+    } catch (Exception e) {
+      throw new CustomException(AuthErrorCode.LOGIN_FAIL);
+    }
   }
 }

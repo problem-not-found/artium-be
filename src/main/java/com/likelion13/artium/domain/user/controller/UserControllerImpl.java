@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.likelion13.artium.domain.exhibition.entity.ParticipateStatus;
 import com.likelion13.artium.domain.user.dto.request.SignUpRequest;
 import com.likelion13.artium.domain.user.dto.request.UpdateContactRequest;
 import com.likelion13.artium.domain.user.dto.request.UpdateUserInfoRequest;
@@ -28,6 +29,7 @@ import com.likelion13.artium.domain.user.dto.response.SignUpResponse;
 import com.likelion13.artium.domain.user.dto.response.UserContactResponse;
 import com.likelion13.artium.domain.user.dto.response.UserDetailResponse;
 import com.likelion13.artium.domain.user.dto.response.UserLikeResponse;
+import com.likelion13.artium.domain.user.dto.response.UserParticipateResponse;
 import com.likelion13.artium.domain.user.dto.response.UserResponse;
 import com.likelion13.artium.domain.user.dto.response.UserSummaryResponse;
 import com.likelion13.artium.domain.user.entity.Age;
@@ -72,6 +74,12 @@ public class UserControllerImpl implements UserController {
   public ResponseEntity<BaseResponse<UserResponse>> getUser() {
 
     return ResponseEntity.ok(BaseResponse.success(userService.getUser()));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<Boolean>> isFirstLogin() {
+
+    return ResponseEntity.ok(BaseResponse.success(userService.isFirstLogin()));
   }
 
   @Override
@@ -120,6 +128,22 @@ public class UserControllerImpl implements UserController {
 
     return ResponseEntity.status(200)
         .body(BaseResponse.success(userService.getUserProfilesByCode(code, pageable)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<Integer>> getUserParticipationCount(
+      @RequestParam ParticipateStatus status) {
+
+    return ResponseEntity.status(200)
+        .body(BaseResponse.success(userService.getUserParticipationCount(status)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<List<UserParticipateResponse>>> getUserParticipation(
+      @RequestParam ParticipateStatus status) {
+
+    return ResponseEntity.status(200)
+        .body(BaseResponse.success(userService.getUserParticipation(status)));
   }
 
   @Override
@@ -175,6 +199,14 @@ public class UserControllerImpl implements UserController {
       @RequestPart MultipartFile profileImage) {
 
     return ResponseEntity.ok(BaseResponse.success(userService.updateProfileImage(profileImage)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<String>> updateUserParticipation(
+      @RequestParam Long exhibitionId) {
+
+    return ResponseEntity.ok(
+        BaseResponse.success(userService.updateUserParticipation(exhibitionId)));
   }
 
   @Override

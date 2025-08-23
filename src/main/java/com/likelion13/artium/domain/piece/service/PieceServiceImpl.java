@@ -40,6 +40,7 @@ import com.likelion13.artium.domain.user.entity.User;
 import com.likelion13.artium.domain.user.exception.UserErrorCode;
 import com.likelion13.artium.domain.user.repository.UserRepository;
 import com.likelion13.artium.domain.user.service.UserService;
+import com.likelion13.artium.global.ai.embedding.service.EmbeddingService;
 import com.likelion13.artium.global.ai.vector.VectorUtils;
 import com.likelion13.artium.global.exception.CustomException;
 import com.likelion13.artium.global.page.mapper.PageMapper;
@@ -66,6 +67,7 @@ public class PieceServiceImpl implements PieceService {
   private final PageMapper pageMapper;
   private final UserRepository userRepository;
   private final QdrantService qdrantService;
+  private final EmbeddingService embeddingService;
 
   @Override
   public PageResponse<PieceSummaryResponse> getPiecePage(Long userId, Pageable pageable) {
@@ -123,7 +125,6 @@ public class PieceServiceImpl implements PieceService {
 
     String mainImageUrl =
         mainImage != null ? s3Service.uploadFile(PathName.PIECE, mainImage) : null;
-
     Piece piece =
         Piece.builder()
             .title(createPieceRequest.getTitle())
@@ -136,6 +137,14 @@ public class PieceServiceImpl implements PieceService {
 
     pieceRepository.save(piece);
 
+    if (saveStatus == SaveStatus.APPLICATION) {
+      piece.updateProgressStatus(ProgressStatus.REGISTERED);
+      String content = (piece.getTitle() + "\n\n" + piece.getDescription()).trim();
+      float[] vector = embeddingService.embed(content);
+
+      qdrantService.upsertPiecePoint(piece.getId(), vector, piece, CollectionName.PIECE);
+    }
+
     if (detailImages != null && !detailImages.isEmpty()) {
       List<String> detailImageUrls =
           detailImages.stream()
@@ -145,7 +154,11 @@ public class PieceServiceImpl implements PieceService {
           detailImageUrl -> pieceDetailService.createPieceDetail(piece, detailImageUrl));
     }
 
-    log.info("작품 등록 성공 - userId: {}, pieceId: {}", user.getId(), piece.getId());
+    log.info(
+        "작품 등록 성공 - userId: {}, pieceId: {}, saveStatus: {}",
+        user.getId(),
+        piece.getId(),
+        saveStatus);
     return pieceMapper.toPieceSummaryResponse(piece);
   }
 

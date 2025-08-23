@@ -36,4 +36,8 @@ public interface AuthController {
   @Operation(summary = "액세스 토큰 재발급", description = "리프레시 토큰을 사용하여 새로운 액세스 토큰을 발급합니다.")
   ResponseEntity<BaseResponse<String>> reissueToken(
       HttpServletRequest request, HttpServletResponse response);
+
+  @PostMapping("/test-login")
+  @Operation(summary = "테스트 로그인", description = "시연용 테스트 로그인을 수행하여 사용자 아이디를 반환합니다.")
+  ResponseEntity<BaseResponse<String>> testLogin(HttpServletResponse response);
 }
