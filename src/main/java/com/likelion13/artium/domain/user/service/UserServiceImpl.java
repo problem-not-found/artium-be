@@ -5,7 +5,6 @@ package com.likelion13.artium.domain.user.service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
@@ -696,6 +695,18 @@ public class UserServiceImpl implements UserService {
     Page<CreatorFeedResponse> page;
 
     switch (sortBy) {
+      case HOTTEST:
+        page =
+            userRepository
+                .findHottestCreators(user.getId(), pageable)
+                .map(
+                    u ->
+                        userMapper.toCreatorFeedResponse(
+                            u,
+                            userLikeRepository.existsByLiker_IdAndLiked_Id(
+                                user.getId(), u.getId())));
+        log.info("가장 인기 있는 크리에이터 리스트 페이지 조회 성공");
+        break;
       case LATEST_OPEN:
         LocalDate cutoffDate = LocalDate.now().minusDays(7);
         page =
@@ -712,11 +723,14 @@ public class UserServiceImpl implements UserService {
         break;
 
       case PEER_GROUP:
-        List<ProgressStatus> statuses =
-            new ArrayList<>(Arrays.asList(ProgressStatus.WAITING, ProgressStatus.UNREGISTERED));
         page =
             userRepository
-                .findSameAgeUsers(user.getId(), user.getAge(), statuses, pageable)
+                .findSameAgeUsers(
+                    user.getId(),
+                    user.getAge(),
+                    ProgressStatus.WAITING,
+                    ProgressStatus.UNREGISTERED,
+                    pageable)
                 .map(
                     u ->
                         userMapper.toCreatorFeedResponse(

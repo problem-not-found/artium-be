@@ -67,15 +67,6 @@ public interface QdrantService {
   float[] retrieveVectorById(Long id, CollectionName collectionName);
 
   /**
-   * 식별자 리스트를 받아 해당 식별자들의 벡터값 리스트를 반환
-   *
-   * @param ids 식별자 리스트
-   * @param collectionName 찾을 컬렉션 이름
-   * @return 벡터값 리스트 반환
-   */
-  List<float[]> retrieveVectorsByIds(List<Long> ids, CollectionName collectionName);
-
-  /**
    * @param query
    * @param limit
    * @param excludeArtworkIds

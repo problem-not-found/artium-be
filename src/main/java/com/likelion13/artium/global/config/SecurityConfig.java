@@ -116,7 +116,11 @@ public class SecurityConfig {
         auth ->
             auth.requestMatchers("/swagger-ui/**", "/v3/api-docs/**")
                 .hasRole("DEVELOPER")
-                .requestMatchers("/api/users/sign-up", "/api/auths/login", "/api/auths/test-login", "/actuator/health")
+                .requestMatchers(
+                    "/api/users/sign-up",
+                    "/api/auths/login",
+                    "/api/auths/test-login",
+                    "/actuator/health")
                 .permitAll()
                 .requestMatchers("/error")
                 .permitAll()

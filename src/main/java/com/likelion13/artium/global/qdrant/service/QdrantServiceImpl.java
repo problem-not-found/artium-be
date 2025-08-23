@@ -122,7 +122,10 @@ public class QdrantServiceImpl implements QdrantService {
                 s -> s.is4xxClientError() || s.is5xxServerError(),
                 r ->
                     r.bodyToMono(String.class)
-                        .map(msg -> new CustomException(QdrantErrorCode.VECTOR_SIZE_MISMATCH)))
+                        .flatMap(
+                            msg ->
+                                Mono.error(
+                                    new CustomException(QdrantErrorCode.QDRANT_REQUEST_FAILED))))
             .bodyToMono(Map.class)
             .block();
 
@@ -137,44 +140,9 @@ public class QdrantServiceImpl implements QdrantService {
   }
 
   @Override
-  public List<float[]> retrieveVectorsByIds(List<Long> ids, CollectionName collectionName) {
-    if (ids.isEmpty()) return List.of();
-
-    Map<String, Object> body =
-        Map.of(
-            "ids", ids,
-            "with_vector", true,
-            "with_payload", false);
-
-    Map resp =
-        qdrantWebClient
-            .post()
-            .uri("/collections/{name}/points", getPrefix(collectionName))
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(body)
-            .retrieve()
-            .onStatus(
-                s -> s.is4xxClientError() || s.is5xxServerError(),
-                r ->
-                    r.bodyToMono(String.class)
-                        .map(msg -> new CustomException(QdrantErrorCode.VECTOR_SIZE_MISMATCH)))
-            .bodyToMono(Map.class)
-            .block();
-
-    List<Map<String, Object>> result = (List<Map<String, Object>>) resp.get("result");
-    List<float[]> out = new ArrayList<>();
-    for (Map<String, Object> p : result) {
-      List<Double> v = (List<Double>) p.get("vector");
-      float[] f = new float[v.size()];
-      for (int i = 0; i < v.size(); i++) f[i] = v.get(i).floatValue();
-      out.add(f);
-    }
-    return out;
-  }
-
-  @Override
   public List<Map<String, Object>> search(
       float[] query, int limit, List<Long> excludeIds, CollectionName collectionName) {
+    log.info("query.length = {}, vectorSize() = {}", query.length, qdrantConfig.getVectorSize());
     if (query.length != qdrantConfig.getVectorSize())
       throw new CustomException(QdrantErrorCode.VECTOR_SIZE_MISMATCH);
 

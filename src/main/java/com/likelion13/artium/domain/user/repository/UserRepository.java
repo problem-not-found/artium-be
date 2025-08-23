@@ -35,6 +35,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
   boolean existsByCodeAndIdNot(String code, Long id);
 
   @Query(
+      "SELECT u FROM User u LEFT JOIN u.likedByUsers l "
+          + "WHERE u.id != :userId "
+          + "GROUP BY u "
+          + "ORDER BY COUNT(l) DESC")
+  Page<User> findHottestCreators(@Param("userId") Long userId, Pageable pageable);
+
+  @Query(
       """
   SELECT u
   FROM User u
@@ -54,11 +61,23 @@ public interface UserRepository extends JpaRepository<User, Long> {
       Pageable pageable);
 
   @Query(
-      "SELECT DISTINCT u from User u LEFT JOIN u.pieces p WHERE u.age= :age AND u.id != :userId AND p.progressStatus NOT IN :statuses ORDER BY p.createdAt DESC")
+      """
+  SELECT u
+  FROM User u
+  JOIN u.pieces p
+  WHERE u.age = :age
+    AND u.id <> :userId
+    AND p.progressStatus NOT IN (:status1, :status2)
+  GROUP BY u.id, u.age, u.code, u.createdAt, u.deletedAt, u.email, u.gender, u.instagram,
+           u.introduction, u.isDeleted, u.modifiedAt, u.nickname, u.password, u.profileImageUrl,
+           u.role, u.username
+  ORDER BY MAX(p.createdAt) DESC
+""")
   Page<User> findSameAgeUsers(
       @Param("userId") Long userId,
       @Param("age") Age age,
-      @Param("statuses") List<ProgressStatus> statuses,
+      @Param("status1") ProgressStatus status1,
+      @Param("status2") ProgressStatus status2,
       Pageable pageable);
 
   Page<User> findByCodeContaining(String code, Pageable pageable);
