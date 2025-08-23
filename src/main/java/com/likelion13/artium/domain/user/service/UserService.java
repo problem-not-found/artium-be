@@ -82,6 +82,8 @@ public interface UserService {
    */
   UserResponse getUser();
 
+  Boolean isFirstLogin();
+
   /**
    * 코드 사용 가능 여부를 확인합니다.
    *

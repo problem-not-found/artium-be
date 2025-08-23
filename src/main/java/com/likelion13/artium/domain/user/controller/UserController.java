@@ -77,6 +77,10 @@ public interface UserController {
   @Operation(summary = "사용자 정보 조회", description = "현재 로그인된 사용자의 정보를 조회합니다.")
   ResponseEntity<BaseResponse<UserResponse>> getUser();
 
+  @GetMapping("/check-first")
+  @Operation(summary = "사용자 첫 로그인 여부 조회", description = "현재 로그인된 사용자의 첫 로그인 여부를 조회합니다.")
+  ResponseEntity<BaseResponse<Boolean>> isFirstLogin();
+
   @GetMapping("/check-code")
   @Operation(
       summary = "코드 중복 여부 확인",

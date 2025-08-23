@@ -212,6 +212,27 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional(readOnly = true)
+  public Boolean isFirstLogin() {
+
+    User currentUser = getCurrentUser();
+
+    boolean hasTheme =
+        currentUser.getThemePreferences() != null && !currentUser.getThemePreferences().isEmpty();
+    boolean hasMood =
+        currentUser.getMoodPreferences() != null && !currentUser.getMoodPreferences().isEmpty();
+    boolean hasFormat =
+        currentUser.getFormatPreferences() != null && !currentUser.getFormatPreferences().isEmpty();
+
+    boolean hasAge = currentUser.getAge() != null;
+    boolean hasGender = currentUser.getGender() != null;
+    boolean hasCode = currentUser.getCode() != null && !currentUser.getCode().isBlank();
+
+    // 하나라도 없으면 첫 로그인
+    return !(hasTheme && hasMood && hasFormat && hasAge && hasGender && hasCode);
+  }
+
+  @Override
+  @Transactional(readOnly = true)
   public Boolean checkCodeDuplicated(String code) {
 
     boolean exists = userRepository.existsByCode(code);

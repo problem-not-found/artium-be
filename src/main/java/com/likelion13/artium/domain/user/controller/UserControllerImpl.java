@@ -77,6 +77,12 @@ public class UserControllerImpl implements UserController {
   }
 
   @Override
+  public ResponseEntity<BaseResponse<Boolean>> isFirstLogin() {
+
+    return ResponseEntity.ok(BaseResponse.success(userService.isFirstLogin()));
+  }
+
+  @Override
   public ResponseEntity<BaseResponse<Boolean>> checkCodeDuplicated(@RequestParam String code) {
     return ResponseEntity.ok(BaseResponse.success(userService.checkCodeDuplicated(code)));
   }
