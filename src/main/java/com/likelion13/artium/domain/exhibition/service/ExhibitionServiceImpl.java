@@ -3,7 +3,6 @@
  */
 package com.likelion13.artium.domain.exhibition.service;
 
-import com.likelion13.artium.domain.exhibition.entity.ParticipateStatus;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -33,6 +32,7 @@ import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionPiecesUpda
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionResponse;
 import com.likelion13.artium.domain.exhibition.entity.Exhibition;
 import com.likelion13.artium.domain.exhibition.entity.ExhibitionStatus;
+import com.likelion13.artium.domain.exhibition.entity.ParticipateStatus;
 import com.likelion13.artium.domain.exhibition.entity.SortBy;
 import com.likelion13.artium.domain.exhibition.exception.ExhibitionErrorCode;
 import com.likelion13.artium.domain.exhibition.mapper.ExhibitionMapper;
@@ -440,16 +440,17 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     User currentUser = userService.getCurrentUser();
 
     // 주최자(owner) 또는 승인된(APPROVED) 참여자인지 확인
-        boolean isOwner = exhibition.getUser().getId().equals(currentUser.getId());
-        boolean isApprovedParticipant = exhibition.getExhibitionParticipants().stream()
-                .anyMatch(p ->
+    boolean isOwner = exhibition.getUser().getId().equals(currentUser.getId());
+    boolean isApprovedParticipant =
+        exhibition.getExhibitionParticipants().stream()
+            .anyMatch(
+                p ->
                     p.getUser().getId().equals(currentUser.getId())
-                        && p.getParticipateStatus() == ParticipateStatus.APPROVED
-                    );
+                        && p.getParticipateStatus() == ParticipateStatus.APPROVED);
 
-            if (!(isOwner || isApprovedParticipant)) {
-            throw new CustomException(ExhibitionErrorCode.EXHIBITION_ACCESS_DENIED);
-          }
+    if (!(isOwner || isApprovedParticipant)) {
+      throw new CustomException(ExhibitionErrorCode.EXHIBITION_ACCESS_DENIED);
+    }
 
     List<ExhibitionPiece> newPieces =
         request.getPieceIdList().stream()
