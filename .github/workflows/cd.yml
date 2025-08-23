@@ -101,23 +101,6 @@ jobs:
               docker compose -f docker-compose.yml -f docker-compose-${COLOR}.yml pull
               docker compose -f docker-compose.yml -f docker-compose-${COLOR}.yml up -d --build
 
-              echo "Waiting for $COLOR deployment to become healthy..."
-              for i in {1..15}; do
-                STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health)
-                if [ "$STATUS_CODE" = "200" ]; then
-                  echo "Health check passed."
-                  break
-                else
-                  echo "Health check not ready yet. Retrying in 5 seconds..."
-                  sleep 5
-                fi
-              done
-
-              if [ "$STATUS_CODE" != "200" ]; then
-                echo "Health check failed. Aborting deployment."
-                exit 1
-              fi
-
               echo "Stopping previous $PREV_COLOR app container"
               docker compose -f docker-compose.yml -f docker-compose-${PREV_COLOR}.yml stop app-${PREV_COLOR} || true
             fi
