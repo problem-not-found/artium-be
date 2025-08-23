@@ -724,11 +724,9 @@ public class UserServiceImpl implements UserService {
         break;
 
       case PEER_GROUP:
-        List<ProgressStatus> statuses =
-            new ArrayList<>(Arrays.asList(ProgressStatus.WAITING, ProgressStatus.UNREGISTERED));
         page =
             userRepository
-                .findSameAgeUsers(user.getId(), user.getAge(), statuses, pageable)
+                .findSameAgeUsers(user.getId(), user.getAge(), ProgressStatus.WAITING, ProgressStatus.UNREGISTERED, pageable)
                 .map(
                     u ->
                         userMapper.toCreatorFeedResponse(

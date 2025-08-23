@@ -60,15 +60,23 @@ public interface UserRepository extends JpaRepository<User, Long> {
       @Param("status") ExhibitionStatus status,
       Pageable pageable);
 
-  @Query(
-      "SELECT u FROM User u LEFT JOIN u.pieces p "
-          + "WHERE u.age = :age AND u.id <> :id AND p.progressStatus NOT IN :statuses "
-          + "GROUP BY u.id "
-          + "ORDER BY MAX(p.createdAt) DESC")
+  @Query("""
+  SELECT u
+  FROM User u
+  JOIN u.pieces p
+  WHERE u.age = :age
+    AND u.id <> :userId
+    AND p.progressStatus NOT IN (:status1, :status2)
+  GROUP BY u.id, u.age, u.code, u.createdAt, u.deletedAt, u.email, u.gender, u.instagram,
+           u.introduction, u.isDeleted, u.modifiedAt, u.nickname, u.password, u.profileImageUrl,
+           u.role, u.username
+  ORDER BY MAX(p.createdAt) DESC
+""")
   Page<User> findSameAgeUsers(
       @Param("userId") Long userId,
       @Param("age") Age age,
-      @Param("statuses") List<ProgressStatus> statuses,
+      @Param("status1") ProgressStatus status1,
+      @Param("status2") ProgressStatus status2,
       Pageable pageable);
 
   Page<User> findByCodeContaining(String code, Pageable pageable);
