@@ -118,6 +118,8 @@ public class SecurityConfig {
                 .hasRole("DEVELOPER")
                 .requestMatchers("/api/users/sign-up", "/api/auths/login")
                 .permitAll()
+                .requestMatchers("/error")
+                .permitAll()
                 .requestMatchers(RegexRequestMatcher.regexMatcher(".*/admin/.*"))
                 .hasRole("ADMIN")
                 .requestMatchers(RegexRequestMatcher.regexMatcher(".*/dev/.*"))
