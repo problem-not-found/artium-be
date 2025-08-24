@@ -196,15 +196,6 @@ public class QdrantServiceImpl implements QdrantService {
     List<Map<String, Object>> results =
         (List<Map<String, Object>>) resp.getOrDefault("result", List.of());
 
-    try {
-      ObjectMapper objectMapper = new ObjectMapper();
-      String prettyResults =
-          objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(results);
-      log.info("Qdrant search results:\n{}", prettyResults);
-    } catch (Exception e) {
-      log.warn("Failed to serialize Qdrant search results for logging", e);
-    }
-
     if (opposite) {
       results.sort(
           (a, b) -> {

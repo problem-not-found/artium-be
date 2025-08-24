@@ -99,7 +99,7 @@ public interface ExhibitionController {
   @Operation(summary = "취향 기반 추천 전시 리스트 조회", description = "사용자의 관심사를 기반으로 추천 전시 리스트를 조회합니다.")
   @GetMapping("/recommendations")
   ResponseEntity<BaseResponse<PageResponse<ExhibitionResponse>>> getRecommendationExhibitionPage(
-      @Parameter(description = "관심", example = "true") @RequestParam Boolean opposite,
+      @Parameter(description = "관심 없음", example = "true") @RequestParam Boolean opposite,
       @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
       @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
 
