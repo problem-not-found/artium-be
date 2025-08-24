@@ -46,6 +46,7 @@ import com.likelion13.artium.domain.exhibition.repository.ExhibitionParticipantR
 import com.likelion13.artium.domain.exhibition.repository.ExhibitionPieceRepository;
 import com.likelion13.artium.domain.exhibition.repository.ExhibitionRepository;
 import com.likelion13.artium.domain.piece.entity.Piece;
+import com.likelion13.artium.domain.piece.entity.ProgressStatus;
 import com.likelion13.artium.domain.piece.exception.PieceErrorCode;
 import com.likelion13.artium.domain.piece.repository.PieceRepository;
 import com.likelion13.artium.domain.user.entity.User;
@@ -124,6 +125,12 @@ public class ExhibitionServiceImpl implements ExhibitionService {
             .toList();
     List<Long> participantIdList =
         exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
+
+    if (exhibition.getFillAll()) {
+      for (ExhibitionPiece exhibitionPiece : exhibition.getExhibitionPieces()) {
+        exhibitionPiece.getPiece().updateProgressStatus(ProgressStatus.ON_DISPLAY);
+      }
+    }
 
     String content = (exhibition.getTitle() + "\n\n" + exhibition.getDescription()).trim();
     float[] vector = embeddingService.embed(content);
@@ -488,6 +495,12 @@ public class ExhibitionServiceImpl implements ExhibitionService {
             .toList();
     List<Long> participantIdList =
         exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
+
+    if (exhibition.getFillAll()) {
+      for (ExhibitionPiece exhibitionPiece : exhibition.getExhibitionPieces()) {
+        exhibitionPiece.getPiece().updateProgressStatus(ProgressStatus.ON_DISPLAY);
+      }
+    }
 
     log.info(
         "전시 정보 수정 성공 - id: {}, status: {}", exhibition.getId(), exhibition.getExhibitionStatus());

@@ -14,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.likelion13.artium.domain.exhibition.entity.Exhibition;
 import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.domain.user.entity.User;
@@ -195,6 +196,15 @@ public class QdrantServiceImpl implements QdrantService {
     List<Map<String, Object>> results =
         (List<Map<String, Object>>) resp.getOrDefault("result", List.of());
 
+    try {
+      ObjectMapper objectMapper = new ObjectMapper();
+      String prettyResults =
+          objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(results);
+      log.info("Qdrant search results:\n{}", prettyResults);
+    } catch (Exception e) {
+      log.warn("Failed to serialize Qdrant search results for logging", e);
+    }
+
     if (opposite) {
       results.sort(
           (a, b) -> {
@@ -204,8 +214,7 @@ public class QdrantServiceImpl implements QdrantService {
           });
 
       List<Map<String, Object>> farthest = new ArrayList<>();
-      int size = results.size();
-      for (int i = size - 1; i >= Math.max(size - limit, 0); i--) {
+      for (int i = 0; i < limit; i++) {
         farthest.add(results.get(i));
       }
       return farthest;
