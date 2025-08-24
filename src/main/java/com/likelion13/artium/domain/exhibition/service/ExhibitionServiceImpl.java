@@ -40,6 +40,7 @@ import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionPiece;
 import com.likelion13.artium.domain.exhibition.repository.ExhibitionLikeRepository;
+import com.likelion13.artium.domain.exhibition.repository.ExhibitionPieceRepository;
 import com.likelion13.artium.domain.exhibition.repository.ExhibitionRepository;
 import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.domain.piece.exception.PieceErrorCode;
@@ -68,6 +69,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
   private final ExhibitionRepository exhibitionRepository;
   private final ExhibitionLikeRepository exhibitionLikeRepository;
+  private final ExhibitionPieceRepository exhibitionPieceRepository;
   private final UserRepository userRepository;
   private final UserService userService;
   private final S3Service s3Service;
@@ -406,6 +408,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       exhibition.getExhibitionParticipants().addAll(participants);
 
       exhibition.getExhibitionPieces().clear();
+      exhibitionPieceRepository.deleteAll(exhibition.getExhibitionPieces());
       pieces.forEach(p -> p.setExhibition(exhibition));
       exhibition.getExhibitionPieces().addAll(pieces);
 
@@ -471,6 +474,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
             .toList();
 
     exhibition.getExhibitionPieces().clear();
+    exhibitionPieceRepository.deleteAll(exhibition.getExhibitionPieces());
     exhibition.getExhibitionPieces().addAll(newPieces);
 
     log.info("작품 리스트 수정 성공 - 전시 ID: {}, 수정한 작품 수: {}", id, newPieces.size());
