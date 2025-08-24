@@ -5,13 +5,17 @@ package com.likelion13.artium.domain.piece.service;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -332,15 +336,33 @@ public class PieceServiceImpl implements PieceService {
     log.info("추천 작품 아이디 리스트 - recommendPieceIds : {} ", recommendPieceIds);
     switch (sortBy) {
       case FAVORITE:
-        page =
-            pieceRepository
-                .findByIdIn(recommendPieceIds, pageable)
+        List<Piece> pieces = pieceRepository.findByIdIn(recommendPieceIds);
+        Map<Long, Piece> pieceMap =
+            pieces.stream().collect(Collectors.toMap(Piece::getId, Function.identity()));
+
+        List<Piece> sortedPieces =
+            recommendPieceIds.stream().map(pieceMap::get).filter(Objects::nonNull).toList();
+
+        int pageSize = pageable.getPageSize();
+        int pageNum = pageable.getPageNumber();
+        int start = pageNum * pageSize;
+        int end = Math.min(start + pageSize, sortedPieces.size());
+        List<Piece> pagedPieces =
+            start < sortedPieces.size()
+                ? sortedPieces.subList(start, end)
+                : Collections.emptyList();
+
+        List<PieceFeedResponse> content =
+            pagedPieces.stream()
                 .map(
                     piece ->
                         pieceMapper.toPieceFeedResponse(
                             piece,
                             pieceLikeRepository.existsByUser_IdAndPiece_Id(
-                                userId, piece.getUser().getId())));
+                                userId, piece.getUser().getId())))
+                .toList();
+
+        page = new PageImpl<>(content, pageable, sortedPieces.size());
         log.info("관심사 기반 취향 저격 작품 리스트 조회 성공");
         break;
       case NEW_STYLE:
@@ -503,12 +525,9 @@ public class PieceServiceImpl implements PieceService {
                 .stream()
                 .toList();
 
-    List<Long> recommendIds =
-        filtered.stream()
-            .sorted(Comparator.comparingInt(id -> pos.getOrDefault(id, Integer.MAX_VALUE)))
-            .toList();
-
-    return recommendIds;
+    return filtered.stream()
+        .sorted(Comparator.comparingInt(id -> pos.getOrDefault(id, Integer.MAX_VALUE)))
+        .toList();
   }
 
   private boolean validateUpdatePieceFields(

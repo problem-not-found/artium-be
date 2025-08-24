@@ -706,7 +706,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
         (a, b) -> {
           double sa = ((Number) a.get("score")).doubleValue();
           double sb = ((Number) b.get("score")).doubleValue();
-          return Boolean.TRUE.equals(opposite) ? Double.compare(sa, sb) : Double.compare(sb, sa);
+          return opposite ? Double.compare(sa, sb) : Double.compare(sb, sa);
         });
     // 상위 limit만 선택
     sorted = sorted.subList(0, Math.min(limit, sorted.size()));
