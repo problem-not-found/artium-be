@@ -80,7 +80,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
     if (hasAge && hasGender && hasCode && hasFormat && hasMood && hasTheme) {
       response.sendRedirect("https://artium.life");
     } else {
-      response.sendRedirect("https://artiums.life/mytype");
+      response.sendRedirect("https://artium.life/mytype");
     }
   }
 }
