@@ -3,7 +3,6 @@
  */
 package com.likelion13.artium.global.qdrant.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -15,6 +14,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.likelion13.artium.domain.exhibition.entity.Exhibition;
 import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.domain.user.entity.User;
@@ -198,7 +198,8 @@ public class QdrantServiceImpl implements QdrantService {
 
     try {
       ObjectMapper objectMapper = new ObjectMapper();
-      String prettyResults = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(results);
+      String prettyResults =
+          objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(results);
       log.info("Qdrant search results:\n{}", prettyResults);
     } catch (Exception e) {
       log.warn("Failed to serialize Qdrant search results for logging", e);

@@ -3,7 +3,6 @@
  */
 package com.likelion13.artium.domain.exhibition.service;
 
-import com.likelion13.artium.domain.piece.entity.ProgressStatus;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -47,6 +46,7 @@ import com.likelion13.artium.domain.exhibition.repository.ExhibitionParticipantR
 import com.likelion13.artium.domain.exhibition.repository.ExhibitionPieceRepository;
 import com.likelion13.artium.domain.exhibition.repository.ExhibitionRepository;
 import com.likelion13.artium.domain.piece.entity.Piece;
+import com.likelion13.artium.domain.piece.entity.ProgressStatus;
 import com.likelion13.artium.domain.piece.exception.PieceErrorCode;
 import com.likelion13.artium.domain.piece.repository.PieceRepository;
 import com.likelion13.artium.domain.user.entity.User;
