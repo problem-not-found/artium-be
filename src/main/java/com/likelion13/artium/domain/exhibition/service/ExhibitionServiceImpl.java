@@ -100,7 +100,10 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     }
 
     List<ExhibitionPiece> pieces = buildPieces(request.getPieceIdList());
-    buildParticipants(request.getParticipantIdList());
+    List<ExhibitionParticipant> exhibitionParticipantList =
+        buildParticipants(request.getParticipantIdList());
+
+    exhibitionParticipantRepository.saveAll(exhibitionParticipantList);
 
     User currentUser = userService.getCurrentUser();
 
@@ -459,8 +462,6 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     try {
       ExhibitionStatus status = determineStatus(request.getStartDate(), request.getEndDate());
 
-      buildParticipants(request.getParticipantIdList());
-
       List<Long> pieceIds = request.getPieceIdList();
       List<Long> distinctPieceIds = pieceIds.stream().distinct().toList();
       if (distinctPieceIds.size() != pieceIds.size()) {
@@ -468,7 +469,10 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       }
 
       List<ExhibitionPiece> pieces = buildPieces(distinctPieceIds);
+      List<ExhibitionParticipant> exhibitionParticipantList =
+          buildParticipants(request.getParticipantIdList());
 
+      exhibitionParticipantRepository.saveAll(exhibitionParticipantList);
       exhibitionPieceRepository.deleteAll(exhibition.getExhibitionPieces());
       exhibition.getExhibitionPieces().clear();
       exhibitionPieceRepository.flush();
@@ -599,6 +603,8 @@ public class ExhibitionServiceImpl implements ExhibitionService {
                   return ExhibitionParticipant.builder().exhibition(exhibition).user(user).build();
                 })
             .toList();
+
+    exhibitionParticipantRepository.saveAll(newParticipants);
 
     log.info("참여자 리스트 수정 성공 - 전시 ID: {}, 수정한 참여자 수: {}", id, newParticipants.size());
 
