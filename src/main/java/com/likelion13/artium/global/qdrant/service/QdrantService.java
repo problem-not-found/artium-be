@@ -74,5 +74,9 @@ public interface QdrantService {
    * @return
    */
   List<Map<String, Object>> search(
-      float[] query, int limit, List<Long> excludeArtworkIds, CollectionName collectionName);
+      float[] query,
+      int limit,
+      List<Long> excludeArtworkIds,
+      CollectionName collectionName,
+      boolean opposite);
 }

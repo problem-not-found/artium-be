@@ -141,7 +141,11 @@ public class QdrantServiceImpl implements QdrantService {
 
   @Override
   public List<Map<String, Object>> search(
-      float[] query, int limit, List<Long> excludeIds, CollectionName collectionName) {
+      float[] query,
+      int limit,
+      List<Long> excludeIds,
+      CollectionName collectionName,
+      boolean opposite) {
     log.info("query.length = {}, vectorSize() = {}", query.length, qdrantConfig.getVectorSize());
     if (query.length != qdrantConfig.getVectorSize())
       throw new CustomException(QdrantErrorCode.VECTOR_SIZE_MISMATCH);
@@ -166,6 +170,7 @@ public class QdrantServiceImpl implements QdrantService {
     Map<String, Object> params = new HashMap<>();
     params.put("exact", true);
     params.put("hnsw_ef", 512);
+    params.put("ascending", opposite);
 
     Map<String, Object> body = new HashMap<>();
     body.put("vector", query);
@@ -185,7 +190,16 @@ public class QdrantServiceImpl implements QdrantService {
             .bodyToMono(Map.class)
             .block();
 
-    return (List<Map<String, Object>>) resp.getOrDefault("result", List.of());
+    List<Map<String, Object>> results =
+        (List<Map<String, Object>>) resp.getOrDefault("result", List.of());
+
+    if (opposite) {
+      List<Map<String, Object>> reversed = new ArrayList<>(results);
+      java.util.Collections.reverse(reversed);
+      return reversed;
+    } else {
+      return results;
+    }
   }
 
   /**
