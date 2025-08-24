@@ -600,11 +600,6 @@ public class ExhibitionServiceImpl implements ExhibitionService {
                 })
             .toList();
 
-    exhibitionParticipantRepository.deleteAll(exhibition.getExhibitionParticipants());
-    exhibition.getExhibitionParticipants().clear();
-    exhibitionPieceRepository.flush();
-    exhibition.getExhibitionParticipants().addAll(newParticipants);
-
     log.info("참여자 리스트 수정 성공 - 전시 ID: {}, 수정한 참여자 수: {}", id, newParticipants.size());
 
     List<Long> participantIdList =
