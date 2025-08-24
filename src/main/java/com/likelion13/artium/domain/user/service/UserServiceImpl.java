@@ -3,6 +3,8 @@
  */
 package com.likelion13.artium.domain.user.service;
 
+import com.likelion13.artium.domain.exhibition.entity.Exhibition;
+import com.likelion13.artium.domain.exhibition.repository.ExhibitionRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -84,6 +86,7 @@ public class UserServiceImpl implements UserService {
   private final PasswordEncoder passwordEncoder;
   private final UserMapper userMapper;
   private final S3Service s3Service;
+  private final ExhibitionRepository exhibitionRepository;
   private final PieceRepository pieceRepository;
   private final UserLikeRepository userLikeRepository;
   private final EmbeddingService embeddingService;
@@ -349,12 +352,18 @@ public class UserServiceImpl implements UserService {
 
     User user = getCurrentUser();
 
+    Exhibition exhibition =
+        exhibitionRepository
+            .findById(exhibitionId)
+            .orElseThrow(() -> new CustomException(ExhibitionErrorCode.EXHIBITION_NOT_FOUND));
+
     ExhibitionParticipant participant =
         user.getExhibitionParticipants().stream()
             .filter(ep -> ep.getExhibition().getId().equals(exhibitionId))
             .findFirst()
             .orElseThrow(() -> new CustomException(ExhibitionErrorCode.EXHIBITION_ACCESS_DENIED));
 
+    exhibition.getExhibitionParticipants().add(participant);
     participant.updateStatus(ParticipateStatus.APPROVED);
 
     log.info(

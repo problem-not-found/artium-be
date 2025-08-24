@@ -99,15 +99,13 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       imageUrl = s3Service.uploadFile(PathName.EXHIBITION, image);
     }
 
-    List<ExhibitionParticipant> participants = buildParticipants(request.getParticipantIdList());
     List<ExhibitionPiece> pieces = buildPieces(request.getPieceIdList());
 
     User currentUser = userService.getCurrentUser();
 
     Exhibition exhibition =
-        exhibitionMapper.toExhibition(imageUrl, request, status, currentUser, pieces, participants);
+        exhibitionMapper.toExhibition(imageUrl, request, status, currentUser, pieces, null);
 
-    participants.forEach(p -> p.setExhibition(exhibition));
     pieces.forEach(piece -> piece.setExhibition(exhibition));
 
     try {
@@ -123,8 +121,6 @@ public class ExhibitionServiceImpl implements ExhibitionService {
         exhibition.getExhibitionPieces().stream()
             .map(exhibitionPiece -> exhibitionPiece.getPiece().getId())
             .toList();
-    List<Long> participantIdList =
-        exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
 
     if (exhibition.getFillAll()) {
       for (ExhibitionPiece exhibitionPiece : exhibition.getExhibitionPieces()) {
@@ -144,7 +140,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
         exhibition.getUser().getUsername(),
         status);
     return exhibitionMapper.toExhibitionDetailResponse(
-        exhibition, true, false, pieceIdList, participantIdList);
+        exhibition, true, false, pieceIdList, null);
   }
 
   @Override
