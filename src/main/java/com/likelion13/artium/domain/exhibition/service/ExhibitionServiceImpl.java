@@ -100,10 +100,6 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     }
 
     List<ExhibitionPiece> pieces = buildPieces(request.getPieceIdList());
-    List<ExhibitionParticipant> exhibitionParticipantList =
-        buildParticipants(request.getParticipantIdList());
-
-    exhibitionParticipantRepository.saveAll(exhibitionParticipantList);
 
     User currentUser = userService.getCurrentUser();
 
@@ -114,6 +110,10 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
     try {
       exhibitionRepository.save(exhibition);
+      List<ExhibitionParticipant> exhibitionParticipantList =
+          buildParticipants(request.getParticipantIdList(), exhibition);
+
+      exhibitionParticipantRepository.saveAll(exhibitionParticipantList);
     } catch (Exception e) {
       if (imageUrl != null) {
         s3Service.deleteFile(s3Service.extractKeyNameFromUrl(imageUrl));
@@ -472,7 +472,8 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       }
 
       List<ExhibitionPiece> pieces = buildPieces(distinctPieceIds);
-      List<ExhibitionParticipant> participants = buildParticipants(request.getParticipantIdList());
+      List<ExhibitionParticipant> participants =
+          buildParticipants(request.getParticipantIdList(), exhibition);
 
       exhibitionParticipantRepository.deleteAll(exhibition.getExhibitionParticipants());
       exhibition.getExhibitionParticipants().clear();
@@ -668,7 +669,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     }
   }
 
-  private List<ExhibitionParticipant> buildParticipants(List<Long> userIds) {
+  private List<ExhibitionParticipant> buildParticipants(List<Long> userIds, Exhibition exhibition) {
     return userIds.stream()
         .distinct()
         .map(
@@ -677,7 +678,10 @@ public class ExhibitionServiceImpl implements ExhibitionService {
                   userRepository
                       .findById(userId)
                       .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
-              return ExhibitionParticipant.builder().exhibition(null).user(participantUser).build();
+              return ExhibitionParticipant.builder()
+                  .exhibition(exhibition)
+                  .user(participantUser)
+                  .build();
             })
         .collect(Collectors.toList());
   }
