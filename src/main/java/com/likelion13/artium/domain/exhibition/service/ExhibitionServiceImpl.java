@@ -414,6 +414,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
       exhibitionPieceRepository.deleteAll(exhibition.getExhibitionPieces());
       exhibition.getExhibitionPieces().clear();
+      exhibitionPieceRepository.deleteAll(exhibition.getExhibitionPieces());
       pieces.forEach(p -> p.setExhibition(exhibition));
       exhibition.getExhibitionPieces().addAll(pieces);
 
@@ -480,6 +481,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
     exhibitionPieceRepository.deleteAll(exhibition.getExhibitionPieces());
     exhibition.getExhibitionPieces().clear();
+    exhibitionPieceRepository.deleteAll(exhibition.getExhibitionPieces());
     exhibition.getExhibitionPieces().addAll(newPieces);
 
     log.info("작품 리스트 수정 성공 - 전시 ID: {}, 수정한 작품 수: {}", id, newPieces.size());
