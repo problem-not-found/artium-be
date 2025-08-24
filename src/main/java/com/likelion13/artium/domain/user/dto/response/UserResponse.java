@@ -21,6 +21,9 @@ public class UserResponse {
   @Schema(description = "코드", example = "simonisnextdoor")
   private String code;
 
+  @Schema(description = "사용자 소개", example = "안녕하세요. 아름다운 바다를 좋아하는")
+  private String introduction;
+
   @Schema(
       description = "프로필 이미지 URL",
       example = "http://k.kakaocdn.net/dn/oOPCG/btsPjlOHjk6/6jx0PyBKkHHyCfbV8IY741/img_640x640.jpg")

@@ -18,10 +18,12 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.likelion13.artium.domain.exhibition.dto.request.ExhibitionParticipantsUpdateRequest;
 import com.likelion13.artium.domain.exhibition.dto.request.ExhibitionPiecesUpdateRequest;
 import com.likelion13.artium.domain.exhibition.dto.request.ExhibitionRequest;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionDetailResponse;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionLikeResponse;
+import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionParticipantsUpdateResponse;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionPiecesUpdateResponse;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionResponse;
 import com.likelion13.artium.domain.exhibition.entity.SortBy;
@@ -184,6 +186,19 @@ public class ExhibitionControllerImpl implements ExhibitionController {
         .body(
             BaseResponse.success(
                 200, "작품 리스트 수정에 성공하였습니다.", exhibitionService.updateExhibitionPieces(id, request)));
+  }
+
+  @Override
+  public ResponseEntity<BaseResponse<ExhibitionParticipantsUpdateResponse>>
+      updateExhibitionParticipants(
+          @PathVariable Long id, @RequestBody ExhibitionParticipantsUpdateRequest request) {
+
+    return ResponseEntity.status(HttpStatus.OK)
+        .body(
+            BaseResponse.success(
+                200,
+                "참여자 리스트 수정에 성공하였습니다.",
+                exhibitionService.updateExhibitionParticipants(id, request)));
   }
 
   @Override

@@ -21,6 +21,8 @@ public class ReviewMapper {
   public ReviewResponse toReviewResponse(Review review, Boolean isAuthor) {
     return ReviewResponse.builder()
         .reviewId(review.getId())
+        .nickname(review.getUser().getNickname())
+        .profileImageUrl(review.getUser().getProfileImageUrl())
         .content(review.getContent())
         .isAuthor(isAuthor)
         .build();

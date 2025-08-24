@@ -15,9 +15,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Schema(title = "ExhibitionPiecesUpdateRequest DTO", description = "전시 작품 리스트 수정을 위한 데이터 전송")
-public class ExhibitionPiecesUpdateRequest {
+@Schema(title = "ExhibitionParticipantsUpdateRequest DTO", description = "전시 참여자 리스트 수정을 위한 데이터 전송")
+public class ExhibitionParticipantsUpdateRequest {
 
   @Schema(description = "전시에 포함될 작품 식별자 리스트", example = "[1, 2, 3]")
-  private List<Long> pieceIdList;
+  private List<Long> participantIdList;
 }
