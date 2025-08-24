@@ -170,6 +170,7 @@ public class QdrantServiceImpl implements QdrantService {
     Map<String, Object> params = new HashMap<>();
     params.put("exact", true);
     params.put("hnsw_ef", 512);
+    params.put("ascending", opposite);
 
     Map<String, Object> body = new HashMap<>();
     body.put("vector", query);
