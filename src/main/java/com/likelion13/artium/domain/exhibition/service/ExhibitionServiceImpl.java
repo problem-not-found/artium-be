@@ -145,8 +145,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
         exhibition.getId(),
         exhibition.getUser().getUsername(),
         status);
-    return exhibitionMapper.toExhibitionDetailResponse(
-        exhibition, true, false, pieceIdList, null);
+    return exhibitionMapper.toExhibitionDetailResponse(exhibition, true, false, pieceIdList, null);
   }
 
   @Override

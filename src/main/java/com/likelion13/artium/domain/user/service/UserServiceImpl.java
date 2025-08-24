@@ -3,8 +3,6 @@
  */
 package com.likelion13.artium.domain.user.service;
 
-import com.likelion13.artium.domain.exhibition.entity.Exhibition;
-import com.likelion13.artium.domain.exhibition.repository.ExhibitionRepository;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,10 +25,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.likelion13.artium.domain.exhibition.entity.Exhibition;
 import com.likelion13.artium.domain.exhibition.entity.ExhibitionStatus;
 import com.likelion13.artium.domain.exhibition.entity.ParticipateStatus;
 import com.likelion13.artium.domain.exhibition.exception.ExhibitionErrorCode;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
+import com.likelion13.artium.domain.exhibition.repository.ExhibitionRepository;
 import com.likelion13.artium.domain.piece.entity.Piece;
 import com.likelion13.artium.domain.piece.entity.ProgressStatus;
 import com.likelion13.artium.domain.piece.entity.SaveStatus;
