@@ -278,7 +278,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
                   return exhibitionMapper.toExhibitionResponse(exhibition, isLike);
                 });
 
-    log.info("전시 리스트 페이지 조회 성공 - 호출된 페이지: {}, 등록 완료 여부: {}", user.getNickname(), fillAll);
+    log.info("전시 리스트 페이지 조회 성공 - 조회한 사용자: {}, 등록 완료 여부: {}", user.getNickname(), fillAll);
     return pageMapper.toExhibitionPageResponse(page);
   }
 
@@ -308,7 +308,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
                   return exhibitionMapper.toExhibitionResponse(exhibition, isLike);
                 });
 
-    log.info("{} 사용자의 전시 리스트 페이지 조회 - 호출된 페이지: {}", user.getNickname(), pageable.getPageNumber());
+    log.info("{} 사용자의 전시 리스트 페이지 조회 - 조회한 사용자: {}", user.getNickname(), pageable.getPageNumber());
     return pageMapper.toExhibitionPageResponse(page);
   }
 
@@ -333,7 +333,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
                 });
 
     log.info(
-        "{} 사용자가 좋아요 한 전시 리스트 페이지 조회 - 호출된 페이지: {}", user.getNickname(), pageable.getPageNumber());
+        "{} 사용자가 좋아요 한 전시 리스트 페이지 조회 - 조회한 사용자: {}", user.getNickname(), pageable.getPageNumber());
     return pageMapper.toExhibitionPageResponse(page);
   }
 
