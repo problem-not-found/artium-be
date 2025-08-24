@@ -631,7 +631,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
         exhibitionRepository.findByUserId(userId).stream().map(Exhibition::getId).toList();
     // Qdrant 검색
     List<Map<String, Object>> result =
-        qdrantService.search(userVector, limit, excludeIds, CollectionName.EXHIBITION);
+        qdrantService.search(userVector, limit, excludeIds, CollectionName.EXHIBITION, opposite);
     // 점수 기준 정렬
     List<Map<String, Object>> sorted = new ArrayList<>(result);
     sorted.sort(

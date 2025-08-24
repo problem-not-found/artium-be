@@ -512,10 +512,10 @@ public class UserServiceImpl implements UserService {
     }
 
     List<Map<String, Object>> pieceResults =
-        qdrantService.search(userVector, 50, List.of(), CollectionName.PIECE);
+        qdrantService.search(userVector, 50, List.of(), CollectionName.PIECE, false);
 
     List<Map<String, Object>> exhibitionResults =
-        qdrantService.search(userVector, 50, List.of(), CollectionName.EXHIBITION);
+        qdrantService.search(userVector, 50, List.of(), CollectionName.EXHIBITION, false);
 
     List<String> keywords = new ArrayList<>();
 

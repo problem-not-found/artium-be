@@ -470,7 +470,7 @@ public class PieceServiceImpl implements PieceService {
         pieceRepository.findByUser_Id(userId).stream().map(Piece::getId).toList();
 
     List<Map<String, Object>> result =
-        qdrantService.search(userVector, limit, excludeIds, CollectionName.PIECE);
+        qdrantService.search(userVector, limit, excludeIds, CollectionName.PIECE, false);
 
     List<Map<String, Object>> sorted = new ArrayList<>(result);
     sorted.sort(
