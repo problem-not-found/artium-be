@@ -487,7 +487,8 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       exhibition.getExhibitionPieces().addAll(pieces);
 
       Exhibition updatedExhibition =
-          exhibitionMapper.toExhibition(imageUrl, request, status, currentUser, pieces, participants);
+          exhibitionMapper.toExhibition(
+              imageUrl, request, status, currentUser, pieces, participants);
 
       exhibition.update(updatedExhibition);
     } catch (Exception e) {
