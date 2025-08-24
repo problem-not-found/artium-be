@@ -100,6 +100,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     }
 
     List<ExhibitionPiece> pieces = buildPieces(request.getPieceIdList());
+    buildParticipants(request.getParticipantIdList());
 
     User currentUser = userService.getCurrentUser();
 
@@ -458,7 +459,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     try {
       ExhibitionStatus status = determineStatus(request.getStartDate(), request.getEndDate());
 
-      List<ExhibitionParticipant> participants = buildParticipants(request.getParticipantIdList());
+      buildParticipants(request.getParticipantIdList());
 
       List<Long> pieceIds = request.getPieceIdList();
       List<Long> distinctPieceIds = pieceIds.stream().distinct().toList();
@@ -468,12 +469,6 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
       List<ExhibitionPiece> pieces = buildPieces(distinctPieceIds);
 
-      exhibitionParticipantRepository.deleteAll(exhibition.getExhibitionParticipants());
-      exhibition.getExhibitionParticipants().clear();
-      exhibitionParticipantRepository.flush();
-      participants.forEach(p -> p.setExhibition(exhibition));
-      exhibition.getExhibitionParticipants().addAll(participants);
-
       exhibitionPieceRepository.deleteAll(exhibition.getExhibitionPieces());
       exhibition.getExhibitionPieces().clear();
       exhibitionPieceRepository.flush();
@@ -482,7 +477,12 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
       Exhibition updatedExhibition =
           exhibitionMapper.toExhibition(
-              imageUrl, request, status, currentUser, pieces, participants);
+              imageUrl,
+              request,
+              status,
+              currentUser,
+              pieces,
+              exhibition.getExhibitionParticipants());
 
       exhibition.update(updatedExhibition);
     } catch (Exception e) {
