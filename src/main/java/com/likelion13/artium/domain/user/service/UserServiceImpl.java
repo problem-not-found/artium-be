@@ -776,9 +776,9 @@ public class UserServiceImpl implements UserService {
           }
         };
 
-    add.accept("themes: " + themes, 0.60);
-    add.accept("moods: " + moods, 0.20);
-    add.accept("formats: " + formats, 0.20);
+    add.accept("themes: " + themes, 0.80);
+    add.accept("moods: " + moods, 0.10);
+    add.accept("formats: " + formats, 0.10);
 
     float[] acc = null;
     for (int i = 0; i < vecs.size(); i++) {
