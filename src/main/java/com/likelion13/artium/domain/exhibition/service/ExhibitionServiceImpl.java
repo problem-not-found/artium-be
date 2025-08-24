@@ -207,7 +207,10 @@ public class ExhibitionServiceImpl implements ExhibitionService {
             .map(exhibitionPiece -> exhibitionPiece.getPiece().getId())
             .toList();
     List<Long> participantIdList =
-        exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
+        exhibition.getExhibitionParticipants().stream()
+            .filter(p -> p.getParticipateStatus() == ParticipateStatus.APPROVED)
+            .map(p -> p.getUser().getId())
+            .toList();
 
     return exhibitionMapper.toExhibitionDetailResponse(
         exhibition, createdByCurrentUser, likedByCurrentUser, pieceIdList, participantIdList);
@@ -469,10 +472,14 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       }
 
       List<ExhibitionPiece> pieces = buildPieces(distinctPieceIds);
-      List<ExhibitionParticipant> exhibitionParticipantList =
-          buildParticipants(request.getParticipantIdList());
+      List<ExhibitionParticipant> participants = buildParticipants(request.getParticipantIdList());
 
-      exhibitionParticipantRepository.saveAll(exhibitionParticipantList);
+      exhibitionParticipantRepository.deleteAll(exhibition.getExhibitionParticipants());
+      exhibition.getExhibitionParticipants().clear();
+      exhibitionParticipantRepository.flush();
+      participants.forEach(p -> p.setExhibition(exhibition));
+      exhibition.getExhibitionParticipants().addAll(participants);
+
       exhibitionPieceRepository.deleteAll(exhibition.getExhibitionPieces());
       exhibition.getExhibitionPieces().clear();
       exhibitionPieceRepository.flush();
@@ -480,13 +487,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       exhibition.getExhibitionPieces().addAll(pieces);
 
       Exhibition updatedExhibition =
-          exhibitionMapper.toExhibition(
-              imageUrl,
-              request,
-              status,
-              currentUser,
-              pieces,
-              exhibition.getExhibitionParticipants());
+          exhibitionMapper.toExhibition(imageUrl, request, status, currentUser, pieces, participants);
 
       exhibition.update(updatedExhibition);
     } catch (Exception e) {
@@ -499,7 +500,10 @@ public class ExhibitionServiceImpl implements ExhibitionService {
             .map(exhibitionPiece -> exhibitionPiece.getPiece().getId())
             .toList();
     List<Long> participantIdList =
-        exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
+        exhibition.getExhibitionParticipants().stream()
+            .filter(p -> p.getParticipateStatus() == ParticipateStatus.APPROVED)
+            .map(p -> p.getUser().getId())
+            .toList();
 
     if (exhibition.getFillAll()) {
       for (ExhibitionPiece exhibitionPiece : exhibition.getExhibitionPieces()) {
@@ -604,7 +608,10 @@ public class ExhibitionServiceImpl implements ExhibitionService {
                 })
             .toList();
 
-    exhibitionParticipantRepository.saveAll(newParticipants);
+    exhibitionParticipantRepository.deleteAll(exhibition.getExhibitionParticipants());
+    exhibition.getExhibitionParticipants().clear();
+    exhibitionPieceRepository.flush();
+    exhibition.getExhibitionParticipants().addAll(newParticipants);
 
     log.info("참여자 리스트 수정 성공 - 전시 ID: {}, 수정한 참여자 수: {}", id, newParticipants.size());
 
