@@ -24,10 +24,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.likelion13.artium.domain.exhibition.dto.request.ExhibitionParticipantsUpdateRequest;
 import com.likelion13.artium.domain.exhibition.dto.request.ExhibitionPiecesUpdateRequest;
 import com.likelion13.artium.domain.exhibition.dto.request.ExhibitionRequest;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionDetailResponse;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionLikeResponse;
+import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionParticipantsUpdateResponse;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionPiecesUpdateResponse;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionResponse;
 import com.likelion13.artium.domain.exhibition.entity.Exhibition;
@@ -40,6 +42,7 @@ import com.likelion13.artium.domain.exhibition.mapping.ExhibitionLike;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionParticipant;
 import com.likelion13.artium.domain.exhibition.mapping.ExhibitionPiece;
 import com.likelion13.artium.domain.exhibition.repository.ExhibitionLikeRepository;
+import com.likelion13.artium.domain.exhibition.repository.ExhibitionParticipantRepository;
 import com.likelion13.artium.domain.exhibition.repository.ExhibitionPieceRepository;
 import com.likelion13.artium.domain.exhibition.repository.ExhibitionRepository;
 import com.likelion13.artium.domain.piece.entity.Piece;
@@ -78,6 +81,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
   private final ExhibitionMapper exhibitionMapper;
   private final PageMapper pageMapper;
   private final PieceRepository pieceRepository;
+  private final ExhibitionParticipantRepository exhibitionParticipantRepository;
 
   @Override
   @Transactional
@@ -403,12 +407,13 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
       List<ExhibitionPiece> pieces = buildPieces(distinctPieceIds);
 
+      exhibitionParticipantRepository.deleteAll(exhibition.getExhibitionParticipants());
       exhibition.getExhibitionParticipants().clear();
       participants.forEach(p -> p.setExhibition(exhibition));
       exhibition.getExhibitionParticipants().addAll(participants);
 
-      exhibition.getExhibitionPieces().clear();
       exhibitionPieceRepository.deleteAll(exhibition.getExhibitionPieces());
+      exhibition.getExhibitionPieces().clear();
       pieces.forEach(p -> p.setExhibition(exhibition));
       exhibition.getExhibitionPieces().addAll(pieces);
 
@@ -473,8 +478,8 @@ public class ExhibitionServiceImpl implements ExhibitionService {
                 })
             .toList();
 
-    exhibition.getExhibitionPieces().clear();
     exhibitionPieceRepository.deleteAll(exhibition.getExhibitionPieces());
+    exhibition.getExhibitionPieces().clear();
     exhibition.getExhibitionPieces().addAll(newPieces);
 
     log.info("작품 리스트 수정 성공 - 전시 ID: {}, 수정한 작품 수: {}", id, newPieces.size());
@@ -484,6 +489,59 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     return ExhibitionPiecesUpdateResponse.builder()
         .exhibitionId(exhibition.getId())
         .pieceIdList(pieceIdList)
+        .build();
+  }
+
+  @Override
+  @Transactional
+  public ExhibitionParticipantsUpdateResponse updateExhibitionParticipants(
+      Long id, ExhibitionParticipantsUpdateRequest request) {
+
+    Exhibition exhibition =
+        exhibitionRepository
+            .findById(id)
+            .orElseThrow(() -> new CustomException(ExhibitionErrorCode.EXHIBITION_NOT_FOUND));
+
+    User currentUser = userService.getCurrentUser();
+
+    // 주최자(owner) 또는 승인된(APPROVED) 참여자인지 확인
+    boolean isOwner = exhibition.getUser().getId().equals(currentUser.getId());
+    boolean isApprovedParticipant =
+        exhibition.getExhibitionParticipants().stream()
+            .anyMatch(
+                p ->
+                    p.getUser().getId().equals(currentUser.getId())
+                        && p.getParticipateStatus() == ParticipateStatus.APPROVED);
+
+    if (!(isOwner || isApprovedParticipant)) {
+      throw new CustomException(ExhibitionErrorCode.EXHIBITION_ACCESS_DENIED);
+    }
+
+    List<ExhibitionParticipant> newParticipants =
+        request.getParticipantIdList().stream()
+            .distinct()
+            .map(
+                userId -> {
+                  User user =
+                      userRepository
+                          .findById(userId)
+                          .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
+                  return ExhibitionParticipant.builder().exhibition(exhibition).user(user).build();
+                })
+            .toList();
+
+    exhibitionParticipantRepository.deleteAll(exhibition.getExhibitionParticipants());
+    exhibition.getExhibitionParticipants().clear();
+    exhibition.getExhibitionParticipants().addAll(newParticipants);
+
+    log.info("참여자 리스트 수정 성공 - 전시 ID: {}, 수정한 참여자 수: {}", id, newParticipants.size());
+
+    List<Long> participantIdList =
+        newParticipants.stream().map(ep -> ep.getUser().getId()).toList();
+
+    return ExhibitionParticipantsUpdateResponse.builder()
+        .exhibitionId(exhibition.getId())
+        .participantIdList(participantIdList)
         .build();
   }
 

@@ -86,6 +86,7 @@ public class UserMapper {
         .userId(user.getId())
         .nickname(user.getNickname())
         .code(user.getCode())
+        .introduction(user.getIntroduction())
         .profileImageUrl(user.getProfileImageUrl())
         .build();
   }

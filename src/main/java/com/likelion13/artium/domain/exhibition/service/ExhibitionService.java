@@ -8,10 +8,12 @@ import java.util.List;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.likelion13.artium.domain.exhibition.dto.request.ExhibitionParticipantsUpdateRequest;
 import com.likelion13.artium.domain.exhibition.dto.request.ExhibitionPiecesUpdateRequest;
 import com.likelion13.artium.domain.exhibition.dto.request.ExhibitionRequest;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionDetailResponse;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionLikeResponse;
+import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionParticipantsUpdateResponse;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionPiecesUpdateResponse;
 import com.likelion13.artium.domain.exhibition.dto.response.ExhibitionResponse;
 import com.likelion13.artium.domain.exhibition.entity.SortBy;
@@ -132,6 +134,9 @@ public interface ExhibitionService {
 
   ExhibitionPiecesUpdateResponse updateExhibitionPieces(
       Long id, ExhibitionPiecesUpdateRequest request);
+
+  ExhibitionParticipantsUpdateResponse updateExhibitionParticipants(
+      Long id, ExhibitionParticipantsUpdateRequest request);
 
   /**
    * 사용자가 특정 전시회 좋아요(Like)를 취소합니다.
