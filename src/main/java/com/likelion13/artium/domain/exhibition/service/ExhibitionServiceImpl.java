@@ -3,6 +3,7 @@
  */
 package com.likelion13.artium.domain.exhibition.service;
 
+import com.likelion13.artium.domain.piece.entity.ProgressStatus;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -124,6 +125,12 @@ public class ExhibitionServiceImpl implements ExhibitionService {
             .toList();
     List<Long> participantIdList =
         exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
+
+    if (exhibition.getFillAll()) {
+      for (ExhibitionPiece exhibitionPiece : exhibition.getExhibitionPieces()) {
+        exhibitionPiece.getPiece().updateProgressStatus(ProgressStatus.ON_DISPLAY);
+      }
+    }
 
     String content = (exhibition.getTitle() + "\n\n" + exhibition.getDescription()).trim();
     float[] vector = embeddingService.embed(content);
@@ -488,6 +495,12 @@ public class ExhibitionServiceImpl implements ExhibitionService {
             .toList();
     List<Long> participantIdList =
         exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
+
+    if (exhibition.getFillAll()) {
+      for (ExhibitionPiece exhibitionPiece : exhibition.getExhibitionPieces()) {
+        exhibitionPiece.getPiece().updateProgressStatus(ProgressStatus.ON_DISPLAY);
+      }
+    }
 
     log.info(
         "전시 정보 수정 성공 - id: {}, status: {}", exhibition.getId(), exhibition.getExhibitionStatus());
