@@ -17,7 +17,7 @@ import com.likelion13.artium.domain.piece.entity.SaveStatus;
 
 public interface PieceRepository extends JpaRepository<Piece, Long> {
 
-  Page<Piece> findByIdIn(List<Long> ids, Pageable pageable);
+  List<Piece> findByIdIn(List<Long> ids);
 
   @Query(
       "SELECT p from Piece p WHERE p.id NOT IN :pieceIds AND p.progressStatus IN :statuses AND SIZE(p.pieceLikes) = 0 ORDER BY p.createdAt ASC")
