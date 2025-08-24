@@ -215,13 +215,21 @@ public class ExhibitionServiceImpl implements ExhibitionService {
   public PageResponse<ExhibitionResponse> getExhibitionPageByType(
       SortBy sortBy, Pageable pageable) {
     Page<ExhibitionResponse> page;
+    User currentUser = userService.getCurrentUser();
 
     switch (sortBy) {
       case HOTTEST:
         page =
             exhibitionRepository
                 .findAllOrderByLikesCountDesc(pageable)
-                .map(exhibitionMapper::toExhibitionResponse);
+                .map(
+                    exhibition -> {
+                      boolean isLike =
+                          exhibitionLikeRepository
+                              .findByExhibitionAndUser(exhibition, currentUser)
+                              .isPresent();
+                      return exhibitionMapper.toExhibitionResponse(exhibition, isLike);
+                    });
         log.info("인기순 전시 리스트 페이지 조회 성공");
         break;
 
@@ -230,7 +238,14 @@ public class ExhibitionServiceImpl implements ExhibitionService {
         page =
             exhibitionRepository
                 .findRecentOngoingExhibitions(cutoffDate, ExhibitionStatus.ONGOING, pageable)
-                .map(exhibitionMapper::toExhibitionResponse);
+                .map(
+                    exhibition -> {
+                      boolean isLike =
+                          exhibitionLikeRepository
+                              .findByExhibitionAndUser(exhibition, currentUser)
+                              .isPresent();
+                      return exhibitionMapper.toExhibitionResponse(exhibition, isLike);
+                    });
         log.info("최신순 전시 리스트 페이지 조회 성공");
         break;
 
@@ -254,9 +269,16 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     Page<ExhibitionResponse> page =
         exhibitionRepository
             .findByUserIdAndFillAll(user.getId(), fillAll, sortedPageable)
-            .map(exhibitionMapper::toExhibitionResponse);
+            .map(
+                exhibition -> {
+                  boolean isLike =
+                      exhibitionLikeRepository
+                          .findByExhibitionAndUser(exhibition, user)
+                          .isPresent();
+                  return exhibitionMapper.toExhibitionResponse(exhibition, isLike);
+                });
 
-    log.info("전시 리스트 페이지 조회 성공 - 호출된 페이지: {}, 등록 완료 여부: {}", user.getNickname(), fillAll);
+    log.info("전시 리스트 페이지 조회 성공 - 조회한 사용자: {}, 등록 완료 여부: {}", user.getNickname(), fillAll);
     return pageMapper.toExhibitionPageResponse(page);
   }
 
@@ -277,9 +299,16 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     Page<ExhibitionResponse> page =
         exhibitionRepository
             .findByUserIdAndFillAll(user.getId(), true, sortedPageable)
-            .map(exhibitionMapper::toExhibitionResponse);
+            .map(
+                exhibition -> {
+                  boolean isLike =
+                      exhibitionLikeRepository
+                          .findByExhibitionAndUser(exhibition, user)
+                          .isPresent();
+                  return exhibitionMapper.toExhibitionResponse(exhibition, isLike);
+                });
 
-    log.info("{} 사용자의 전시 리스트 페이지 조회 - 호출된 페이지: {}", user.getNickname(), pageable.getPageNumber());
+    log.info("{} 사용자의 전시 리스트 페이지 조회 - 조회한 사용자: {}", user.getNickname(), pageable.getPageNumber());
     return pageMapper.toExhibitionPageResponse(page);
   }
 
@@ -294,10 +323,17 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     Page<ExhibitionResponse> page =
         exhibitionRepository
             .findLikedExhibitionsByUserId(user.getId(), sortedPageable)
-            .map(exhibitionMapper::toExhibitionResponse);
+            .map(
+                exhibition -> {
+                  boolean isLike =
+                      exhibitionLikeRepository
+                          .findByExhibitionAndUser(exhibition, user)
+                          .isPresent();
+                  return exhibitionMapper.toExhibitionResponse(exhibition, isLike);
+                });
 
     log.info(
-        "{} 사용자가 좋아요 한 전시 리스트 페이지 조회 - 호출된 페이지: {}", user.getNickname(), pageable.getPageNumber());
+        "{} 사용자가 좋아요 한 전시 리스트 페이지 조회 - 조회한 사용자: {}", user.getNickname(), pageable.getPageNumber());
     return pageMapper.toExhibitionPageResponse(page);
   }
 
@@ -328,7 +364,14 @@ public class ExhibitionServiceImpl implements ExhibitionService {
               .sorted(
                   Comparator.comparingInt(
                       e -> pageOrder.getOrDefault(e.getId(), Integer.MAX_VALUE)))
-              .map(exhibitionMapper::toExhibitionResponse)
+              .map(
+                  exhibition -> {
+                    boolean isLike =
+                        exhibitionLikeRepository
+                            .findByExhibitionAndUser(exhibition, user)
+                            .isPresent();
+                    return exhibitionMapper.toExhibitionResponse(exhibition, isLike);
+                  })
               .toList();
     }
     Page<ExhibitionResponse> page = new PageImpl<>(content, pageable, total);
@@ -343,6 +386,9 @@ public class ExhibitionServiceImpl implements ExhibitionService {
   @Override
   @Transactional(readOnly = true)
   public List<ExhibitionResponse> getExhibitionListByKeyword(String keyword, SortBy sortBy) {
+
+    User user = userService.getCurrentUser();
+
     if (keyword == null || keyword.isBlank()) {
       return List.of();
     }
@@ -361,7 +407,14 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     }
 
     log.info("키워드를 통한 전시 검색 성공 - 키워드: {}, 정렬: {}", q, sortBy);
-    return results.stream().map(exhibitionMapper::toExhibitionResponse).toList();
+    return results.stream()
+        .map(
+            exhibition -> {
+              boolean isLike =
+                  exhibitionLikeRepository.findByExhibitionAndUser(exhibition, user).isPresent();
+              return exhibitionMapper.toExhibitionResponse(exhibition, isLike);
+            })
+        .toList();
   }
 
   @Override
@@ -409,12 +462,13 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
       exhibitionParticipantRepository.deleteAll(exhibition.getExhibitionParticipants());
       exhibition.getExhibitionParticipants().clear();
+      exhibitionParticipantRepository.flush();
       participants.forEach(p -> p.setExhibition(exhibition));
       exhibition.getExhibitionParticipants().addAll(participants);
 
       exhibitionPieceRepository.deleteAll(exhibition.getExhibitionPieces());
       exhibition.getExhibitionPieces().clear();
-      exhibitionPieceRepository.deleteAll(exhibition.getExhibitionPieces());
+      exhibitionPieceRepository.flush();
       pieces.forEach(p -> p.setExhibition(exhibition));
       exhibition.getExhibitionPieces().addAll(pieces);
 
@@ -481,7 +535,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
     exhibitionPieceRepository.deleteAll(exhibition.getExhibitionPieces());
     exhibition.getExhibitionPieces().clear();
-    exhibitionPieceRepository.deleteAll(exhibition.getExhibitionPieces());
+    exhibitionPieceRepository.flush();
     exhibition.getExhibitionPieces().addAll(newPieces);
 
     log.info("작품 리스트 수정 성공 - 전시 ID: {}, 수정한 작품 수: {}", id, newPieces.size());
@@ -534,6 +588,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
     exhibitionParticipantRepository.deleteAll(exhibition.getExhibitionParticipants());
     exhibition.getExhibitionParticipants().clear();
+    exhibitionPieceRepository.flush();
     exhibition.getExhibitionParticipants().addAll(newParticipants);
 
     log.info("참여자 리스트 수정 성공 - 전시 ID: {}, 수정한 참여자 수: {}", id, newParticipants.size());

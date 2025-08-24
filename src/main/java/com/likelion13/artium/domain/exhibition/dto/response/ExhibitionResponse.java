@@ -19,6 +19,9 @@ public class ExhibitionResponse {
   @Schema(description = "전시 식별자", example = "1")
   private Long exhibitionId;
 
+  @Schema(description = "전시 좋아요 여부", example = "true")
+  private Boolean isLike;
+
   @Schema(description = "썸네일 사진 URL", example = "")
   private String thumbnailImageUrl;
 

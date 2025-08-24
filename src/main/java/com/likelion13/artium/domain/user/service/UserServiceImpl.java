@@ -255,7 +255,9 @@ public class UserServiceImpl implements UserService {
         String oldImageUrl = user.getProfileImageUrl();
         String newImageUrl = s3Service.uploadFile(PathName.PROFILE_IMAGE, profileImage);
 
-        if (oldImageUrl != null && !oldImageUrl.isEmpty()) {
+        if (oldImageUrl != null
+            && !oldImageUrl.isEmpty()
+            && !oldImageUrl.startsWith("http://k.kakaocdn.net")) {
           s3Service.deleteFile(oldImageUrl);
         }
         user.updateProfileImageUrl(newImageUrl);
@@ -325,7 +327,9 @@ public class UserServiceImpl implements UserService {
     try {
       newImageUrl = s3Service.uploadFile(PathName.PROFILE_IMAGE, profileImage);
 
-      if (oldImageUrl != null && !oldImageUrl.isEmpty()) {
+      if (oldImageUrl != null
+          && !oldImageUrl.isEmpty()
+          && !oldImageUrl.startsWith("http://k.kakaocdn.net")) {
         s3Service.deleteFile(oldImageUrl);
       }
     } catch (Exception e) {
@@ -772,9 +776,9 @@ public class UserServiceImpl implements UserService {
           }
         };
 
-    add.accept("themes: " + themes, 0.60);
-    add.accept("moods: " + moods, 0.20);
-    add.accept("formats: " + formats, 0.20);
+    add.accept("themes: " + themes, 0.80);
+    add.accept("moods: " + moods, 0.10);
+    add.accept("formats: " + formats, 0.10);
 
     float[] acc = null;
     for (int i = 0; i < vecs.size(); i++) {

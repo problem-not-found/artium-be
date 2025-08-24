@@ -170,12 +170,14 @@ public class QdrantServiceImpl implements QdrantService {
     Map<String, Object> params = new HashMap<>();
     params.put("exact", true);
     params.put("hnsw_ef", 512);
-    params.put("ascending", opposite);
 
     Map<String, Object> body = new HashMap<>();
     body.put("vector", query);
-    body.put("limit", limit);
+
+    int fetchLimit = opposite ? Math.max(limit * 10, limit) : limit;
+    body.put("limit", fetchLimit);
     body.put("with_payload", true);
+    body.put("with_vector", false);
     body.put("params", params);
     body.put("score_threshold", 0.20);
     if (!must.isEmpty() || !mustNot.isEmpty()) body.put("filter", filter);
@@ -194,9 +196,19 @@ public class QdrantServiceImpl implements QdrantService {
         (List<Map<String, Object>>) resp.getOrDefault("result", List.of());
 
     if (opposite) {
-      List<Map<String, Object>> reversed = new ArrayList<>(results);
-      java.util.Collections.reverse(reversed);
-      return reversed;
+      results.sort(
+          (a, b) -> {
+            Double scoreA = (Double) a.get("score");
+            Double scoreB = (Double) b.get("score");
+            return scoreA.compareTo(scoreB);
+          });
+
+      List<Map<String, Object>> farthest = new ArrayList<>();
+      int size = results.size();
+      for (int i = size - 1; i >= Math.max(size - limit, 0); i--) {
+        farthest.add(results.get(i));
+      }
+      return farthest;
     } else {
       return results;
     }

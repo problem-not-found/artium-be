@@ -67,7 +67,20 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     log.info("카카오 로그인 성공: {}", user.getUsername());
 
+    boolean hasTheme = user.getThemePreferences() != null && !user.getThemePreferences().isEmpty();
+    boolean hasMood = user.getMoodPreferences() != null && !user.getMoodPreferences().isEmpty();
+    boolean hasFormat =
+        user.getFormatPreferences() != null && !user.getFormatPreferences().isEmpty();
+
+    boolean hasAge = user.getAge() != null;
+    boolean hasGender = user.getGender() != null;
+    boolean hasCode = user.getCode() != null && !user.getCode().isBlank();
+
     response.addHeader("Authorization", "Bearer " + tokenResponse.getAccessToken());
-    response.sendRedirect("http://localhost:5173");
+    if (hasAge && hasGender && hasCode && hasFormat && hasMood && hasTheme) {
+      response.sendRedirect("http://localhost:5173");
+    } else {
+      response.sendRedirect("http://localhost:5173/mytype");
+    }
   }
 }
