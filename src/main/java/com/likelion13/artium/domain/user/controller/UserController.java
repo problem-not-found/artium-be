@@ -152,8 +152,8 @@ public interface UserController {
 
   @GetMapping("/recommendations")
   @Operation(
-      summary = "최근 전시 오픈한/나와 비슷한 연령대 크리에이터 리스트 조회",
-      description = "최근에 전시를 오픈한 또는 비슷한 연령대 크리에이터 리스트를 조회합니다.")
+      summary = "지금 뜨는/최근 전시 오픈한/나와 비슷한 연령대 크리에이터 리스트 조회",
+      description = "지는 뜨는 또는 최근에 전시를 오픈한 또는 비슷한 연령대 크리에이터 리스트를 조회합니다.")
   ResponseEntity<BaseResponse<PageResponse<CreatorFeedResponse>>> getRecommendations(
       @Parameter(description = "정렬 기준", example = "LATEST_OPEN") @RequestParam SortBy sortBy,
       @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,

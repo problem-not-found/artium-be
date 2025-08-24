@@ -25,6 +25,9 @@ public class CreatorFeedResponse {
       example = "http://k.kakaocdn.net/dn/oOPCG/btsPjlOHjk6/6jx0PyBKkHHyCfbV8IY741/img_640x640.jpg")
   private String profileImageUrl;
 
+  @Schema(description = "코드", example = "simonisnextdoor")
+  private String code;
+
   @Schema(
       description = "작품 사진 URL 리스트",
       example =

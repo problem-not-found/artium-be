@@ -132,6 +132,7 @@ public class UserMapper {
         .userId(user.getId())
         .nickname(user.getNickname())
         .profileImageUrl(user.getProfileImageUrl())
+        .code(user.getCode())
         .pieceImageUrls(pieceImageUrls.stream().limit(2).toList())
         .isLike(isLike)
         .build();
