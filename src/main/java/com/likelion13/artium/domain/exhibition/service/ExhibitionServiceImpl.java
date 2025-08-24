@@ -128,6 +128,12 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       }
     }
 
+    if (exhibition.getFillAll()) {
+      for (ExhibitionPiece exhibitionPiece : exhibition.getExhibitionPieces()) {
+        exhibitionPiece.getPiece().updateProgressStatus(ProgressStatus.ON_DISPLAY);
+      }
+    }
+
     String content = (exhibition.getTitle() + "\n\n" + exhibition.getDescription()).trim();
     float[] vector = embeddingService.embed(content);
 
