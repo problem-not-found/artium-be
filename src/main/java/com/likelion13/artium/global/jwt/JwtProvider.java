@@ -334,6 +334,7 @@ public class JwtProvider {
    */
   public void addJwtToCookie(HttpServletResponse response, String token, String name, long maxAge) {
     Cookie cookie = new Cookie(name, token);
+    cookie.setDomain(".artium.life");
     cookie.setHttpOnly(true);
     cookie.setSecure(true);
     cookie.setPath("/");
