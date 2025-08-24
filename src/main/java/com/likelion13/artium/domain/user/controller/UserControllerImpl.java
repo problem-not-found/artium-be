@@ -121,13 +121,11 @@ public class UserControllerImpl implements UserController {
   }
 
   @Override
-  public ResponseEntity<BaseResponse<PageResponse<UserSummaryResponse>>> getUserProfilesByCode(
-      @RequestParam String code, @RequestParam Integer pageNum, @RequestParam Integer pageSize) {
-
-    Pageable pageable = validatePageable(pageNum, pageSize);
+  public ResponseEntity<BaseResponse<List<UserSummaryResponse>>> getUserProfilesByCode(
+      @RequestParam String code) {
 
     return ResponseEntity.status(200)
-        .body(BaseResponse.success(userService.getUserProfilesByCode(code, pageable)));
+        .body(BaseResponse.success(userService.getUserProfilesByCode(code)));
   }
 
   @Override

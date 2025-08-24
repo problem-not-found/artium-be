@@ -100,10 +100,8 @@ public interface UserController {
 
   @GetMapping("/profile")
   @Operation(summary = "사용자 코드 조회", description = "코드를 통해 사용자 리스트를 조회합니다.")
-  ResponseEntity<BaseResponse<PageResponse<UserSummaryResponse>>> getUserProfilesByCode(
-      @Parameter(description = "특정 유저 코드", example = "kim") @RequestParam String code,
-      @Parameter(description = "페이지 번호", example = "1") @RequestParam Integer pageNum,
-      @Parameter(description = "페이지 크기", example = "3") @RequestParam Integer pageSize);
+  ResponseEntity<BaseResponse<List<UserSummaryResponse>>> getUserProfilesByCode(
+      @Parameter(description = "특정 유저 코드", example = "kim") @RequestParam String code);
 
   @GetMapping("/join/count")
   @Operation(summary = "사용자 전시 참여 개수 조회", description = "현재 로그인된 사용자가 요청 받은 전시의 개수를 조회합니다.")
