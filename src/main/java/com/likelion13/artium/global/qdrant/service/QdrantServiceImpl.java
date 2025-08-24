@@ -3,6 +3,7 @@
  */
 package com.likelion13.artium.global.qdrant.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -194,6 +195,14 @@ public class QdrantServiceImpl implements QdrantService {
 
     List<Map<String, Object>> results =
         (List<Map<String, Object>>) resp.getOrDefault("result", List.of());
+
+    try {
+      ObjectMapper objectMapper = new ObjectMapper();
+      String prettyResults = objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(results);
+      log.info("Qdrant search results:\n{}", prettyResults);
+    } catch (Exception e) {
+      log.warn("Failed to serialize Qdrant search results for logging", e);
+    }
 
     if (opposite) {
       results.sort(
