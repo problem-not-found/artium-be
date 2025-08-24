@@ -78,9 +78,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
     response.addHeader("Authorization", "Bearer " + tokenResponse.getAccessToken());
     if (hasAge && hasGender && hasCode && hasFormat && hasMood && hasTheme) {
-      response.sendRedirect("https://artiums.netlify.app");
+      response.sendRedirect("https://artium.life");
     } else {
-      response.sendRedirect("https://artiums.netlify.app/mytype");
+      response.sendRedirect("https://artiums.life/mytype");
     }
   }
 }
