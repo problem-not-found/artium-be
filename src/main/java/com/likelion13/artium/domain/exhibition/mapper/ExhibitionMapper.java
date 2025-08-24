@@ -50,9 +50,10 @@ public class ExhibitionMapper {
     return ExhibitionLike.builder().exhibition(exhibition).user(user).build();
   }
 
-  public ExhibitionResponse toExhibitionResponse(Exhibition exhibition) {
+  public ExhibitionResponse toExhibitionResponse(Exhibition exhibition, boolean isLike) {
     return ExhibitionResponse.builder()
         .exhibitionId(exhibition.getId())
+        .isLike(isLike)
         .thumbnailImageUrl(exhibition.getThumbnailImageUrl())
         .status(exhibition.getExhibitionStatus())
         .title(exhibition.getTitle())

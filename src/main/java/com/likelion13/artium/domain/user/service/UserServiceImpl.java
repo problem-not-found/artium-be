@@ -255,7 +255,9 @@ public class UserServiceImpl implements UserService {
         String oldImageUrl = user.getProfileImageUrl();
         String newImageUrl = s3Service.uploadFile(PathName.PROFILE_IMAGE, profileImage);
 
-        if (oldImageUrl != null && !oldImageUrl.isEmpty()) {
+        if (oldImageUrl != null
+            && !oldImageUrl.isEmpty()
+            && !oldImageUrl.startsWith("http://k.kakaocdn.net")) {
           s3Service.deleteFile(oldImageUrl);
         }
         user.updateProfileImageUrl(newImageUrl);
@@ -325,7 +327,9 @@ public class UserServiceImpl implements UserService {
     try {
       newImageUrl = s3Service.uploadFile(PathName.PROFILE_IMAGE, profileImage);
 
-      if (oldImageUrl != null && !oldImageUrl.isEmpty()) {
+      if (oldImageUrl != null
+          && !oldImageUrl.isEmpty()
+          && !oldImageUrl.startsWith("http://k.kakaocdn.net")) {
         s3Service.deleteFile(oldImageUrl);
       }
     } catch (Exception e) {
