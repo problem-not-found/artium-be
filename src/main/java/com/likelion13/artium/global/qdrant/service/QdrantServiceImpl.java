@@ -214,7 +214,7 @@ public class QdrantServiceImpl implements QdrantService {
           });
 
       List<Map<String, Object>> farthest = new ArrayList<>();
-      for (int i = 0; i < limit; i++) {
+      for (int i = 0; i < Math.min(limit, results.size()); i++) {
         farthest.add(results.get(i));
       }
       return farthest;
