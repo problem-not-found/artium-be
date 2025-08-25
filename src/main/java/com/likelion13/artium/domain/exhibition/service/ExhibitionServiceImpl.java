@@ -565,6 +565,12 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     exhibitionPieceRepository.flush();
     exhibition.getExhibitionPieces().addAll(newPieces);
 
+    if (exhibition.getFillAll()) {
+      for (ExhibitionPiece exhibitionPiece : exhibition.getExhibitionPieces()) {
+        exhibitionPiece.getPiece().updateProgressStatus(ProgressStatus.ON_DISPLAY);
+      }
+    }
+
     log.info("작품 리스트 수정 성공 - 전시 ID: {}, 수정한 작품 수: {}", id, newPieces.size());
 
     List<Long> pieceIdList = newPieces.stream().map(ep -> ep.getPiece().getId()).toList();
