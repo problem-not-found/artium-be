@@ -10,6 +10,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -47,6 +48,6 @@ public interface S3Controller {
           String keyName);
 
   @Operation(summary = "S3 파일 프록시", description = "S3 파일을 프록시로 내려줍니다.")
-  @GetMapping("/proxy")
-  ResponseEntity<ByteArrayResource> getPiece(@RequestParam String filename);
+  @GetMapping("/{filename}")
+  ResponseEntity<ByteArrayResource> getPiece(@PathVariable String filename);
 }

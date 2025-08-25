@@ -5,6 +5,7 @@ package com.likelion13.artium.global.s3.controller;
 
 import java.util.List;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,6 +21,7 @@ import com.likelion13.artium.global.s3.service.S3Service;
 
 import lombok.RequiredArgsConstructor;
 
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class S3ControllerImpl implements S3Controller {
@@ -48,10 +50,14 @@ public class S3ControllerImpl implements S3Controller {
   }
 
   @Override
-  public ResponseEntity<ByteArrayResource> getPiece(@RequestParam String filename) {
+  public ResponseEntity<ByteArrayResource> getPiece(@PathVariable String filename) {
 
-    byte[] fileBytes = restTemplate.getForObject(filename, byte[].class);
+    String s3Url = "https://likelion13-artium.s3.ap-northeast-2.amazonaws.com/piece/" + filename;
+
+    byte[] fileBytes = restTemplate.getForObject(s3Url, byte[].class);
     ByteArrayResource resource = new ByteArrayResource(fileBytes);
+
+    log.info("이미지 프록시 요청 성공: " + s3Url);
 
     return ResponseEntity.ok().contentType(MediaType.IMAGE_JPEG).body(resource);
   }
