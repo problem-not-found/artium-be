@@ -139,10 +139,13 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     }
 
     String content = (exhibition.getTitle() + "\n\n" + exhibition.getDescription()).trim();
-    float[] vector = embeddingService.embed(content);
 
-    qdrantService.upsertExhibitionPoint(
-        exhibition.getId(), vector, exhibition, CollectionName.EXHIBITION);
+    if (exhibition.getFillAll()) {
+      float[] vector = embeddingService.embed(content);
+
+      qdrantService.upsertExhibitionPoint(
+          exhibition.getId(), vector, exhibition, CollectionName.EXHIBITION);
+    }
 
     log.info(
         "전시 정보 생성 성공 - id:{}, username:{}, status:{}",
