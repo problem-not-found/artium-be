@@ -735,12 +735,12 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     // 후보 순서 맵핑
     Map<Long, Integer> pos = new HashMap<>();
     for (int i = 0; i < candidateIds.size(); i++) pos.put(candidateIds.get(i), i);
-    // 진행중/예정 전시만 필터링
+    // 진행중/예정 전시이면서 fillAll=true 인 전시만 필터링
     List<Long> filtered =
         candidateIds.isEmpty()
             ? List.of()
             : exhibitionRepository
-                .findIdsByIdsInAndStatusIn(
+                .findIdsByIdsInAndStatusInAndFillAllTrue(
                     candidateIds,
                     List.of(ExhibitionStatus.ONGOING, ExhibitionStatus.UPCOMING),
                     Pageable.unpaged())

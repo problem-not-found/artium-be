@@ -47,7 +47,7 @@ public interface ExhibitionRepository extends JpaRepository<Exhibition, Long> {
   Page<Exhibition> findLikedExhibitionsByUserId(@Param("userId") Long userId, Pageable pageable);
 
   @Query("SELECT e.id FROM Exhibition e WHERE e.id IN :ids AND e.exhibitionStatus IN :statuses")
-  Page<Long> findIdsByIdsInAndStatusIn(
+  Page<Long> findIdsByIdsInAndStatusInAndFillAllTrue(
       @Param("ids") List<Long> ids,
       @Param("statuses") List<ExhibitionStatus> statuses,
       Pageable pageable);
