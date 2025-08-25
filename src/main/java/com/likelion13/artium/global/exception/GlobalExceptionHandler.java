@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import com.likelion13.artium.global.exception.model.BaseErrorCode;
@@ -78,6 +79,20 @@ public class GlobalExceptionHandler {
     log.debug("정적 리소스 없음: {}", ex.getMessage());
     return ResponseEntity.status(HttpStatus.NOT_FOUND)
         .body(BaseResponse.error(404, "리소스를 찾을 수 없습니다."));
+  }
+
+  /**
+   * 업로드 파일이 서버에서 허용하는 최대 크기를 초과했을 때 발생하는 예외를 처리합니다.
+   *
+   * @param ex 발생한 {@link MaxUploadSizeExceededException}
+   * @return {@link ResponseEntity} 형태의 {@link BaseResponse} 에러 응답
+   */
+  @ExceptionHandler(MaxUploadSizeExceededException.class)
+  public ResponseEntity<BaseResponse<Object>> handleMaxUploadSizeExceeded(
+      MaxUploadSizeExceededException ex) {
+    log.warn("업로드 파일 사이즈 초과: {}", ex.getMessage());
+    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+        .body(BaseResponse.error(400, "업로드 가능한 파일 용량을 초과했습니다."));
   }
 
   /**
