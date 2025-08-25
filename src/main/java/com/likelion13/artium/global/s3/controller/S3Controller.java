@@ -5,6 +5,7 @@ package com.likelion13.artium.global.s3.controller;
 
 import java.util.List;
 
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -44,4 +45,8 @@ public interface S3Controller {
               example = "profile-image/43835b6e-8991-4eab-8384-5cbf7e854abb")
           @RequestParam
           String keyName);
+
+  @Operation(summary = "S3 파일 프록시", description = "S3 파일을 프록시로 내려줍니다.")
+  @GetMapping("/proxy")
+  ResponseEntity<ByteArrayResource> getPiece(@RequestParam String filename);
 }
