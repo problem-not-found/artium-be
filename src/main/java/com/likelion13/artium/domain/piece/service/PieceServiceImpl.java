@@ -261,6 +261,15 @@ public class PieceServiceImpl implements PieceService {
       pieceDetails.forEach(piece::addPieceDetail);
     }
 
+    if (saveStatus == SaveStatus.APPLICATION) {
+      piece.updateProgressStatus(ProgressStatus.REGISTERED);
+      String content =
+          (updatePieceRequest.getTitle() + "\n\n" + updatePieceRequest.getDescription()).trim();
+      float[] vector = embeddingService.embed(content);
+
+      qdrantService.upsertPiecePoint(piece.getId(), vector, piece, CollectionName.PIECE);
+    }
+
     piece.update(
         updatePieceRequest.getTitle(),
         updatePieceRequest.getDescription(),

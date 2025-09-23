@@ -590,13 +590,14 @@ public class UserServiceImpl implements UserService {
 
   @Override
   @Transactional(readOnly = true)
-  public PageResponse<UserSummaryResponse> getUserProfilesByCode(String code, Pageable pageable) {
+  public List<UserSummaryResponse> getUserProfilesByCode(String code) {
 
-    Page<User> page = userRepository.findByCodeContaining(code, pageable);
-    Page<UserSummaryResponse> responsePage = page.map(userMapper::toUserSummaryResponse);
+    List<User> userList = userRepository.findByCodeContaining(code);
+    List<UserSummaryResponse> responseList =
+        userList.stream().map(userMapper::toUserSummaryResponse).toList();
 
-    log.info("코드 포함 사용자 검색 성공 - code: {}, totalElements: {}", code, page.getTotalElements());
-    return pageMapper.toUserSummaryPageResponse(responsePage);
+    log.info("코드 포함 사용자 검색 성공 - code: {}, totalElements: {}", code, responseList.size());
+    return responseList;
   }
 
   @Override

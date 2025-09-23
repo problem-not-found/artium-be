@@ -110,6 +110,10 @@ public class ExhibitionServiceImpl implements ExhibitionService {
 
     try {
       exhibitionRepository.save(exhibition);
+      List<ExhibitionParticipant> exhibitionParticipantList =
+          buildParticipants(request.getParticipantIdList(), exhibition);
+
+      exhibitionParticipantRepository.saveAll(exhibitionParticipantList);
     } catch (Exception e) {
       if (imageUrl != null) {
         s3Service.deleteFile(s3Service.extractKeyNameFromUrl(imageUrl));
@@ -203,7 +207,10 @@ public class ExhibitionServiceImpl implements ExhibitionService {
             .map(exhibitionPiece -> exhibitionPiece.getPiece().getId())
             .toList();
     List<Long> participantIdList =
-        exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
+        exhibition.getExhibitionParticipants().stream()
+            .filter(p -> p.getParticipateStatus() == ParticipateStatus.APPROVED)
+            .map(p -> p.getUser().getId())
+            .toList();
 
     return exhibitionMapper.toExhibitionDetailResponse(
         exhibition, createdByCurrentUser, likedByCurrentUser, pieceIdList, participantIdList);
@@ -458,8 +465,6 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     try {
       ExhibitionStatus status = determineStatus(request.getStartDate(), request.getEndDate());
 
-      List<ExhibitionParticipant> participants = buildParticipants(request.getParticipantIdList());
-
       List<Long> pieceIds = request.getPieceIdList();
       List<Long> distinctPieceIds = pieceIds.stream().distinct().toList();
       if (distinctPieceIds.size() != pieceIds.size()) {
@@ -467,6 +472,8 @@ public class ExhibitionServiceImpl implements ExhibitionService {
       }
 
       List<ExhibitionPiece> pieces = buildPieces(distinctPieceIds);
+      List<ExhibitionParticipant> participants =
+          buildParticipants(request.getParticipantIdList(), exhibition);
 
       exhibitionParticipantRepository.deleteAll(exhibition.getExhibitionParticipants());
       exhibition.getExhibitionParticipants().clear();
@@ -495,7 +502,10 @@ public class ExhibitionServiceImpl implements ExhibitionService {
             .map(exhibitionPiece -> exhibitionPiece.getPiece().getId())
             .toList();
     List<Long> participantIdList =
-        exhibition.getExhibitionParticipants().stream().map(p -> p.getUser().getId()).toList();
+        exhibition.getExhibitionParticipants().stream()
+            .filter(p -> p.getParticipateStatus() == ParticipateStatus.APPROVED)
+            .map(p -> p.getUser().getId())
+            .toList();
 
     if (exhibition.getFillAll()) {
       for (ExhibitionPiece exhibitionPiece : exhibition.getExhibitionPieces()) {
@@ -659,7 +669,7 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     }
   }
 
-  private List<ExhibitionParticipant> buildParticipants(List<Long> userIds) {
+  private List<ExhibitionParticipant> buildParticipants(List<Long> userIds, Exhibition exhibition) {
     return userIds.stream()
         .distinct()
         .map(
@@ -668,7 +678,10 @@ public class ExhibitionServiceImpl implements ExhibitionService {
                   userRepository
                       .findById(userId)
                       .orElseThrow(() -> new CustomException(UserErrorCode.USER_NOT_FOUND));
-              return ExhibitionParticipant.builder().exhibition(null).user(participantUser).build();
+              return ExhibitionParticipant.builder()
+                  .exhibition(exhibition)
+                  .user(participantUser)
+                  .build();
             })
         .collect(Collectors.toList());
   }
@@ -722,12 +735,12 @@ public class ExhibitionServiceImpl implements ExhibitionService {
     // 후보 순서 맵핑
     Map<Long, Integer> pos = new HashMap<>();
     for (int i = 0; i < candidateIds.size(); i++) pos.put(candidateIds.get(i), i);
-    // 진행중/예정 전시만 필터링
+    // 진행중/예정 전시이면서 fillAll=true 인 전시만 필터링
     List<Long> filtered =
         candidateIds.isEmpty()
             ? List.of()
             : exhibitionRepository
-                .findIdsByIdsInAndStatusIn(
+                .findIdsByIdsInAndStatusInAndFillAllTrue(
                     candidateIds,
                     List.of(ExhibitionStatus.ONGOING, ExhibitionStatus.UPCOMING),
                     Pageable.unpaged())
